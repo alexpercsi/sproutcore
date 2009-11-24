@@ -138,13 +138,8 @@ SC.mixin( /** @scope SC */ {
    */
   rectsEqual: function(r1, r2, delta) {
     if (!r1 || !r2) return (r1 == r2) ;
-<<<<<<< HEAD:frameworks/foundation/system/utils.js
     
-    if (SC.none(delta)) delta = 0.1;
-=======
-  
     if (!delta && delta !== 0) delta = 0.1;
->>>>>>> fd30dac08ec7b9762a14048c09e2bcccad68e7fe:frameworks/foundation/system/utils.js
     if ((r1.y != r2.y) && (Math.abs(r1.y - r2.y) > delta)) return NO ; 
     if ((r1.x != r2.x) && (Math.abs(r1.x - r2.x) > delta)) return NO ; 
     if ((r1.width != r2.width) && (Math.abs(r1.width - r2.width) > delta)) return NO ; 
