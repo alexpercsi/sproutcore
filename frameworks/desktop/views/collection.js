@@ -1093,7 +1093,7 @@ SC.CollectionView = SC.View.extend(
     // walk up the element hierarchy until we find this or an element with an
     // id matching the base guid (i.e. a collection item)
     while (element && element !== document && element !== layer) {
-      id = element ? element.getAttribute('id') : null ;
+      id = element ? SC.$(element).attr('id') : null ;
       if (id && (contentIndex = this.contentIndexForLayerId(id)) !== null) {
           break;
       }
@@ -1224,8 +1224,8 @@ SC.CollectionView = SC.View.extend(
   reloadSelectionIndexes: function(indexes) {
     var invalid = this._invalidSelection ;
     if (indexes && (invalid !== YES)) {
-      if (invalid) invalid.add(indexes)
-      else invalid = this._invalidSelection = indexes.copy();
+      if (invalid) { invalid.add(indexes) ; }
+      else { invalid = this._invalidSelection = indexes.copy(); }
 
     } else this._invalidSelection = YES ; // force a total reload
     

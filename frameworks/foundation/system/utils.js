@@ -12,6 +12,12 @@ SC.mixin( /** @scope SC */ {
 
   _downloadFrames: 0, // count of download frames inserted into document
   
+  _copy_computed_props: [
+    "maxWidth", "maxHeight", "paddingLeft", "paddingRight", "paddingTop", "paddingBottom",
+    "fontFamily", "fontSize", "fontStyle", "fontWeight", "fontVariant", "lineHeight",
+    "whiteSpace"
+  ],
+  
   /**
     Starts a download of the file at the named path.
     
@@ -132,8 +138,13 @@ SC.mixin( /** @scope SC */ {
    */
   rectsEqual: function(r1, r2, delta) {
     if (!r1 || !r2) return (r1 == r2) ;
+<<<<<<< HEAD:frameworks/foundation/system/utils.js
     
     if (SC.none(delta)) delta = 0.1;
+=======
+  
+    if (!delta && delta !== 0) delta = 0.1;
+>>>>>>> fd30dac08ec7b9762a14048c09e2bcccad68e7fe:frameworks/foundation/system/utils.js
     if ((r1.y != r2.y) && (Math.abs(r1.y - r2.y) > delta)) return NO ; 
     if ((r1.x != r2.x) && (Math.abs(r1.x - r2.x) > delta)) return NO ; 
     if ((r1.width != r2.width) && (Math.abs(r1.width - r2.width) > delta)) return NO ; 
@@ -269,19 +280,122 @@ SC.mixin( /** @scope SC */ {
     }
 
     style = '%@; width: %@px; left: %@px; position: absolute'.fmt(style, width, (-1*width));
-    elem.setAttribute('style', style);
+    SC.$(elem).attr('style', style);
 
     if (classes !== '') {
-      elem.setAttribute('class', classes);
+      SC.$(elem).attr('class', classes);
     }
 
-    elem.textContent = str;
+    elem.innerHTML = str;
     height = elem.clientHeight;
 
     elem = null; // don't leak memory
     return height;
   },
   
+  /**
+  Given a string and an example element or style string, and an optional
+  set of class names, calculates the width and height of that block of text.
+  
+  To constrain the width, set max-width on the exampleElement or in the style string.
+  
+  @param string {String} The string to measure.
+  @param exampleElement The example element to grab styles from, or the style string to use.
+  @param classNames {String} (Optional) Class names to add to the test element.
+  */
+  metricsForString: function(string, exampleElement, classNames)
+  {
+    var element = this._metricsCalculationElement, width, height, classes, styles, style;
+    
+    // collect the class names
+    classes = SC.A(classNames).join(' ');
+    
+    // get the calculation element
+    if (!element) {
+      element = this._metricsCalculationElement = document.createElement("div");
+      document.body.insertBefore(element, null);
+    }
+    
+    // two possibilities: example element or type string
+    if (SC.typeOf(exampleElement) != SC.T_STRING) {
+      var computed = null;
+      if (document.defaultView && document.defaultView.getComputedStyle) {
+        computed = document.defaultView.getComputedStyle(exampleElement, null);
+      } else {
+        computed = exampleElement.currentStyle;
+      }
+      
+      // set (lovely cssText property here helps a lot—if it works. Unfortunately, only Safari supplies it.)
+      style = computed.cssText;
+      
+      // if that didn't work (Safari-only?) go alternate route. This is SLOW code...
+      if (!style || style.trim() === "") {
+        // there is only one way to do it...
+        var props = this._copy_computed_props;
+        
+        // firefox ONLY allows this method
+        for (var i = 0; i < props.length; i++) {
+          var prop = props[i], val = computed[prop];
+          element.style[prop] = val;
+        }
+        
+        // and why does firefox specifically need "font" set?
+        var cs = element.style; // cached style
+        if (cs.font === "") {
+          var font = "";
+          if (cs.fontStyle) font += cs.fontStyle + " ";
+          if (cs.fontVariant) font += cs.fontVariant + " ";
+          if (cs.fontWeight) font += cs.fontWeight + " ";
+          if (cs.fontSize) font += cs.fontSize; else font += "10px"; //force a default
+          if (cs.lineHeight) font += "/" + cs.lineHeight;
+          font += " ";
+          if (cs.fontFamily) font += cs.fontFamily; else cs += "sans-serif";
+          
+          element.style.font = font;
+        }
+        
+        SC.mixin(element.style, {
+          left: "0px", top: "0px", position: "absolute", bottom: "auto", right: "auto", width: "auto", height: "auto"
+        });
+      }
+      else
+      {
+        // set style
+        element.setAttribute("style", style + "; position:absolute; left: 0px; top: 0px; bottom: auto; right: auto; width: auto; height: auto;");
+      }
+      
+      // clean up
+      computed = null;
+    } else {
+      // it is a style string already
+      style = exampleElement;
+      
+      // set style
+      element.setAttribute("style", style + "; position:absolute; left: 0px; top: 0px; bottom: auto; right: auto; width: auto; height: auto;");
+    }
+    
+    // the conclusion of which to use (innerText or textContent) should be cached
+    if (typeof element.innerText != "undefined") element.innerText = string;
+    else element.textContent = string;
+    
+    element.className = classes;
+    
+    // measure
+    var result = {
+      width: element.clientWidth,
+      height: element.clientHeight
+    };
+    
+    // clear element
+    element.innerHTML = "";
+    element.className = "";
+    element.setAttribute("style", ""); // get rid of any junk from computed style.
+    
+    // clean up
+    element = null;
+    return result;
+  },
+
   /** Finds the absolute viewportOffset for a given element.
     This method is more accurate than the version provided by prototype.
     
@@ -378,8 +492,8 @@ SC.mixin( /** @scope SC */ {
   /** Returns the union of two ranges.  If one range is null, the other
    range will be returned.  */
   unionRanges: function(r1, r2) { 
-    if ((r1 === null) || (r1.length < 0)) return r2 ;
-    if ((r2 === null) || (r2.length < 0)) return r1 ;
+    if ((r1 == null) || (r1.length < 0)) return r2 ;
+    if ((r2 == null) || (r2.length < 0)) return r1 ;
     
     var min = Math.min(r1.start, r2.start) ;
     var max = Math.max(SC.maxRange(r1), SC.maxRange(r2)) ;
@@ -388,7 +502,7 @@ SC.mixin( /** @scope SC */ {
   
   /** Returns the intersection of the two ranges or SC.RANGE_NOT_FOUND */
   intersectRanges: function(r1, r2) {
-    if ((r1 === null) || (r2 === null)) return SC.RANGE_NOT_FOUND ;
+    if ((r1 == null) || (r2 == null)) return SC.RANGE_NOT_FOUND ;
     if ((r1.length < 0) || (r2.length < 0)) return SC.RANGE_NOT_FOUND;
     var min = Math.max(SC.minRange(r1), SC.minRange(r2)) ;
     var max = Math.min(SC.maxRange(r1), SC.maxRange(r2)) ;
@@ -398,7 +512,7 @@ SC.mixin( /** @scope SC */ {
   
   /** Returns the difference of the two ranges or SC.RANGE_NOT_FOUND */
   subtractRanges: function(r1, r2) {
-    if ((r1 === null) || (r2 === null)) return SC.RANGE_NOT_FOUND ;
+    if ((r1 == null) || (r2 == null)) return SC.RANGE_NOT_FOUND ;
     if ((r1.length < 0) || (r2.length < 0)) return SC.RANGE_NOT_FOUND;
     var max = Math.max(SC.minRange(r1), SC.minRange(r2)) ;
     var min = Math.min(SC.maxRange(r1), SC.maxRange(r2)) ;
@@ -416,8 +530,8 @@ SC.mixin( /** @scope SC */ {
   */
   rangesEqual: function(r1, r2) {
     if (r1===r2) return true ;
-    if (r1 === null) return r2.length < 0 ;
-    if (r2 === null) return r1.length < 0 ;
+    if (r1 == null) return r2.length < 0 ;
+    if (r2 == null) return r1.length < 0 ;
     return (r1.start == r2.start) && (r1.length == r2.length) ;
   },
 
@@ -449,7 +563,7 @@ SC.mixin( /** @scope SC */ {
 
     var h = (max == min) ? 0 : ((max == rgb[0]) ? ((rgb[1]-rgb[2])/(max-min)/6) : ((max == rgb[1]) ? ((rgb[2]-rgb[0])/(max-min)/6+1/3) : ((rgb[0]-rgb[1])/(max-min)/6+2/3)));
     h = (h < 0) ? (h + 1) : ((h > 1)  ? (h - 1) : h);
-    var s = (max === 0) ? 0 : (1 - min/max);
+    var s = (max == 0) ? 0 : (1 - min/max);
     var v = max/255;
     return [h, s, v];
   },
