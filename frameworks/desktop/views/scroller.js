@@ -5,6 +5,9 @@
 // License:   Licened under MIT license (see license.js)
 // ==========================================================================
 
+/** Vary based on current platform. */
+SC.NATURAL_SCROLLER_THICKNESS = 16;
+
 /** @class
 
   Displays a horizontal or vertical scroller.  You will not usually need to
@@ -25,7 +28,7 @@ SC.ScrollerView = SC.View.extend({
   /**
    Used by the SC.ScrollView to properly layout the scrollers.
   */
-  scrollerThickness: (function() {
+  scrollerThickness: function() {
     var testDiv = document.createElement('div'), ret
     testDiv.style.position = "absolute"
     testDiv.style.left = "-4000px"
@@ -35,7 +38,7 @@ SC.ScrollerView = SC.View.extend({
     ret = 200 - testDiv.clientWidth
     document.body.removeChild(testDiv)
     return ret
-  }).call(this),
+  }.property().cacheable(),
 
   /** 
     The scroller offset value.  This value will adjust between the minimum
