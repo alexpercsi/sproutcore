@@ -1146,6 +1146,81 @@ SC.Store = SC.Object.extend( /** @scope SC.Store.prototype */ {
     return ret ;
   },
   
+  
+  /**
+    Unloads a record, removing the data hash from the store.  If you try to 
+    unload a record that is already destroyed then this method will have no effect.  
+    If you unload a record that does not exist or an error then an exception 
+    will be raised.
+    
+    @param {SC.Record} recordType the recordType
+    @param {String} id the record id
+    @param {Number} storeKey (optional) if passed, ignores recordType and id
+    @returns {SC.Store} receiver
+  */
+  unloadRecord: function(recordType, id, storeKey, newStatus) {
+    if (storeKey === undefined) storeKey = recordType.storeKeyFor(id);
+    var status = this.readStatus(storeKey), K = SC.Record;
+    newStatus = newStatus || K.EMPTY;
+    // handle status - ignore if destroying or destroyed
+    if ((status === K.BUSY_DESTROYING) || (status & K.DESTROYED)) {
+      return this; // nothing to do
+      
+    // error out if empty
+    } else if (status & K.BUSY) {
+      throw K.BUSY_ERROR ;
+           
+    // otherwise, destroy in dirty state
+    } else status = newStatus ;
+    
+    // remove the data hash, set new status
+    this.removeDataHash(storeKey, status);
+    this.dataHashDidChange(storeKey);
+            
+    return this ;
+  },
+  
+  /**
+    Unloads a group of records.  If you have a set of record ids, unloading
+    them this way can be faster than retrieving each record and unloading 
+    it individually.
+    
+    You can pass either a single recordType or an array of recordTypes.  If
+    you pass a single recordType, then the record type will be used for each
+    record.  If you pass an array, then each id must have a matching record 
+    type in the array.
+
+    You can optionally pass an array of storeKeys instead of the recordType
+    and ids.  In this case the first two parameters will be ignored.  This
+    is usually only used by low-level internal methods.  You will not usually
+    unload records this way.
+    
+    @param {SC.Record|Array} recordTypes class or array of classes
+    @param {Array} ids ids to unload
+    @param {Array} storeKeys (optional) store keys to unload
+    @returns {SC.Store} receiver
+  */
+  unloadRecords: function(recordTypes, ids, storeKeys, newStatus) {
+    var len, isArray, idx, id, recordType, storeKey;
+    if(storeKeys===undefined){
+      len = ids.length;
+      isArray = SC.typeOf(recordTypes) === SC.T_ARRAY;
+      if (!isArray) recordType = recordTypes;
+      for(idx=0;idx<len;idx++) {
+        if (isArray) recordType = recordTypes[idx] || SC.Record;
+        id = ids ? ids[idx] : undefined ;
+        this.unloadRecord(recordType, id, undefined, newStatus);
+      }
+    }else{
+      len = storeKeys.length;
+      for(idx=0;idx<len;idx++) {
+        storeKey = storeKeys ? storeKeys[idx] : undefined ;
+        this.unloadRecord(undefined, undefined, storeKey, newStatus);
+      }
+    }
+    return this ;
+  },
+  
   /**
     Destroys a record, removing the data hash from the store and adding the
     record to the destroyed changelog.  If you try to destroy a record that is 
@@ -1966,7 +2041,7 @@ SC.Store = SC.Object.extend( /** @scope SC.Store.prototype */ {
     @param {Object} id the record id or null
     @param {Hash} dataHash data hash to load
     @param {Number} storeKey optional store key.  
-    @returns {Boolean} YES if push was allowed
+    @returns {Number|Boolean} storeKey if push was allowed, NO if not
   */
   pushRetrieve: function(recordType, id, dataHash, storeKey) {
     var K = SC.Record, status;
@@ -1981,7 +2056,7 @@ SC.Store = SC.Object.extend( /** @scope SC.Store.prototype */ {
 
       this.dataHashDidChange(storeKey);
       
-      return YES;
+      return storeKey;
     }
     //conflicted (ready)
     return NO;
@@ -1994,7 +2069,7 @@ SC.Store = SC.Object.extend( /** @scope SC.Store.prototype */ {
     @param {Class} recordType the SC.Record subclass
     @param {Object} id the record id or null
     @param {Number} storeKey optional store key.  
-    @returns {Boolean} YES if push was allowed
+    @returns {Number|Boolean} storeKey if push was allowed, NO if not
   */
   pushDestroy: function(recordType, id, storeKey) {
     var K = SC.Record, status;
@@ -2007,7 +2082,7 @@ SC.Store = SC.Object.extend( /** @scope SC.Store.prototype */ {
       status = K.DESTROYED_CLEAN;
       this.removeDataHash(storeKey, status) ;
       this.dataHashDidChange(storeKey);
-      return YES;
+      return storeKey;
     }
     //conflicted (destroy)
     return NO;
@@ -2021,7 +2096,7 @@ SC.Store = SC.Object.extend( /** @scope SC.Store.prototype */ {
     @param {Object} id the record id or null
     @param {SC.Error} error [optional] an SC.Error instance to associate with id or storeKey
     @param {Number} storeKey optional store key.
-    @returns {Boolean} YES if push was allowed
+    @returns {Number|Boolean} storeKey if push was allowed, NO if not
   */
   pushError: function(recordType, id, error, storeKey) {
     var K = SC.Record, status, errors = this.recordErrors;
@@ -2040,7 +2115,7 @@ SC.Store = SC.Object.extend( /** @scope SC.Store.prototype */ {
       
       this.writeStatus(storeKey, status) ;
       this.dataHashDidChange(storeKey, null, YES);
-      return YES;
+      return storeKey;
     }
     //conflicted (error)
     return NO;
@@ -2089,9 +2164,9 @@ SC.Store = SC.Object.extend( /** @scope SC.Store.prototype */ {
     query.  This will put the query into a READY state if it was loading.
     
     Note that if the query is a REMOTE query, then you must separately load 
-    the results into the query using loadQuery().  If the query is LOCAL, then
-    the query will update automatically with any new records you added to the
-    store.
+    the results into the query using loadQueryResults().  If the query is 
+    LOCAL, then the query will update automatically with any new records you 
+    added to the store.
     
     @param {SC.Query} query the query you fetched
     @returns {SC.Store} receiver
