@@ -1124,6 +1124,7 @@ SC.View = SC.Responder.extend(SC.DelegateSupport,
       this.designer.viewDidUpdateLayer(); //let the designer know
     }
     return this ;
+    
   },
   
   /**
