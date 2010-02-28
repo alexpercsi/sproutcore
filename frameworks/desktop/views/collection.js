@@ -579,6 +579,18 @@ SC.CollectionView = SC.View.extend(
     return this.delegateFor('isCollectionContent', del, content);
   }.property('delegate', 'content').cacheable(),
   
+
+
+
+	selectionMode: 'row',
+
+	columnViews: function() {
+		var containerView = this.get('containerView') || this
+    containerView.createLayer();
+		return [containerView]
+	}.property('columns').cacheable(),
+
+
   // ..........................................................
   // CONTENT CHANGES
   // 
@@ -791,109 +803,155 @@ SC.CollectionView = SC.View.extend(
     
     @returns {SC.CollectionView} receiver
   */
-  reloadIfNeeded: function() {
+	reloadIfNeeded: function() {
     var invalid = this._invalidIndexes;
     if (!invalid || !this.get('isVisibleInWindow')) return this ; // delay
+
+		var containers = this.get('columnViews')
+		if(SC.none(containers)) return this;
+
     this._invalidIndexes = NO ;
-    
+
     var content = this.get('content'),
         len     = content ? content.get('length'): 0,
         layout  = this.computeLayout(),
         bench   = SC.BENCHMARK_RELOAD,
+        del  = this.get('contentDelegate'),
         nowShowing = this.get('nowShowing'),
-        itemViews  = this._sc_itemViews,
-        containerView = this.get('containerView') || this,
-        views, idx, view, layer ;
+        views, idx, view, layer, itemViews, existing, context;
 
     // if the set is defined but it contains the entire nowShowing range, just
     // replace
     if (invalid.isIndexSet && invalid.contains(nowShowing)) invalid = YES ;
     if (this.willReload) this.willReload(invalid === YES ? null : invalid);
 
+		// if(invalid.get && (invalid.get('length') / nowShowing.get('length') > .5))
+			// invalid = YES
+
+
+
     // if an index set, just update indexes
     if (invalid.isIndexSet) {
-      
+
       if (bench) {
-        SC.Benchmark.start(bench="%@#reloadIfNeeded (Partial)".fmt(this),YES);
+				bench=("%@#reloadIfNeeded (Partial)" + Math.random(10000)).fmt(this)
+        SC.Benchmark.start(bench);
       }
-      
+
       invalid.forEach(function(idx) {
-        // get the existing item view, if there is one
-        var existing = itemViews ? itemViews[idx] : null;
-        
-        // if nowShowing, then reload the item view.
-        if (nowShowing.contains(idx)) {
-          view = this.itemViewForContentIndex(idx, YES);
-          if (existing && existing.parentView === containerView) {
-    
-            // if the existing view has a layer, remove it immediately from
-            // the parent.  This is necessary because the old and new views 
-            // will use the same layerId
-            layer = existing.get('layer');
-            if (layer && layer.parentNode) {
-              layer.parentNode.removeChild(layer);  
-            } 
-            layer = null ; // avoid leaks
-            
-            containerView.replaceChild(view, existing);
-          } else {
-            containerView.appendChild(view);
-          }
-          
-        // if not nowShowing, then remove the item view if needed
-        } else if (existing && existing.parentView === containerView) {
-          delete itemViews[idx];
-          
-          // if the existing view has a layer, remove it immediately from
-          // the parent...
-          layer = existing.get('layer');
-          if (layer && layer.parentNode) {
-            layer.parentNode.removeChild(layer);
-          }
-          layer = null ; // avoid leaks
-          
-          containerView.removeChild(existing);
-        }
+				containers.forEach(function(containerView, i) {
+	        if (nowShowing.contains(idx))
+						this.addItemViewForContentIndex(idx, containerView)
+					else
+						this.removeItemViewForContentIndex(idx, containerView)
+				}, this)
       },this);
 
       if (bench) SC.Benchmark.end(bench);
-      
+
     // if set is NOT defined, replace entire content with nowShowing
     } else {
 
       if (bench) {
-        SC.Benchmark.start(bench="%@#reloadIfNeeded (Full)".fmt(this),YES);
+				bench=("%@#reloadIfNeeded (Full)").fmt(this)
+        SC.Benchmark.start(bench);
       }
 
-      // truncate cached item views since they will all be removed from the
-      // container anyway.
-      if (itemViews) itemViews.length = 0 ; 
-      
-      views = [];
-      nowShowing.forEach(function(idx) {
-        views.push(this.itemViewForContentIndex(idx, YES));
-      }, this);
+			var useFactory = this.get('exampleView').useFactory
 
-      // below is an optimized version of:
-      //this.replaceAllChildren(views);
-      containerView.beginPropertyChanges();
-      containerView.destroyLayer().removeAllChildren();
-      containerView.set('childViews', views); // quick swap
-      containerView.replaceLayer();
-      containerView.endPropertyChanges();
-      
+			// a bit hacky, yes, but it's an optimization
+			containers.forEach(function(containerView, i) {
+					itemViews = containerView._sc_itemViews = []
+
+					if(containerView.get('exampleView'))
+						useFactory = containerView.get('exampleView').useFactory
+
+					if(!useFactory) {
+						var views = []
+      			nowShowing.forEach(function(idx) {
+							views.push(this.itemViewForContentIndex(idx, YES, containerView))
+      			}, this);
+
+						containerView.beginPropertyChanges();
+			      containerView.destroyLayer().removeAllChildren();
+			      containerView.set('childViews', views); // quick swap
+			      containerView.replaceLayer();
+			      containerView.endPropertyChanges();
+					} else {
+						var innerHTML = ""
+						containerView.innerHTML = ""
+      			nowShowing.forEach(function(idx) {
+							view = this.itemViewForContentIndex(idx, YES, containerView)
+							context = view.renderContext(view.get('tagName')) ;
+							view.prepareContext(context, YES) ;
+							// containerView.get('layer').appendChild(view.element())
+
+							innerHTML += context.join()					
+      			}, this);
+						containerView.get('layer').innerHTML = innerHTML
+					}
+			}, this);
+
+
       if (bench) SC.Benchmark.end(bench);
-      
+
     }
-    
+
     // adjust my own layout if computed
     if (layout) this.adjust(layout);
     if (this.didReload) this.didReload(invalid === YES ? null : invalid);
-    
-    
+
     return this ;
   },
-  
+
+	addItemViewForContentIndex: function(idx, containerView, view) {
+		var view, itemViews, layer
+		itemViews  = containerView._sc_itemViews,
+    existing = itemViews ? itemViews[idx] : null;	
+		if(!view)
+			view = this.itemViewForContentIndex(idx, YES, containerView)
+
+		if(existing) {
+			if(existing.get) {
+				layer = existing.get('layer');
+      	if (layer && layer.parentNode) {
+        	layer.parentNode.removeChild(layer);  
+      	} 
+      	layer = null ; // avoid leaks
+
+				if(!view.isFactory) {
+					containerView.replaceChild(view, existing);
+					return this
+				}
+			} else {
+				containerView.get('layer').removeChild(document.getElementById(existing))
+			}
+		}
+
+
+		if(view.isFactory) {
+			context = view.renderContext(view.get('tagName')) ;
+			view.prepareContext(context, YES) ;
+			containerView.get('layer').appendChild(context.element())
+		} else
+			containerView.appendChild(view)
+		return this
+	},
+
+	removeItemViewForContentIndex: function(idx, containerView) {
+		var itemViews = containerView._sc_itemViews, ret
+    if (!itemViews || !itemViews[idx])
+			return
+
+		var view = itemViews[idx]
+		if(view.get)
+			itemViews[idx].destroy()
+		else {
+			containerView.get('layer').removeChild(document.getElementById(view))
+		}
+		delete itemViews[idx]
+	},
+	
   displayProperties: 'isFirstResponder isEnabled isActive'.w(),
   
   /** @private
@@ -939,23 +997,28 @@ SC.CollectionView = SC.View.extend(
     @param {Boolean} rebuild internal use only
     @returns {SC.View} instantiated view
   */
-  itemViewForContentIndex: function(idx, rebuild) {
+	itemViewForContentIndex: function(idx, rebuild, containerView) {
+		if(!containerView)
+			containerView = this.get('containerView') || this
 
-    // return from cache if possible
+		var itemViews = containerView._sc_itemViews, ret
+    if (!itemViews) itemViews = containerView._sc_itemViews = [] ;
+    if (rebuild || !(ret = itemViews[idx]) || !ret.get) {
+			ret = this._itemViewForContentIndex(idx, YES, containerView)
+			itemViews[idx] = SC.typeOf(ret) == 'array' ? ret[0] : ret
+		}
+		return SC.typeOf(ret) == 'array' ? ret[1] : ret
+	},
+
+  _itemViewForContentIndex: function(idx, rebuild, containerView) {
     var content   = this.get('content'),
-        itemViews = this._sc_itemViews,
         item = content.objectAt(idx),
         del  = this.get('contentDelegate'),
         groupIndexes = del.contentGroupIndexes(this, content),
         isGroupView = NO,
-        key, ret, E, layout, layerId;
+				factories = this.get('factories'),
+        key, ret, E, layout, layerId, factory, attrs, context;
 
-    // use cache if available
-    if (!itemViews) itemViews = this._sc_itemViews = [] ;
-    if (!rebuild && (ret = itemViews[idx])) return ret ; 
-
-    // otherwise generate...
-    
     // first, determine the class to use
     isGroupView = groupIndexes && groupIndexes.contains(idx);
     if (isGroupView) isGroupView = del.contentIndexIsGroup(this, content,idx);
@@ -970,32 +1033,54 @@ SC.CollectionView = SC.View.extend(
       if (!E) E = this.get('exampleView');
     }
 
-    // collect some other state
-    var attrs = this._TMP_ATTRS;
+		if(E.prototype.get('useFactory')) {
+			if(SC.none(factories))
+				factories = this.factories = []
+			factory = factories[SC.guidFor(E)]				
+			if(!factory) {
+				factory = factories[SC.guidFor(E)] = this.createChildView(E)
+				factory.isFactory = YES
+			}
+
+			factory.set('layer', null)
+			attrs = factory
+		} else {
+	    // collect some other state
+	    attrs = this._TMP_ATTRS;
+		}
+
     attrs.contentIndex = idx;
-    attrs.content      = item ;
-    attrs.owner        = attrs.displayDelegate = this;
-    attrs.parentView   = this.get('containerView') || this ;
+    attrs.owner        = attrs.displayDelegate = containerView;
+    attrs.parentView   = containerView ;
     attrs.page         = this.page ;
-    attrs.layerId      = this.layerIdFor(idx, item);
+    attrs.layerId      = this.layerIdFor(idx, containerView);
     attrs.isEnabled    = del.contentIndexIsEnabled(this, content, idx);
-    attrs.isSelected   = del.contentIndexIsSelected(this, content, idx);
+    attrs.isSelected   = del.contentIndexIsSelected(this, content, idx) ;
     attrs.outlineLevel = del.contentIndexOutlineLevel(this, content, idx);
     attrs.disclosureState = del.contentIndexDisclosureState(this, content, idx);
     attrs.isGroupView  = isGroupView;
     attrs.isVisibleInWindow = this.isVisibleInWindow;
-    if (isGroupView) attrs.classNames = this._GROUP_COLLECTION_CLASS_NAMES;
-    else attrs.classNames = this._COLLECTION_CLASS_NAMES;
-    
-    layout = this.layoutForContentIndex(idx);
-    if (layout) {
-      attrs.layout = layout;
-    } else {
-      delete attrs.layout ;
-    }
-    
-    ret = this.createItemView(E, idx, attrs);
-    itemViews[idx] = ret ;
+
+		if(factory) {
+			factory.set('content', item)
+			factory.set('column', containerView.get('column'))
+			SC.Binding.flushPendingChanges()
+			factory.set('layout', this.layoutForContentIndex(idx))
+			ret = [factory.get('layerId'), factory]
+		} else {
+	    attrs.content      = item ;
+	    if (isGroupView) attrs.classNames = this._GROUP_COLLECTION_CLASS_NAMES;
+	    else attrs.classNames = this._COLLECTION_CLASS_NAMES;
+
+			layout = this.layoutForContentIndex(idx);
+	    if (layout) {
+	      attrs.layout = layout;
+	    } else {
+	      delete attrs.layout ;
+	    }
+	    ret = this.createItemView(E, idx, attrs);
+
+		}
     return ret ;
   },
   
@@ -1005,7 +1090,7 @@ SC.CollectionView = SC.View.extend(
     @param {Object} object
   */
   itemViewForContentObject: function(object) {
-    return this.itemViewForContentIndex(this.get('content').indexOf(object));
+    return this.itemViewForContentIndex(this.get('content').indexOf(object), null, this.get('columnViews').firstObject());
   },
   
   _TMP_LAYERID: [],
@@ -1037,12 +1122,30 @@ SC.CollectionView = SC.View.extend(
     @param {Number} idx the content index
     @returns {String} layer id, must be suitable for use in HTML id attribute
   */
-  layerIdFor: function(idx) {  
+  layerIdFor: function(idx, containerView) {  
     var ret = this._TMP_LAYERID;
     ret[0] = SC.guidFor(this);
-    ret[1] = idx;
+		ret[1] = SC.guidFor(containerView)
+    ret[2] = idx;
     return ret.join('-');
   },
+
+	containerViewForLayerId: function(id) {
+	    if (!id || !(id = id.toString())) return null ; // nothing to do
+
+	    var base = this._baseLayerId;
+	    if (!base) base = this._baseLayerId = SC.guidFor(this)+"-";
+
+	    // no match
+	    if ((id.length <= base.length) || (id.indexOf(base) !== 0)) return null ; 
+	    var ret = id.split("-")[1]
+
+			var containersHash = this._containersHash
+			if(SC.none(containersHash))
+				return this.get('containerView') || this
+			else
+				return containersHash[ret]
+	},
   
   /**
     Extracts the content index from the passed layerID.  If the layer id does
@@ -1076,17 +1179,17 @@ SC.CollectionView = SC.View.extend(
     @param {SC.Event} evt An event
     @returns {SC.View} the item view or null
   */
-  itemViewForEvent: function(evt) {
+	itemViewForEvent: function(evt) {
     var responder = this.getPath('pane.rootResponder') ;
     if (!responder) return null ; // fast path
-    
+
     var base    = SC.guidFor(this) + '-',
         baseLen = base.length,
         element = evt.target,
         layer   = this.get('layer'),
         contentIndex = null,
         id, itemView, ret ;
-        
+
     // walk up the element hierarchy until we find this or an element with an
     // id matching the base guid (i.e. a collection item)
     while (element && element !== document && element !== layer) {
@@ -1096,20 +1199,20 @@ SC.CollectionView = SC.View.extend(
       }
       element = element.parentNode ; 
     }
-    
+
     // no matching element found? 
     if (contentIndex===null || (element === layer)) {
       element = layer = null; // avoid memory leaks 
       return null;    
     }
-    
+
     // okay, found the DOM node for the view, go ahead and create it
     // first, find the contentIndex
     if (contentIndex >= this.get('length')) {
       throw "layout for item view %@ was found when item view does not exist (%@)".fmt(id, this);
     }
-    
-    return this.itemViewForContentIndex(contentIndex);
+
+    return this.itemViewForContentIndex(contentIndex, NO, this.containerViewForLayerId(id));
   },
   
   // ..........................................................
@@ -1635,10 +1738,11 @@ SC.CollectionView = SC.View.extend(
     @returns {SC.CollectionView} receiver
   */
   scrollToContentIndex: function(contentIndex) {
-    var itemView = this.itemViewForContentIndex(contentIndex) ;
+    var itemView = this.itemViewForContentIndex(contentIndex, null, this.get('columnViews').firstObject()) ;
     if (itemView) this.scrollToItemView(itemView) ;
     return this; 
   },
+
   
   /**
     Scroll to the passed item view.  If the item view is not visible on screen
