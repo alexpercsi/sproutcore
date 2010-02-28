@@ -595,15 +595,21 @@ SC.CollectionView = SC.View.extend(
   }.property('contentDelegate', 'content').cacheable(),
   
 
+	
 
 
-	selectionMode: 'row',
 
 	columnViews: function() {
 		var containerView = this.get('containerView') || this
     containerView.createLayer();
 		return [containerView]
 	}.property('columns').cacheable(),
+
+
+	_cv_columnViewsDidChange: function() {
+		this.reload()
+	}.observes('columnViews'),
+  
 
 
   // ..........................................................
@@ -1025,7 +1031,13 @@ SC.CollectionView = SC.View.extend(
 		itemViews  = containerView._sc_itemViews,
     existing = itemViews ? itemViews[idx] : null;	
 		if(!view)
-			view = this.itemViewForContentIndex(idx, YES, containerView)
+			// if(containerView.prototype.spacer)
+			// 	view = containerView.createChildView(SC.View.extend({
+			// 		layerId: this.layerIdFor(idx, containerView) + "-spacer"
+			// 	}))
+			// else
+				view = this.itemViewForContentIndex(idx, YES, containerView)
+			
 
 		if(existing) {
 			if(existing.get) {
@@ -2647,22 +2659,27 @@ SC.CollectionView = SC.View.extend(
     indexes = this.get('nowShowing').without(indexes);
 
     // cleanup weird stuff that might make the drag look out of place
-    SC.$(dragLayer).css('backgroundColor', 'transparent')
-      .css('border', 'none')
+    SC.$(dragLayer).css('backgroundColor', 'rgba(255, 255, 255, .5)')
+      .css('border', '1px solid #333')
       .css('top', 0).css('left', 0);
     
+
     indexes.forEach(function(i) {
-      var itemView = this.itemViewForContentIndex(i),
-          isSelected, layer;
+			if(SC.none(first))
+				first = this.rowOffsetForContentIndex(i)
+
+			last = i
+					
+			containers.forEach(function(containerView) {
+				containerLayer = containerView.get('layer')
+				containerWidth = parseInt(SC.$(containerLayer).css('width'))
+				containerLeft = parseInt(SC.$(containerLayer).css('left'))
+	      itemView = this.itemViewForContentIndex(i, YES, containerView)
         
-      // render item view without isSelected state.  
-      if (itemView) {
-        isSelected = itemView.get('isSelected');
-        itemView.set('isSelected', NO);
-        
-        itemView.updateLayerIfNeeded();
-        layer = itemView.get('layer');
-        if (layer) layer = layer.cloneNode(true);
+	      // render item view without isSelected state.  
+	      if (itemView) {
+	        isSelected = itemView.get('isSelected');
+	        itemView.set('isSelected', NO);
         
         itemView.set('isSelected', isSelected);
         itemView.updateLayerIfNeeded();
@@ -2680,6 +2697,13 @@ SC.CollectionView = SC.View.extend(
     }, this);
     // we don't want to show the scrollbars, resize the dragview'
     view.set('layout', {height:height});
+
+
+		var height = this.rowOffsetForContentIndex(last + 1) - first
+
+		SC.$(dragLayer).css('height', height).css('top', first)
+		// view.adjust({height: height, top: 0, left: 0});
+		// view.updateLayerIfNeeded();
 
     dragLayer = null;
     return view ;
@@ -3175,6 +3199,6 @@ SC.CollectionView = SC.View.extend(
       return view.action(evt) ;
     }
   }
-  
+
   
 });
