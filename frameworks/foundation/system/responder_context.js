@@ -146,7 +146,8 @@ SC.ResponderContext = SC.Responder.extend({
     
     // Find the nearest common responder in the responder chain for the new
     // responder.  If there are no common responders, use last responder.
-    common = responder ? this.nextResponderFor(responder) : null;
+    // Note: start at the responder itself: it could be the common responder.
+    common = responder ? responder : null;
     while (common) {
       if (common.get('hasFirstResponder')) break;
       common = (common===last) ? null : this.nextResponderFor(common);
@@ -159,10 +160,17 @@ SC.ResponderContext = SC.Responder.extend({
 
     // Set new first responder.  If new firstResponder does not have its 
     // responderContext property set, then set it.
+    
+    // but, don't tell anyone until we have _also_ updated the hasFirstResponder state.
+    this.beginPropertyChanges();
+    
     this.set('firstResponder', responder) ;
     if (responder) responder.set('isFirstResponder', YES);
     
     this._notifyDidBecomeFirstResponder(responder, responder, common);
+    
+    // now, tell everyone the good news!
+    this.endPropertyChanges();
     
     this._locked = NO ;
     if (this._pendingResponder) {

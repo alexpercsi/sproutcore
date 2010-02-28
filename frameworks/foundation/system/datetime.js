@@ -595,14 +595,14 @@ SC.DateTime.mixin(SC.Comparable,
     if (v === null) {
       prefix = key.slice(0, 4);
       suffix = key.slice(4);
-      if (prefix === 'last' || prefix === 'next') {
-        currentWeekday = d.getDay();
+      if (prefix === 'last' || prefix === 'next') {
+        currentWeekday = this._get('dayOfWeek');
         targetWeekday = this._englishDayNames.indexOf(suffix);    
         if (targetWeekday >= 0) {
           var delta = targetWeekday - currentWeekday;
           if (prefix === 'last' && delta >= 0) delta -= 7;
           if (prefix === 'next' && delta <  0) delta += 7;
-          this._advance({ day: delta });
+          this._advance({ day: delta }, start, timezone);
           v = this._createFromCurrentState();
         }
       }
@@ -990,6 +990,7 @@ SC.DateTime.mixin(SC.Comparable,
       case 'B': return this.monthNames[this._get('month')-1];
       case 'c': return this._date.toString();
       case 'd': return this._pad(this._get('day'));
+      case 'D': return this._get('day');
       case 'h': return this._get('hour');
       case 'H': return this._pad(this._get('hour'));
       case 'i':
@@ -1031,7 +1032,7 @@ SC.DateTime.mixin(SC.Comparable,
     // need to move into local time zone for these calculations
     this._setCalcState(start - (timezone * 60000), 0); // so simulate a shifted 'UTC' time
 
-    return format.replace(/\%([aAbBcdHIjmMpSUWwxXyYZ\%])/g, function() {
+    return format.replace(/\%([aAbBcdDHiIjmMpSUWwxXyYZ\%])/g, function() {
       var v = that.__toFormattedString.call(that, arguments, start, timezone);
       return v;
     });
