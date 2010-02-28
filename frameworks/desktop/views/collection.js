@@ -594,6 +594,18 @@ SC.CollectionView = SC.View.extend(
     return this.get('contentDelegate').contentGroupIndexes(this, this.get('content'));
   }.property('contentDelegate', 'content').cacheable(),
   
+
+
+
+	selectionMode: 'row',
+
+	columnViews: function() {
+		var containerView = this.get('containerView') || this
+    containerView.createLayer();
+		return [containerView]
+	}.property('columns').cacheable(),
+
+
   // ..........................................................
   // CONTENT CHANGES
   // 
@@ -810,15 +822,20 @@ SC.CollectionView = SC.View.extend(
     
     @returns {SC.CollectionView} receiver
   */
-  reloadIfNeeded: function() {
+	reloadIfNeeded: function() {
     var invalid = this._invalidIndexes;
     if (!invalid || !this.get('isVisibleInWindow')) return this ; // delay
+
+		var containers = this.get('columnViews')
+		if(SC.none(containers)) return this;
+
     this._invalidIndexes = NO ;
-    
+
     var content = this.get('content'),
         i, len, existing,
         layout  = this.computeLayout(),
         bench   = SC.BENCHMARK_RELOAD,
+        del  = this.get('contentDelegate'),
         nowShowing = this.get('nowShowing'),
         itemViews  = this._sc_itemViews,
         containerView = this.get('containerView') || this,
@@ -846,7 +863,8 @@ SC.CollectionView = SC.View.extend(
     // if an index set, just update indexes
     if (invalid.isIndexSet) {
       if (bench) {
-        SC.Benchmark.start(bench="%@#reloadIfNeeded (Partial)".fmt(this),YES);
+				bench=("%@#reloadIfNeeded (Partial)" + Math.random(10000)).fmt(this)
+        SC.Benchmark.start(bench);
       }
             
       // Each of these arrays holds indexes.
@@ -932,11 +950,12 @@ SC.CollectionView = SC.View.extend(
       
 
       if (bench) SC.Benchmark.end(bench);
-      
+
     // if set is NOT defined, replace entire content with nowShowing
     } else {
       if (bench) {
-        SC.Benchmark.start(bench="%@#reloadIfNeeded (Full)".fmt(this),YES);
+				bench=("%@#reloadIfNeeded (Full)").fmt(this)
+        SC.Benchmark.start(bench);
       }
 
       // truncate cached item views since they will all be removed from the
@@ -990,16 +1009,64 @@ SC.CollectionView = SC.View.extend(
       containerView.endPropertyChanges();
       
       if (bench) SC.Benchmark.end(bench);
-      
+
     }
-    
+
     // adjust my own layout if computed
     if (layout) this.adjust(layout);
     if (this.didReload) this.didReload(invalid === YES ? null : invalid);
     
     return this ;
   },
-  
+
+	addItemViewForContentIndex: function(idx, containerView, view) {
+		var view, itemViews, layer
+		itemViews  = containerView._sc_itemViews,
+    existing = itemViews ? itemViews[idx] : null;	
+		if(!view)
+			view = this.itemViewForContentIndex(idx, YES, containerView)
+
+		if(existing) {
+			if(existing.get) {
+				layer = existing.get('layer');
+      	if (layer && layer.parentNode) {
+        	layer.parentNode.removeChild(layer);  
+      	} 
+      	layer = null ; // avoid leaks
+
+				if(!view.isFactory) {
+					containerView.replaceChild(view, existing);
+					return this
+				}
+			} else {
+				containerView.get('layer').removeChild(document.getElementById(existing))
+			}
+		}
+
+
+		if(view.isFactory) {
+			context = view.renderContext(view.get('tagName')) ;
+			view.prepareContext(context, YES) ;
+			containerView.get('layer').appendChild(context.element())
+		} else
+			containerView.appendChild(view)
+		return this
+	},
+
+	removeItemViewForContentIndex: function(idx, containerView) {
+		var itemViews = containerView._sc_itemViews, ret
+    if (!itemViews || !itemViews[idx])
+			return
+
+		var view = itemViews[idx]
+		if(view.get)
+			itemViews[idx].destroy()
+		else {
+			containerView.get('layer').removeChild(document.getElementById(view))
+		}
+		delete itemViews[idx]
+	},
+	
   displayProperties: 'isFirstResponder isEnabled isActive'.w(),
   
   /** @private
@@ -1058,7 +1125,16 @@ SC.CollectionView = SC.View.extend(
       return ret ; 
     }
 
-    // return from cache if possible
+		var itemViews = containerView._sc_itemViews, ret
+    if (!itemViews) itemViews = containerView._sc_itemViews = [] ;
+    if (rebuild || !(ret = itemViews[idx]) || !ret.get) {
+			ret = this._itemViewForContentIndex(idx, YES, containerView)
+			itemViews[idx] = SC.typeOf(ret) == 'array' ? ret[0] : ret
+		}
+		return SC.typeOf(ret) == 'array' ? ret[1] : ret
+	},
+
+  _itemViewForContentIndex: function(idx, rebuild, containerView) {
     var content   = this.get('content'),
         item = content.objectAt(idx),
         del  = this.get('contentDelegate'),
@@ -1068,8 +1144,6 @@ SC.CollectionView = SC.View.extend(
         viewPoolKey, viewPool, reuseFunc, parentView, isEnabled, isSelected,
         outlineLevel, disclosureState, isVisibleInWindow;
 
-    // otherwise generate...
-    
     // first, determine the class to use
     isGroupView = groupIndexes && groupIndexes.contains(idx);
     if (isGroupView) isGroupView = del.contentIndexIsGroup(this, content,idx);
@@ -1184,7 +1258,7 @@ SC.CollectionView = SC.View.extend(
     @param {Object} object
   */
   itemViewForContentObject: function(object) {
-    return this.itemViewForContentIndex(this.get('content').indexOf(object));
+    return this.itemViewForContentIndex(this.get('content').indexOf(object), null, this.get('columnViews').firstObject());
   },
   
   _TMP_LAYERID: [],
@@ -1216,12 +1290,30 @@ SC.CollectionView = SC.View.extend(
     @param {Number} idx the content index
     @returns {String} layer id, must be suitable for use in HTML id attribute
   */
-  layerIdFor: function(idx) {  
+  layerIdFor: function(idx, containerView) {  
     var ret = this._TMP_LAYERID;
     ret[0] = SC.guidFor(this);
-    ret[1] = idx;
+		ret[1] = SC.guidFor(containerView)
+    ret[2] = idx;
     return ret.join('-');
   },
+
+	containerViewForLayerId: function(id) {
+	    if (!id || !(id = id.toString())) return null ; // nothing to do
+
+	    var base = this._baseLayerId;
+	    if (!base) base = this._baseLayerId = SC.guidFor(this)+"-";
+
+	    // no match
+	    if ((id.length <= base.length) || (id.indexOf(base) !== 0)) return null ; 
+	    var ret = id.split("-")[1]
+
+			var containersHash = this._containersHash
+			if(SC.none(containersHash))
+				return this.get('containerView') || this
+			else
+				return containersHash[ret]
+	},
   
   /**
     Extracts the content index from the passed layerID.  If the layer id does
@@ -1255,17 +1347,17 @@ SC.CollectionView = SC.View.extend(
     @param {SC.Event} evt An event
     @returns {SC.View} the item view or null
   */
-  itemViewForEvent: function(evt) {
+	itemViewForEvent: function(evt) {
     var responder = this.getPath('pane.rootResponder') ;
     if (!responder) return null ; // fast path
-    
+
     var base    = SC.guidFor(this) + '-',
         baseLen = base.length,
         element = evt.target,
         layer   = this.get('layer'),
         contentIndex = null,
         id, itemView, ret ;
-        
+
     // walk up the element hierarchy until we find this or an element with an
     // id matching the base guid (i.e. a collection item)
     while (element && element !== document && element !== layer) {
@@ -1275,20 +1367,20 @@ SC.CollectionView = SC.View.extend(
       }
       element = element.parentNode ; 
     }
-    
+
     // no matching element found? 
     if (contentIndex===null || (element === layer)) {
       element = layer = null; // avoid memory leaks 
       return null;    
     }
-    
+
     // okay, found the DOM node for the view, go ahead and create it
     // first, find the contentIndex
     if (contentIndex >= this.get('length')) {
       throw "layout for item view %@ was found when item view does not exist (%@)".fmt(id, this);
     }
-    
-    return this.itemViewForContentIndex(contentIndex);
+
+    return this.itemViewForContentIndex(contentIndex, NO, this.containerViewForLayerId(id));
   },
   
   // ..........................................................
@@ -1819,10 +1911,11 @@ SC.CollectionView = SC.View.extend(
     @returns {SC.CollectionView} receiver
   */
   scrollToContentIndex: function(contentIndex) {
-    var itemView = this.itemViewForContentIndex(contentIndex) ;
+    var itemView = this.itemViewForContentIndex(contentIndex, null, this.get('columnViews').firstObject()) ;
     if (itemView) this.scrollToItemView(itemView) ;
     return this; 
   },
+
   
   /**
     Scroll to the passed item view.  If the item view is not visible on screen
