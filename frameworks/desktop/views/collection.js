@@ -804,6 +804,7 @@ SC.CollectionView = SC.View.extend(
     @returns {SC.CollectionView} receiver
   */
 	reloadIfNeeded: function() {
+		
     var invalid = this._invalidIndexes;
     if (!invalid || !this.get('isVisibleInWindow')) return this ; // delay
 
@@ -857,7 +858,7 @@ SC.CollectionView = SC.View.extend(
         SC.Benchmark.start(bench);
       }
 
-			var useFactory = this.get('exampleView').useFactory
+			var useFactory = this.get('exampleView').prototype.useFactory
 
 			// a bit hacky, yes, but it's an optimization
 			containers.forEach(function(containerView, i) {
@@ -1033,7 +1034,7 @@ SC.CollectionView = SC.View.extend(
       if (!E) E = this.get('exampleView');
     }
 
-		if(E.prototype.get('useFactory')) {
+		if(E.prototype.useFactory) {
 			if(SC.none(factories))
 				factories = this.factories = []
 			factory = factories[SC.guidFor(E)]				
