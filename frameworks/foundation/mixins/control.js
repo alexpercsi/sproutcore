@@ -428,6 +428,13 @@ SC.Control = {
     r.attr('controlSize', controlSize);
   },
   
+  updateRendererMixin: function(r) {
+    r.isSelected = this.get("isSelected");
+    r.isEnabled = this.get("isEnabled");
+    r.isActive = this.get("isActive");
+    r.controlSize = this.get("controlSize");
+  },
+  
   /** @private
     This should be null so that if content is also null, the
     _contentDidChange won't do anything on init.

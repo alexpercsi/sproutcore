@@ -1350,7 +1350,19 @@ SC.View = SC.Responder.extend(SC.DelegateSupport,
       }
     }
     
-    this.endPropertyChanges() ;
+    // add special class names
+    if (this.get('isTextSelectable')) classSet["allow-select"] = YES;
+    if (!this.get('isEnabled')) classSet["disabled"] = YES;
+    if (!this.get('isVisible')) classSet["hidden"] = YES;
+    if (this.get('isFirstResponder')) classSet["focus"] = YES;
+    
+    bgcolor = this.get('backgroundColor');
+    if (bgcolor) q.css('backgroundColor', bgcolor);
+
+    cursor = this.get('cursor') ;
+    if (cursor) classSet[cursor.get('className')] = YES;
+
+    q.setClass(classSet);
   },
   
   /**
