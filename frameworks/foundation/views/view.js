@@ -319,6 +319,14 @@ SC.View = SC.Responder.extend(SC.DelegateSupport,
     }
   },
   
+  _notifyThemeDidChange: function() {
+    var len, idx, childViews = this.get("childViews");
+    len = childViews.length;
+    for (idx = 0; idx < len; idx++){
+      childViews[idx].notifyPropertyChange("theme");
+    }
+  },
+  
   /**
     The current theme. You may only set this to a string, and during runtime, the value
     (from get()) will always be a theme object or null.
