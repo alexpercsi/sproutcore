@@ -602,6 +602,7 @@ SC.SelectView = SC.ButtonView.extend(
 
     // no menu to toggle... bail...
     if (!menu) return NO ;
+    menu.set('currentSelectedMenuItem', value) ;
     menu.popup(this, this.preferMatrix) ;
     this.set('menu', menu);
 
