@@ -121,14 +121,17 @@ SC.RangeObserver = {
     var func = this._beginObservingForEach;
     if (!func) {
       func = this._beginObservingForEach = function(idx) {
-        var obj = this.source.objectAt(idx);
+				var obj = idx
+        // var obj = this.source.objectAt(idx);
         if (obj && obj.addObserver) {
           observing.push(obj);
           obj._kvo_needsRangeObserver = YES ;
         }
       };
     }
-    this.indexes.forEach(func,this);
+		
+		var indexes = (this.indexes ? this.indexes : SC.IndexSet.create(0, this.source.get('length')))
+		indexes.forEach(func, this)
 
     // add to pending range observers queue so that if any of these objects
     // change we will have a chance to setup observing on them.
@@ -183,7 +186,9 @@ SC.RangeObserver = {
           }
         };
       }
-      this.indexes.forEach(func,this);
+
+			var indexes = (this.indexes ? this.indexes : SC.IndexSet.create(0, this.source.get('length')))
+      indexes.forEach(func,this);
       return YES ;
       
     } else return NO ;
