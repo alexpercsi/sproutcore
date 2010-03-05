@@ -1029,9 +1029,10 @@ SC.CollectionView = SC.View.extend(
         key, ret, E, layout, layerId, factory, attrs, context;
 
 		if(containerView.get('spacer')) {
-			E = Endash.TableCellSpacerView
+			E = SC.TableCellSpacerView
 			factory = YES
 		} else {
+			
 	    // first, determine the class to use
 	    isGroupView = groupIndexes && groupIndexes.contains(idx);
 	    if (isGroupView) isGroupView = del.contentIndexIsGroup(this, content,idx);
@@ -1043,8 +1044,13 @@ SC.CollectionView = SC.View.extend(
 	    } else {
 	      key  = this.get('contentExampleViewKey');
 	      if (key && item) E = item.get(key);
-	      if (!E) E = this.get('exampleView');
 	    }
+      if(!E)
+				E = containerView.get('exampleView')
+
+			if(!E)
+				E = this.get('exampleView');
+				
 			factory = E.prototype.useFactory
 		}
 

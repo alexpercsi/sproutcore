@@ -1,320 +1,92 @@
-// ==========================================================================
-// Project:   SproutCore - JavaScript Application Framework
-// Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
-//            Portions ©2008-2009 Apple, Inc. All rights reserved.
-// License:   Licened under MIT license (see license.js)
-// ==========================================================================
+sc_require('views/table_header')
+sc_require('views/table_cell')
 
-sc_require('views/list');
-sc_require('views/table_row');
-sc_require('views/table_head');
-sc_require('mixins/table_delegate');
-
-/** @class
-  
-  A table view renders a two-dimensional grid of data.
-  
-  TODO: More documentation.
-  
-  @extends SC.ListView
-  @extends SC.TableDelegate
-  @since SproutCore 1.1
-*/
-
-SC.TableView = SC.ListView.extend(SC.TableDelegate, {
-  /** @scope SC.TableView.prototype */  
-  
-  // ..........................................................
-  // PROPERTIES
-  // 
-  
-  classNames: ['sc-table-view'],
-  
-  childViews: "tableHeadView scrollView".w(),
-  
-  scrollView: SC.ScrollView.design({
+SC.TableView = SC.ListView.extend({
+	classNames: ['endash-table-view'],
+  childViews: "tableHeaderView dataView".w(),
+	columns: null,
+	horizontalScrollOffset: 0,
+	
+	orderBy: '',
+	orderByBinding: '*content.orderBy',
+	sortColumn: null,
+	sortDirection: null,
+	
+	exampleView: SC.TableCellView.extend({
+		useFactory: YES
+	}),
+	
+		
+	init: function() {
+		sc_super()
+		this.columnsDidChange()
+	},
+	  
+  dataView: SC.ScrollView.design({
     isVisible: YES,
     layout: {
       left:   -1,
       right:  0,
       bottom: 0,
-      top:    19
+      top:    17
     },
-    hasHorizontalScroller: NO,
     borderStyle: SC.BORDER_NONE,
-    contentView: SC.View.design({
-    }),
-    
+    contentView: SC.View.design(SC.SimpleLayout, {
+			classNames: ['endash-table-data-view'],
+			thicknessesBinding: '.parentView.parentView.parentView.columns',
+			thicknessKey: 'width',
+			computedWidthBinding: '.parentView.parentView.parentView.totalThickness',
+			showDividers: NO,
+			_div_reload: function(indexes) {
+				if(SC.none(this.get('thicknesses')))
+					return
+				sc_super()
+			},
+		}),
+	  autohidesVerticalScroller: NO,
+		horizontalScrollOffsetBinding: '.parentView.horizontalScrollOffset',
+
     // FIXME: Hack.
     _sv_offsetDidChange: function() {
       this.get('parentView')._sctv_scrollOffsetDidChange();
     }.observes('verticalScrollOffset', 'horizontalScrollOffset')
   }),
 
-  hasHorizontalScroller: NO,
-  hasVerticalScroller: NO,
-  
-  selectOnMouseDown: NO,
-  
-  // FIXME: Charles originally had this as an outlet, but that doesn't work.
-  // Figure out why.
-  containerView: function() {
-    var scrollView = this.get('scrollView');
-    return (scrollView && scrollView.get) ? scrollView.get('contentView') : null;
-    //return this.get('scrollView').get('contentView');
-  }.property('scrollView'),
-  
-  layout: { left: 0, right: 0, top: 0, bottom: 0 },
-  
-  init: function() {
-    window.table = this; // DEBUG
-    //this._sctv_columnsDidChange();
-    return sc_super();
-  },
-  
-  
-  canReorderContent: NO,
-  
-  isInDragMode: NO,
-  
-  // ..........................................................
-  // EVENT RESPONDERS
-  // 
-  
-  mouseDownInTableHeaderView: function(evt, header) {
-    var column = header.get('column');
-    
-    if (!column.get('isReorderable') && !column.get('isSortable')) {
-      return NO;
-    }
-    
-    // Save the mouseDown event so we can use it for mouseUp/mouseDragged.
-    this._mouseDownEvent = evt;
-    // Set the timer for switching from a sort action to a reorder action.
-    this._mouseDownTimer = SC.Timer.schedule({
-      target: this,
-      action: '_scthv_enterDragMode',
-      interval: 300
-    });
-    
-    return YES;
-  },
-  
-  mouseUpInTableHeaderView: function(evt, header) {
-    var isInDragMode = this.get('isInDragMode');
-    // Only sort if we're not in drag mode (i.e., short clicks).
-    if (!isInDragMode) {
-      var column = header.get('column');
-      // Change the sort state of the associated column.
-      this.set('sortedColumn', column);
-
-      var sortState = column.get('sortState');
-      var newSortState = sortState === SC.SORT_ASCENDING ?
-       SC.SORT_DESCENDING : SC.SORT_ASCENDING;
-
-      column.set('sortState', newSortState);
-    }
-    
-    // Exit drag mode (and cancel any scheduled drag modes).
-    // this._scthv_exitDragMode();
-    this._dragging = false;
-    if (this._mouseDownTimer) {
-      this._mouseDownTimer.invalidate();
-    }
-    
-  },
-  
-  mouseDraggedInTableHeaderView: function(evt, header) {
-    SC.RunLoop.begin();
-    var isInDragMode = this.get('isInDragMode');
-    if (!isInDragMode) return NO;
-    
-    if (!this._dragging) {
-      SC.Drag.start({
-        event:  this._mouseDownEvent,
-        source: header,
-        dragView: this._scthv_dragViewForHeader(),
-        ghost: YES
-        //anchorView: this.get('parentView')
-      });
-      this._dragging = true;
-    }
-    
-    return sc_super();
-    SC.RunLoop.end();
-  },
-  
-  
-  // ..........................................................
-  // COLUMN PROPERTIES
-  //
-  
-  /**
-    A collection of `SC.TableColumn` objects. Modify the array to adjust the
-    columns.
-    
-    @property
-    @type Array
-  */
-  columns: [],
-  
-  /**
-    Which column will alter its size so that the columns fill the available
-    width of the table. If `null`, the last column will stretch.
-    
-    @property
-    @type SC.TableColumn
-  */
-  flexibleColumn: null,
-  
-  /**
-    Which column is currently the "active" column for sorting purposes.
-    Doesn't say anything about sorting direction; for that, read the
-    `sortState` property of the sorted column.
-    
-    @property
-    @type SC.TableColumn
-  */
-  sortedColumn: null,
-
-  // ..........................................................
-  // HEAD PROPERTIES
-  // 
-
-  /**
-    if YES, the table view will generate a head row at the top of the table
-    view.
-    
-    @property
-    @type Boolean
-  */
-  hasTableHead: YES,
-    
-  /**
-    The view that serves as the head view for the table (if any).
-    
-    @property
-    @type SC.View
-  */
-  tableHeadView: SC.TableHeadView.design({
-    layout: { top: 0, left: 0, right: 0 }
+  tableHeaderView: SC.ScrollView.design({
+    isVisible: YES,
+    layout: {
+      left:   -1,
+      right:  16,
+      bottom: 0,
+      top:    0,
+			height: 17
+    },
+		hasHorizontalScroller: NO,
+	  canScrollHorizontal: function() {
+			return YES
+		}.property().cacheable(),
+		horizontalScrollOffsetBinding: '.parentView.horizontalScrollOffset',
+    borderStyle: SC.BORDER_NONE,
+    contentView: SC.TableHeaderView.extend({
+			tableBinding: '.parentView.parentView.parentView',
+			columnsBinding: '*table.columns',
+		})
   }),
-  
-  /**
-    The height of the table head in pixels.
-    
-    @property
-    @type Number
-  */
-  tableHeadHeight: 18,
-  
+	
+	
+	/* taken almost verbatim from SC.TableView */
+	
 
-  // ..........................................................
-  // ROW PROPERTIES
-  //
+	containerView: function() {
+    var scrollView = this.get('dataView');
+    return (scrollView && scrollView.get) ? scrollView.get('contentView') : null;
+  }.property('scrollView'),
+	
 
-  /**
-    Whether all rows in the table will have the same pixel height. If so, we
-    can compute offsets very cheaply.
-    
-    @property
-    @type Boolean
-  */
-  hasUniformRowHeights: YES,
-  
-  /**
-    How high each row should be, in pixels.
-    
-    @property
-    @type Number
-  */
-  rowHeight: 18,
-  
-  /**
-    Which view to use for a table row.
-    
-    @property
-    @type SC.View
-  */
-  exampleView: SC.TableRowView,
-  
-  // ..........................................................
-  // DRAG-REORDER MODE
-  // 
-  
-  isInColumnDragMode: NO,
-  
-    
-  
-  // ..........................................................
-  // OTHER PROPERTIES
-  // 
-  
-  filterKey: null,
-  
-  
-  /**
-    Returns the top offset for the specified content index.  This will take
-    into account any custom row heights and group views.
-    
-    @param {Number} idx the content index
-    @returns {Number} the row offset in pixels
-  */
-  
-  rowOffsetForContentIndex: function(contentIndex) {
-    var top = 0, idx;
-    
-    if (this.get('hasUniformRowHeights')) {
-      return top + (this.get('rowHeight') * contentIndex);
-    } else {
-      for (idx = 0; idx < contentIndex; i++) {
-        top += this.rowHeightForContentIndex(idx);
-      }
-      return top;
-    }    
-  },
-  
-  /**
-    Returns the row height for the specified content index.  This will take
-    into account custom row heights and group rows.
-    
-    @param {Number} idx content index
-    @returns {Number} the row height in pixels
-  */
-  rowHeightForContentIndex: function(contentIndex) {
-    if (this.get('hasUniformRowHeights')) {
-      return this.get('rowHeight');
-    } else {
-      // TODO
-    }
-  },
-  
-  
-  /**  
-    Computes the layout for a specific content index by combining the current
-    row heights.
-    
-    @param {Number} index content index
-  */
-  layoutForContentIndex: function(index) {
-    return {
-      top:    this.rowOffsetForContentIndex(index),
-      height: this.rowHeightForContentIndex(index),
-      left:   0,
-      right:  0
-    };
-  },
-  
-  createItemView: function(exampleClass, idx, attrs) {
-    // Add a `tableView` attribute to each created row so it has a way to
-    // refer back to this view.
-    attrs.tableView = this;
-    return exampleClass.create(attrs);
-  },
-  
-  clippingFrame: function() {
+
+	clippingFrame: function() {
     var cv = this.get('containerView'),
-        sv = this.get('scrollView'),
+        sv = this.get('dataView'),
         f  = this.get('frame');
         
     if (!sv.get) {
@@ -329,17 +101,12 @@ SC.TableView = SC.ListView.extend(SC.TableDelegate, {
     };
     
   }.property('frame', 'content').cacheable(),
-   
-  _sctv_scrollOffsetDidChange: function() {
+	
+	_sctv_scrollOffsetDidChange: function() {
     this.notifyPropertyChange('clippingFrame');
   },
-
-
-  // ..........................................................
-  // SUBCLASS IMPLEMENTATIONS
-  //
   
-  
+
   computeLayout: function() {
     var layout = sc_super(),
         containerView = this.get('containerView'),
@@ -348,94 +115,125 @@ SC.TableView = SC.ListView.extend(SC.TableDelegate, {
     var minHeight = layout.minHeight;
     delete layout.minHeight;
         
-
-    // FIXME: In the middle of initialization, the TableView needs to be
-    // reloaded in order to become aware of the proper display state of the
-    // table rows. This is currently the best heuristic I can find to decide
-    // when to do the reload. But the whole thing is a hack and should be
-    // fixed as soon as possible.
-    // var currentHeight = containerView.get('layout').height;
-    // if (currentHeight !== height) {
-    //   this.reload();
-    // }
-    
     containerView.adjust('minHeight', minHeight);
     containerView.layoutDidChange();
-
-    //containerView.adjust('height', height);
-    //containerView.layoutDidChange();
     
     this.notifyPropertyChange('clippingFrame');    
     return layout;
   },
-  
-  
-  // ..........................................................
-  // INTERNAL SUPPORT
-  // 
-  
-  // When the columns change, go through all the columns and set their tableContent to be this table's content
-  // TODO: should these guys not just have a binding of this instead?
-  _sctv_columnsDidChange: function() {
 
-    var columns = this.get('columns'), 
-        content = this.get('content'),
-        idx;
-    
-    for (idx = 0; idx < columns.get('length'); idx++) {
-      columns.objectAt(idx).set('tableContent', content);
-    }
-    this.get('tableHeadView')._scthv_handleChildren();
-    this.reload();
 
-  }.observes('columns'),
-  
-  // Do stuff when our frame size changes.
-  _sctv_adjustColumnWidthsOnResize: function() {
+	/* end code from sc.tableview */
+	
+	
 
-    var width   = this.get('frame').width;
-    var content = this.get('content'),
-        del = this.delegateFor('isTableDelegate', this.delegate, content);
-    
-    if (this.get('columns').length == 0) return;
-    width = del.tableShouldResizeWidthTo(this, width);
-    
-    var columns = this.get('columns'), totalColumnWidth = 0, idx;
-    
-    for (var idx = 0; idx < columns.length; idx++) {
-      totalColumnWidth += columns.objectAt(idx).get('width');
-    }
-    
-    if (width === 0) width = totalColumnWidth;
-    var flexibleColumn = this.get('flexibleColumn') ||
-      this.get('columns').objectAt(this.get('columns').length - 1);
-    var flexibleWidth = flexibleColumn.get('width') +
-     (width - totalColumnWidth);
-     
-    flexibleColumn.set('width', flexibleWidth);    
-  }.observes('frame'),
-    
-  // =============================================================
-  // = This is all terrible, but will have to do in the interim. =
-  // =============================================================
-  _sctv_sortContent: function() {
-    var sortedColumn = this.get('sortedColumn');
-    var sortKey = sortedColumn.get('key');
-    this.set('orderBy', sortKey);
-  },
-  
-  _sctv_sortedColumnDidChange: function() {
-    var columns = this.get('columns'),
-        sortedColumn = this.get('sortedColumn'),
-        column, idx;
-    
-    for (idx = 0; idx < columns.get('length'); idx++) {
-      column = columns.objectAt(idx);
-      if (column !== sortedColumn) {
-        column.set('sortState', null);
-      }
-    }
-    
-    this.invokeOnce('_sctv_sortContent');
-  }.observes('sortedColumn')    
-});
+  columnViews: function() {
+		var columns = this.get('columns')
+		if(SC.none(columns))
+			return null
+
+		var views = this._columnViews
+		var viewsHash = this._columnViewsHash
+		var newViews = [], view
+		if(!views) {
+			views = this._columnViews = []
+			viewsHash = this._columnViewsHash = {}
+			containersHash = this._containersHash = {}
+		}
+
+		columns.forEach(function(column) {
+			view = views[viewsHash[SC.guidFor(column)]]
+			if(!view) {
+				view = this.get('containerView').createChildView(SC.View.extend({
+					column: column,
+			  	contentValueKey: column.get('key'),
+					exampleView: column.get('exampleView')
+				}))
+				views.push(view)
+				viewsHash[SC.guidFor(column)] = view
+				containersHash[view.get('layerId')] = view
+			}
+			newViews.push(view)
+		}, this)
+		
+		view = this.get('containerView').createChildView(SC.View.extend({
+			spacer: YES,
+			exampleView: SC.View
+		}))
+		newViews.push(view)
+		
+		var containerView = this.get('containerView')
+
+		containerView.beginPropertyChanges();
+		containerView.destroyLayer()
+    containerView.set('childViews', newViews.slice()); // quick swap
+    containerView.createLayer();
+    containerView.endPropertyChanges();
+
+		this.get('dataView').get('containerView').replaceContent(containerView)
+		
+		return newViews
+	}.property('columns').cacheable(),
+	
+	
+	columnsDidChange: function() {
+		var columns = this.get('columns')
+		if (SC.none(columns) || columns === this._columns) return this; // nothing to do
+		var observer   = this._sctv_columnsRangeObserver
+		var func = this.columnsRangeDidChange;
+		if(this._columns)
+			this._columns.removeRangeObserver(observer)
+		observer = columns.addRangeObserver(null, this, func, null);      
+		this._sctv_columnsRangeObserver = observer ;
+		this._columns = columns
+	}.observes('columns'),
+	
+	columnsRangeDidChange: function(content, object, key, indexes) {
+		if(key == "[]")
+			this.notifyPropertyChange('columns')
+	},
+	
+	reloadSelectionIndexesIfNeeded: function() {
+		var invalid = this._invalidSelection;
+		if (!invalid || !this.get('isVisibleInWindow')) return this ; 
+
+		var nowShowing = this.get('nowShowing'),
+				reload     = this._invalidIndexes,
+				content    = this.get('content'),
+				sel        = this.get('selection');
+
+		this._invalidSelection = NO; // reset invalid
+
+		// fast path.  if we are going to reload everything anyway, just forget
+		// about it.  Also if we don't have a nowShowing, nothing to do.
+		if (reload === YES || !nowShowing) return this ;
+
+		// if invalid is YES instead of index set, just reload everything 
+		if (invalid === YES) invalid = nowShowing;
+
+		// if we will reload some items anyway, don't bother
+		if (reload && reload.isIndexSet) invalid = invalid.without(reload);
+
+		this.reload(invalid)
+
+		return this ;
+	 },
+	
+	sortByColumn: function(column) {
+		var sortColumn = this.get('sortColumn')
+		if(sortColumn && sortColumn != column)
+			sortColumn.set('sortState', null)
+			
+		this.set('sortColumn', column)
+		column.toggleSortState()
+		this.set('sortDirection', column.get('sortState'))
+	},
+	
+	orderBy: function() {
+		var sortDirection = this.get('sortDirection')
+		var sortColumn = this.get('sortColumn')
+		if(SC.none(sortColumn))
+			return null
+		return sortColumn.get('key') + " " + sortDirection
+	}.property('sortDirection', 'sortColumn').cacheable()
+})

@@ -463,7 +463,7 @@ SC.ArrayController = SC.Controller.extend(SC.Array, SC.SelectionSupport,
     this._scac_contentStatusDidChange();
     this.enumerableContentDidChange(0, newlen, newlen - oldlen);
     this.updateSelectionAfterContentChange();
-  }.observes('content'),
+  }.observes('content', 'orderBy'),
   
   /** @private
     Whenever enumerable content changes, need to regenerate the 
