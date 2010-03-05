@@ -1,7 +1,7 @@
 SC.TableHeaderCellView = SC.ButtonView.extend({
   classNames: ['endash-table-cell'],
 
-	titleBinding: '.column.title',
+	titleBinding: '.column.label',
 	
 	tagName: 'div',
 	
