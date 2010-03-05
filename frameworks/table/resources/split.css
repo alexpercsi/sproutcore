@@ -1,0 +1,97 @@
+.sc-split-view {
+	background-color: white;
+}
+
+.endash-table-header {
+/*	background: static_url('tableheader.png') top left repeat-x;*/
+	background: #9a9a9a !important;
+}
+
+.endash-table-header .endash-table-cell {
+	background-image: static_url('tableheader.png') !important;
+	background-position: top left !important;
+	background-repeat: repeat-x !important;
+}
+
+	.endash-table-header .endash-table-cell.selected {
+		background-image: static_url('tableheader-sel.png') !important;
+		background-position: top left !important;
+		background-repeat: repeat-x !important;
+	}
+
+.endash-table-header .endash-table-cell * {
+	background: none !important;
+}
+
+/*.endash-table-header .endash-table-cell.asc {
+	color: red !important;
+}
+
+.endash-table-header .endash-table-cell.desc {
+	color: blue !important;
+}
+*/
+	.endash-table-header .endash-table-cell label {
+		text-align: left !important;
+		font-size: 11px !important;
+		margin: 0px 6px !important;
+		line-height: 16px !important;
+		font-weight: bold !important;
+		background: none !important;
+	}
+
+	.endash-table-data-view .endash-table-cell label {
+		left: 6px !important;
+		right: 6px !important;
+	}
+	
+	
+.endash-table-cell.even {
+/*	background-color: #f1f5f9 !important;*/
+}
+	
+.endash-table-cell .sc-outline {
+	position: absolute !important;
+	padding: 0px 8px !important;
+	border-right: 1px solid #e4e4e4;
+	font-size: 11px !important;
+	line-height: 17px !important;
+	top: 0px !important;
+	left: 0px !important;
+	right: 0px !important;
+	bottom: 0px !important;
+}
+
+.endash-table-cell.sel {
+	background-color: #3a83df !important;
+	color: white !important;
+/*	border-bottom: 1px solid #81b6f2;*/
+}
+
+.endash-table-cell.sel .sc-outline {
+	border-right: 1px solid #217cce;
+}
+
+
+.endash-table-header .sc-thumb-view {
+	z-index: 1000;
+	background: static_url('tableheaderdivider.png') top 50% no-repeat transparent !important;
+	cursor: "col-resize"
+}
+
+.endash-table-header .sc-thumb-view:hover {
+	cursor: col-resize !important
+}
+
+body.resizing-horizontally {
+	cursor: col-resize !important
+}
+
+	body.resizing-horizontally * {
+		cursor: inherit !important;
+	}
+	
+.dragging {
+	z-index: 999999 !important;
+	opacity: .6;
+}

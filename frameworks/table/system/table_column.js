@@ -120,6 +120,11 @@ SC.TableColumn = SC.Object.extend({
     because the SC.TableHeader views use this class to find out how to
     render table content (when necessary).
   */
-  tableContent: null
+  tableContent: null,
+
+	toggleSortState: function() {
+		var sortState = this.get('sortState')
+		this.set('sortState', (sortState != "ASC" ? "ASC" : "DESC"))
+	}
   
 });
