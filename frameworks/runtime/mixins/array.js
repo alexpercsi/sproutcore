@@ -360,6 +360,7 @@ SC.Array = {
     
     var C = this.rangeObserverClass ;
     var isDeep = NO; //disable this feature for now
+		isDeep = YES
     var ret = C.create(this, indexes, target, method, context, isDeep) ;
     rangeob.add(ret);
     
