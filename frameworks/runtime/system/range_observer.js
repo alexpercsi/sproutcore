@@ -121,15 +121,14 @@ SC.RangeObserver = {
     var func = this._beginObservingForEach;
     if (!func) {
       func = this._beginObservingForEach = function(idx) {
-				var obj = idx
-        // var obj = this.source.objectAt(idx);
+        var obj = this.source.objectAt(idx);
         if (obj && obj.addObserver) {
           observing.push(obj);
           obj._kvo_needsRangeObserver = YES ;
         }
       };
     }
-		
+
 		var indexes = (this.indexes ? this.indexes : SC.IndexSet.create(0, this.source.get('length')))
 		indexes.forEach(func, this)
 
