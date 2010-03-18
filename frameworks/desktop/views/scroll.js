@@ -1305,6 +1305,12 @@ SC.ScrollView = SC.View.extend(SC.Border, {
       this.touch = null;
     }
   },
+  
+  touchCancelled: function(touch) {
+    this.tracking = NO;
+    this.dragging = NO;
+    this.touch = null;
+  },
 
   startDecelerationAnimation: function(evt) {
     var touch = this.touch;
