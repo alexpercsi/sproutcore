@@ -706,6 +706,8 @@ SC.ScrollView = SC.View.extend(SC.Border, {
     var vscroll = this.get('hasVerticalScroller') ? this.get('verticalScrollerView') : null ;
     var hasVertical = vscroll && this.get('isVerticalScrollerVisible') ;
     
+    if (SC.browser.touch) hasVertical = hasHorizontal = NO;
+    
     // get the containerView
     var clip = this.get('containerView') ;
     var clipLayout = { left: 0, top: 0 } ;
