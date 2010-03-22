@@ -456,6 +456,10 @@ SC.ScrollView = SC.View.extend(SC.Border, {
     The container view that will contain your main content view.  You can 
     replace this property with your own custom subclass if you prefer.
     
+    The default is a ContainerView which has a contentClippingFrame that will
+    be normal on desktop, but will show three screenfulls on touch devices (making
+    scrolling a bit nicer).
+    
     @type {SC.ContainerView}
   */
   containerView: SC.ContainerView.extend({
