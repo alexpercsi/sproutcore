@@ -4,23 +4,24 @@ sc_require('views/table_cell')
 SC.TableView = SC.ListView.extend({
 	classNames: ['endash-table-view'],
   childViews: "tableHeaderView dataView".w(),
+  childViews: "dataView".w(),
 	columns: null,
 	horizontalScrollOffset: 0,
 	
-	orderBy: '',
-	orderByBinding: '*content.orderBy',
-	sortColumn: null,
-	sortDirection: null,
+	// orderBy: '',
+	// orderByBinding: '*content.orderBy',
+	// sortColumn: null,
+	// sortDirection: null,
 	
 	exampleView: SC.TableCellView.extend({
 		useFactory: YES
 	}),
 	
 		
-	init: function() {
-		sc_super()
-		this.columnsDidChange()
-	},
+	// init: function() {
+		// sc_super()
+		// this.columnsDidChange()
+	// },
 	  
   dataView: SC.ScrollView.design({
     isVisible: YES,
@@ -31,17 +32,17 @@ SC.TableView = SC.ListView.extend({
       top:    17
     },
     borderStyle: SC.BORDER_NONE,
-    contentView: SC.View.design(SC.SimpleLayout, {
-			classNames: ['endash-table-data-view'],
-			thicknessesBinding: '.parentView.parentView.parentView.columns',
-			thicknessKey: 'width',
-			computedWidthBinding: '.parentView.parentView.parentView.totalThickness',
-			showDividers: NO,
-			_div_reload: function(indexes) {
-				if(SC.none(this.get('thicknesses')))
-					return
-				sc_super()
-			},
+    contentView: SC.View.design({
+			// classNames: ['endash-table-data-view'],
+			// thicknessesBinding: '.parentView.parentView.parentView.columns',
+			// thicknessKey: 'width',
+			// computedWidthBinding: '.parentView.parentView.parentView.totalThickness',
+			// showDividers: NO,
+			// _div_reload: function(indexes) {
+				// if(SC.none(this.get('thicknesses')))
+					// return
+				// sc_super()
+			// },
 		}),
 	  autohidesVerticalScroller: NO,
 		horizontalScrollOffsetBinding: '.parentView.horizontalScrollOffset',
@@ -52,26 +53,26 @@ SC.TableView = SC.ListView.extend({
     }.observes('verticalScrollOffset', 'horizontalScrollOffset')
   }),
 
-  tableHeaderView: SC.ScrollView.design({
-    isVisible: YES,
-    layout: {
-      left:   -1,
-      right:  16,
-      bottom: 0,
-      top:    0,
-			height: 17
-    },
-		hasHorizontalScroller: NO,
-	  canScrollHorizontal: function() {
-			return YES
-		}.property().cacheable(),
-		horizontalScrollOffsetBinding: '.parentView.horizontalScrollOffset',
-    borderStyle: SC.BORDER_NONE,
-    contentView: SC.TableHeaderView.extend({
-			tableBinding: '.parentView.parentView.parentView',
-			columnsBinding: '*table.columns',
-		})
-  }),
+  // tableHeaderView: SC.ScrollView.design({
+  //   isVisible: YES,
+  //   layout: {
+  //     left:   -1,
+  //     right:  16,
+  //     bottom: 0,
+  //     top:    0,
+  // 			height: 17
+  //   },
+  // 		hasHorizontalScroller: NO,
+  // 	  canScrollHorizontal: function() {
+  // 			return YES
+  // 		}.property().cacheable(),
+  // 		horizontalScrollOffsetBinding: '.parentView.horizontalScrollOffset',
+  //   borderStyle: SC.BORDER_NONE,
+  //   contentView: SC.TableHeaderView.extend({
+  // 			tableBinding: '.parentView.parentView.parentView',
+  // 			columnsBinding: '*table.columns',
+  // 		})
+  // }),
 	
 	
 	/* taken almost verbatim from SC.TableView */
@@ -125,74 +126,74 @@ SC.TableView = SC.ListView.extend({
 
 	/* end code from sc.tableview */
 	
+		// 
+		// 
+		//   columnViews: function() {
+		// 	var columns = this.get('columns')
+		// 	if(SC.none(columns))
+		// 		return null
+		// 
+		// 	var views = this._columnViews
+		// 	var viewsHash = this._columnViewsHash
+		// 	var newViews = [], view
+		// 	if(!views) {
+		// 		views = this._columnViews = []
+		// 		viewsHash = this._columnViewsHash = {}
+		// 		containersHash = this._containersHash = {}
+		// 	}
+		// 
+		// 	columns.forEach(function(column) {
+		// 		view = views[viewsHash[SC.guidFor(column)]]
+		// 		if(!view) {
+		// 			view = this.get('containerView').createChildView(SC.View.extend({
+		// 				column: column,
+		// 		  	contentValueKey: column.get('key'),
+		// 				exampleView: column.get('exampleView')
+		// 			}))
+		// 			views.push(view)
+		// 			viewsHash[SC.guidFor(column)] = view
+		// 			containersHash[view.get('layerId')] = view
+		// 		}
+		// 		newViews.push(view)
+		// 	}, this)
+		// 	
+		// 	view = this.get('containerView').createChildView(SC.View.extend({
+		// 		spacer: YES,
+		// 		// exampleView: SC.TableCellSpacerView
+		// 	}))
+		// 	newViews.push(view)
+		// 	
+		// 	var containerView = this.get('containerView')
+		// 
+		// 	containerView.beginPropertyChanges();
+		// 	containerView.destroyLayer()
+		//     containerView.set('childViews', newViews.slice()); // quick swap
+		//     containerView.createLayer();
+		//     containerView.endPropertyChanges();
+		// 
+		// 	this.get('dataView').get('containerView').replaceContent(containerView)
+		// 	
+		// 	return newViews
+		// }.property('columns').cacheable(),
 	
-
-  columnViews: function() {
-		var columns = this.get('columns')
-		if(SC.none(columns))
-			return null
-
-		var views = this._columnViews
-		var viewsHash = this._columnViewsHash
-		var newViews = [], view
-		if(!views) {
-			views = this._columnViews = []
-			viewsHash = this._columnViewsHash = {}
-			containersHash = this._containersHash = {}
-		}
-
-		columns.forEach(function(column) {
-			view = views[viewsHash[SC.guidFor(column)]]
-			if(!view) {
-				view = this.get('containerView').createChildView(SC.View.extend({
-					column: column,
-			  	contentValueKey: column.get('key'),
-					exampleView: column.get('exampleView')
-				}))
-				views.push(view)
-				viewsHash[SC.guidFor(column)] = view
-				containersHash[view.get('layerId')] = view
-			}
-			newViews.push(view)
-		}, this)
-		
-		view = this.get('containerView').createChildView(SC.View.extend({
-			spacer: YES,
-			exampleView: SC.View
-		}))
-		newViews.push(view)
-		
-		var containerView = this.get('containerView')
-
-		containerView.beginPropertyChanges();
-		containerView.destroyLayer()
-    containerView.set('childViews', newViews.slice()); // quick swap
-    containerView.createLayer();
-    containerView.endPropertyChanges();
-
-		this.get('dataView').get('containerView').replaceContent(containerView)
-		
-		return newViews
-	}.property('columns').cacheable(),
 	
+	// columnsDidChange: function() {
+	// 	var columns = this.get('columns')
+	// 	if (SC.none(columns) || columns === this._columns) return this; // nothing to do
+	// 	var observer   = this._sctv_columnsRangeObserver
+	// 	var func = this.columnsRangeDidChange;
+	// 	if(this._columns)
+	// 		this._columns.removeRangeObserver(observer)
+	// 	observer = columns.addRangeObserver(null, this, func, null);      
+	// 	this._sctv_columnsRangeObserver = observer ;
+	// 	this._columns = columns
+	// }.observes('columns'),
 	
-	columnsDidChange: function() {
-		var columns = this.get('columns')
-		if (SC.none(columns) || columns === this._columns) return this; // nothing to do
-		var observer   = this._sctv_columnsRangeObserver
-		var func = this.columnsRangeDidChange;
-		if(this._columns)
-			this._columns.removeRangeObserver(observer)
-		observer = columns.addRangeObserver(null, this, func, null);      
-		this._sctv_columnsRangeObserver = observer ;
-		this._columns = columns
-	}.observes('columns'),
-	
-	columnsRangeDidChange: function(content, object, key, indexes) {
-		if(key == "[]")
-			this.notifyPropertyChange('columns')
-	},
-	
+	// columnsRangeDidChange: function(content, object, key, indexes) {
+	// 	if(key == "[]")
+	// 		this.notifyPropertyChange('columns')
+	// },
+	// 
 	reloadSelectionIndexesIfNeeded: function() {
 		var invalid = this._invalidSelection;
 		if (!invalid || !this.get('isVisibleInWindow')) return this ; 
@@ -235,5 +236,57 @@ SC.TableView = SC.ListView.extend({
 		if(SC.none(sortColumn))
 			return null
 		return sortColumn.get('key') + " " + sortDirection
-	}.property('sortDirection', 'sortColumn').cacheable()
+	}.property('sortDirection', 'sortColumn').cacheable(),
+	
+	reloadIfNeeded: function() {
+		if(SC.none(this.get('columns')))
+			return
+		
+		sc_super()
+	},
+	
+	layoutForCell: function(row, column) {
+		var ret = this.layoutForContentIndex(row),
+			columns = this.get('columns'),
+
+			
+		
+		
+		if(SC.none(column))
+			return ret
+
+		ret.left = this.offsetForColumn(column)
+		
+		if(column >= this.get('columns').get('length'))
+			return ret
+			
+		ret.width = this.widthForColumn(column)
+		delete ret.right
+		// ret.top = 0
+		
+		return ret
+	},
+	
+	offsetForColumn: function(column) {
+		var offsets = this.columnOffsets
+		
+		if(!offsets)
+			offsets = this.columnOffsets = []
+			
+		if(column <= 0)  
+			return 0
+		
+		if(!offsets[column])
+			offsets[column]  = this.offsetForColumn(column - 1) + this.widthForColumn(column - 1)
+
+		return offsets[column]
+	},
+	
+	widthForColumn: function(column) {
+		var columns = this.get('columns'),
+		column = columns.objectAt(column)
+		if(column)
+			return column.get('width') || 120
+	}
+		
 })

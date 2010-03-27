@@ -53,6 +53,18 @@ SC.CollectionViewDelegate = {
     return sel ;
   },
 
+	collectionViewWillDisplayCellForRowAndColumn: function(collectionView, view, row, column) {
+		var content = collectionView.get('content'),
+			item = content.objectAt(row),
+			// del  = this.get('contentDelegate')	
+			del = this
+		view.set('content', item)
+    view.set('isEnabled', del.contentIndexIsEnabled(this, content, row));
+    view.set('isSelected', del.contentIndexIsSelected(this, content, row));
+    view.set('outlineLevel', del.contentIndexOutlineLevel(this, content, row));
+    view.set('disclosureState', del.contentIndexDisclosureState(this, content, row));
+	},
+
   /**
     Called by the collection when attempting to select an item.  Return the 
     actual indexes you want to allow to be selected.  Return null to disallow
