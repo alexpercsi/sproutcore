@@ -92,7 +92,10 @@ SC.Array = {
       return null.
   */
   objectAt: function(idx) {
-    if (idx < 0) return undefined ;
+		if (idx < 0)
+			idx += this.get('length')
+
+		if (idx < 0) return undefined ;
     if (idx >= this.get('length')) return undefined;
     return this.get(idx);
   },
@@ -144,7 +147,9 @@ SC.Array = {
         empty = [];
     
     if (typeof start === SC.T_NUMBER) {
-      
+      if(start < 0)
+				start += this.get('length')
+				
       if ((start < 0) || (start >= this.get('length'))) {
         throw SC.OUT_OF_RANGE_EXCEPTION;
       }
