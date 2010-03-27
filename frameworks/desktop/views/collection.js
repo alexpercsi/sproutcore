@@ -847,21 +847,12 @@ baseView: SC.View.extend({
 			invalid = nowShowing
     if (this.willReload) this.willReload(invalid === YES ? null : invalid);
 
-		// if(invalid === YES)
-			// invalid = nowShowing
-
-		
 
     // if an index set, just update indexes
     if (invalid.isIndexSet) {
 	
-		// this.$().css('display', 'none')
-    	// if (layout) this.adjust(layout);
-			// return
-
       if (bench) {
-        bench=("%@#reloadIfNeeded (Partial)"+ Math.random(10000) + " " + invalid.get('length')).fmt(this)
-// + Math.random(10000)
+        bench=("%@#reloadIfNeeded (Partial)" + Math.random(10000) + " " + invalid.get('length')).fmt(this)
         SC.Benchmark.start(bench);
       }
 
@@ -879,12 +870,7 @@ baseView: SC.View.extend({
 				}
       }, this)
 
-			// this.get('layer').appendChild(this.fragment)
-			// this.fragment = null
-
-
       if (bench) SC.Benchmark.end(bench);
-		// this.$().css('display', 'block')
     // if set is NOT defined, replace entire content with nowShowing
     } else {
       if (bench) {
@@ -1071,30 +1057,6 @@ baseView: SC.View.extend({
 			itemViews[row][SC.none(column) ? "base" : column] = ret
     }
     
-    
-    // Collect other state that we'll need whether we're re-using a previous
-    // view or creating a new view.
-    parentView        = this.get('containerView') || this;
-    layerId           = this.layerIdFor(idx);
-    isEnabled         = del.contentIndexIsEnabled(this, content, idx);
-    isSelected        = del.contentIndexIsSelected(this, content, idx);
-    outlineLevel      = del.contentIndexOutlineLevel(this, content, idx);
-    disclosureState   = del.contentIndexDisclosureState(this, content, idx);
-    isVisibleInWindow = this.isVisibleInWindow;
-    layout            = this.layoutForContentIndex(idx);    
-    
-    
-    // If the view is reusable and there is an appropriate view inside the
-    // pool, simply reuse it to avoid having to create a new view.
-    if (E  &&  E.isReusableInCollections) {
-      // Lazily create the view pool.
-      viewPool = this[viewPoolKey];
-      if (!viewPool) viewPool = this[viewPoolKey] = [];
-      
-      // Is there a view we can re-use?
-      if (viewPool.length > 0) {
-        ret = viewPool.pop();
-
     return ret
   },
 
