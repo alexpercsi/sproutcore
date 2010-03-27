@@ -1,6 +1,7 @@
 sc_require('views/table_header')
 sc_require('views/table_cell')
 
+
 SC.TableView = SC.ListView.extend({
 	classNames: ['endash-table-view'],
   childViews: "tableHeaderView dataView".w(),

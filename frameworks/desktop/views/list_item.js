@@ -2,7 +2,7 @@
 // Project:   SproutCore - JavaScript Application Framework
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            portions copyright @2009 Apple Inc.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 
 SC.LIST_ITEM_ACTION_CANCEL = 'sc-list-item-cancel-action';
@@ -310,7 +310,7 @@ SC.ListItemView = SC.View.extend(
     html = cache[key];
     
     if (!html) {
-      tmp = SC.RenderContext('a').attr('href', 'javascript:;')
+      tmp = SC.RenderContext('div').attr('role', 'button')
         .classNames(SC.clone(SC.CheckboxView.prototype.classNames));
 
       // set state on html
@@ -421,8 +421,8 @@ SC.ListItemView = SC.View.extend(
    @returns {void}
   */
   renderCount: function(context, count) {
-    context.push('<span class="count"><span class="inner">')
-      .push(count.toString()).push('</span></span>') ;
+    context.push('<span class="count"><span class="inner">',
+                  count.toString(),'</span></span>') ;
   },
   
   /**
@@ -766,6 +766,14 @@ SC.ListItemView = SC.View.extend(
   discardEditing: function() {
    if (!this.get('isEditing')) return YES ;
    return SC.InlineTextFieldView.discardEditing();
+  },
+  
+  
+  /** @private
+    Allow editing.
+  */
+  inlineEditorShouldBeginEditing: function(inlineEditor) {
+    return YES ;
   },
   
   /** @private

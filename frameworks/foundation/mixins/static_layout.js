@@ -2,7 +2,7 @@
 // Project:   SproutCore - JavaScript Application Framework
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            Portions ©2008-2009 Apple Inc. All rights reserved.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 
 /**
@@ -85,39 +85,43 @@ SC.StaticLayout = {
   },
   
   /**
-    clippingFrame is not available on views with static layout.  This 
-    property will always return null.
+    This method is not supported on static layout views. This 
+    method will return null.
     
     @function
   */
-  clippingFrame: null,
+  parentViewDidResize: function() {
+    return null;
+  },
   
   /**
-    This method is not supported on static layout views.
+    This method is not supported on static layout views. This 
+    method will return null.
     
     @function
   */
-  parentViewDidResize: null,
-  
-  /**
-    This method is not supported on static layout views.
-    
-    @function
-  */
-  beginLiveResize: null,
+  beginLiveResize: function() {
+    return null;
+  },
 
   /**
-    This method is not supported on static layout views.
+    This method is not supported on static layout views. This 
+    method will return null.
     
     @function
   */
-  endLiveResize: null,
+  endLiveResize: function() {
+    return null;
+  },
 
   /**
-    This method is not supported on static layout views.
+    This method is not supported on static layout views. This 
+    method will return null.
     
     @function
   */
-  viewDidResize: null
+  viewDidResize: function() {
+    return null;
+  }
   
 };

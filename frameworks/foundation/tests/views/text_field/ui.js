@@ -2,7 +2,7 @@
 // Project:   SproutCore - JavaScript Application Framework
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            portions copyright @2009 Apple Inc.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 
 /*global module test htmlbody ok equals same stop start */
@@ -190,7 +190,7 @@ test("changing value to null", function() {
   SC.RunLoop.begin();
   view.set('value', null);
   SC.RunLoop.end();
-  equals(view.get('fieldValue'), null, 'should have empty fieldValue');
+  equals(view.get('fieldValue'), '', 'should have empty fieldValue');
   pane.verifyEmpty(view, 'Full Name');
 });
 
@@ -394,13 +394,15 @@ test("focus and blurring text field", function() {
   // verify editing state changed...
   ok(view.get('isEditing'), 'view.isEditing should be YES');
   ok(view.$().hasClass('focus'), 'view layer should have focus class');
-  
+
   // simulate typing a letter
+  SC.RunLoop.begin();
   SC.Event.trigger(input, 'keydown');
   SC.Event.trigger(input, 'keyup');
   input.val('f');
   SC.Event.trigger(input, 'change');
-  
+  SC.RunLoop.end();
+
   // wait a little bit to let text field propograte changes
   stop();
   
@@ -409,10 +411,10 @@ test("focus and blurring text field", function() {
     
     equals(view.get('value'), 'f', 'view should have new value');
     ok(view.$().hasClass('not-empty'), 'should have not-empty class');
-
+  
     // attempt to blur...
     SC.Event.trigger(input, 'blur');
-
+  
     // verify editing state changed...
     ok(!view.get('isEditing'), 'view.isEditing should be NO');
     ok(!view.$().hasClass('focus'), 'view layer should NOT have focus class');

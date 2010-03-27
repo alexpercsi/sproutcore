@@ -2,7 +2,7 @@
 // Project:   SproutCore - JavaScript Application Framework
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            Portions ©2008-2009 Apple Inc. All rights reserved.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 
 /**
@@ -45,10 +45,10 @@ SC.DisclosureView = SC.ButtonView.extend(
     if(firstTime) {
       context.push('<img src="', SC.BLANK_IMAGE_URL, '" class="button" alt="" />');
       if(this.get('needsEllipsis')) {
-        context.push('<label class="ellipsis">',title,'</label>');
+        context.push('<span class="ellipsis sc-button-label">',title,'</span>');
       }
       else {
-        context.push('<label>', title,'</label>');  
+        context.push('<span class="sc-button-label">', title,'</span>');  
       }
     }
     else {

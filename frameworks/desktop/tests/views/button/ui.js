@@ -2,7 +2,7 @@
 // Project:   SproutCore - JavaScript Application Framework
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            portions copyright @2009 Apple Inc.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 
 /*global module test htmlbody ok equals same */
@@ -156,7 +156,7 @@ test("Check that the title is set or not and if it is in the appropriate element
 });
 
 test("Check if title,toolTip has the tool tip set", function() {
-  var viewElem=pane.view('title,toolTip').$('a');
+  var viewElem=pane.view('title,toolTip').$('div');
   ok(viewElem.defaultClass[0].title == 'Hello World is my tool tip', 'title,toolTip has the expected tool tip set.');
 });
 

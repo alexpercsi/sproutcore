@@ -2,7 +2,7 @@
 // Project:   SproutCore - JavaScript Application Framework
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            Portions ©2008-2009 Apple Inc. All rights reserved.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 
 /*global main */
@@ -138,11 +138,13 @@ SC.mixin({
     // Remove any loading div
     if (SC.removeLoading) SC.$('#loading').remove();
     
-    // Now execute main, if defined
-    if ((SC.mode === SC.APP_MODE) && (typeof main != "undefined") && (main instanceof Function) && !SC.suppressMain) main();
-    
-    // handle routes, if modules is installed.
-    if (SC.routes && SC.routes.ping) SC.routes.ping() ; 
+    // Now execute main, if defined and SC.UserDefaults is ready
+    if(SC.userDefaults.get('ready')){
+      if ((SC.mode === SC.APP_MODE) && (typeof main != "undefined") && (main instanceof Function) && !SC.suppressMain) main();
+    } 
+    else {
+      SC.userDefaults.readyCallback(window, main);
+    }
     
     // end run loop.  This is probably where a lot of bindings will trigger
     SC.RunLoop.end() ; 

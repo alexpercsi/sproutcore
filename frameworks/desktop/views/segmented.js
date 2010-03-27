@@ -43,6 +43,8 @@ SC.SegmentedView = SC.View.extend(SC.Control,
   
   classNames: ['sc-segmented-view'],
   
+  theme: 'square',
+  
   /**
     The value of the segmented view.
     
@@ -270,7 +272,9 @@ SC.SegmentedView = SC.View.extend(SC.Control,
     
     // regenerate the buttons only if the new display items differs from the
     // last cached version of it needsFirstDisplay is YES.
-    var last = this._seg_displayItems;
+    var last = this._seg_displayItems,
+      theme = this.get('theme');
+    if (theme) context.addClass(theme);
     if (firstTime || (items !== last)) {
       this._seg_displayItems = items; // save for future
       this.renderDisplayItems(context, items) ;
@@ -284,7 +288,7 @@ SC.SegmentedView = SC.View.extend(SC.Control,
         value = value.objectAt(0); isArray = NO ;
       }
       var names = {}; // reuse
-      var loc = items.length, cq = this.$('a.sc-segment'), item;
+      var loc = items.length, cq = this.$('.sc-segment'), item;
       while(--loc>=0) {
         item = items[loc];
         names.sel = isArray ? (value.indexOf(item[1])>=0) : (item[1]===value);
@@ -311,7 +315,7 @@ SC.SegmentedView = SC.View.extend(SC.Control,
         classArray;
 
     for(i=0; i< len; i++){
-      ic = context.begin('a').attr('href', 'javascript:;');
+      ic = context.begin('a').attr('role', 'button');
       item=items[i];
       title = item[0]; 
       icon = item[3];
@@ -380,18 +384,18 @@ SC.SegmentedView = SC.View.extend(SC.Control,
     if (!elem || elem===document) return -1; // nothing found
 
     // start at the target event and go upwards until we reach either the 
-    // root responder or find an anchor.sc-segment.
+    // root responder or find an element with an 'sc-segment' class.
     var root = this.$(), match = null ;
     while(!match && (elem.length>0) && (elem[0]!==root[0])) {
-      if (elem.hasClass('sc-segment') && elem.attr('tagName')==='A') {
+      if (elem.hasClass('sc-segment')) {
         match = elem;
       } else elem = elem.parent();
     }
     
     elem = root = null;
-    
+
     // if a match was found, return the index of the match in subtags
-    return (match) ? this.$('a.sc-segment').index(match) : -1;
+    return (match) ? this.$('.sc-segment').index(match) : -1;
   },
   
   keyDown: function(evt) {

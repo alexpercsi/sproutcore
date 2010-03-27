@@ -2,7 +2,7 @@
 // Project:   SproutCore - JavaScript Application Framework
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            Portions ©2008-2009 Apple Inc. All rights reserved.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 
 /** Detects the current browser type. Borrowed from jQuery + prototype */
@@ -37,7 +37,10 @@ SC.browser = (function() {
     /** non-zero if we are on a mac */
     mac: !!((/(macintosh)/).test(userAgent) || (/(mac os x)/).test(userAgent)),
     
-    language: (navigator.language || navigator.browserLanguage).split('-', 1)[0]
+    language: (navigator.language || navigator.browserLanguage).split('-', 1)[0],
+
+    /** YES if the browser supports touch events, NO otherwise */
+    touch: ('createTouch' in document)
   };
   
   // Add more SC-like descriptions...

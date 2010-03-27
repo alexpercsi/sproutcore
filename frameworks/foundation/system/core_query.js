@@ -2,7 +2,7 @@
 // Project:   SproutCore - JavaScript Application Framework
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            Portions ©2008-2009 Apple Inc. All rights reserved.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 /*globals CQ add*/
 
@@ -1895,7 +1895,7 @@ SC.mixin(SC.$.fn, /** @scope SC.CoreQuery.prototype */ {
     return this.map(function() { 
       var ret=null, guidKey = SC.viewKey, dom = this, value;
       while(!ret && dom && (dom !== document)) {
-        if (value = dom.getAttribute('id')) ret = SC.View.views[value] ;
+        if (dom.getAttribute && (value = dom.getAttribute('id'))) ret = SC.View.views[value] ;
         dom = dom.parentNode;
       }
       dom =null;

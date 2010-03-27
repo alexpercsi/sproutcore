@@ -2,7 +2,7 @@
 // Project:   SproutCore - JavaScript Application Framework
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            Portions ©2008-2009 Apple Inc. All rights reserved.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 
 /**
@@ -29,6 +29,18 @@ SC.InlineEditorDelegate = {
     inlineEditorClassName: "",
   
   
+    /**
+      Called before the inline editor is configured for display.  
+
+      You can use this method to prevent editing
+
+      @param inlineEditor {SC.InlineTextFieldView} The inline editor.
+      @returns {Boolean} YES to allow the editor to begin editing.
+    */
+    inlineEditorShouldBeginEditing: function(inlineEditor) {
+      return YES ;
+    },
+      
     /**
       Called just before the inline edit displays itself but after it has been 
       configured for display.  

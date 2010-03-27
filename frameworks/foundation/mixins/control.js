@@ -2,7 +2,7 @@
 // Project:   SproutCore - JavaScript Application Framework
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            Portions ©2008-2009 Apple Inc. All rights reserved.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 
 sc_require('mixins/string');
@@ -353,6 +353,13 @@ SC.Control = {
         this.$input().attr('disabled', disabled);
       }
     }
+  },
+  
+  updateRendererMixin: function(r) {
+    r.isSelected = this.get("isSelected");
+    r.isEnabled = this.get("isEnabled");
+    r.isActive = this.get("isActive");
+    r.controlSize = this.get("controlSize");
   },
   
   /** @private

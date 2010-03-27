@@ -2,7 +2,7 @@
 // Project:   SproutCore Costello - Property Observing Library
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            Portions ©2008-2009 Apple Inc. All rights reserved.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 
 sc_require('private/observer_set');
@@ -163,10 +163,9 @@ SC.RunLoop = SC.Object.extend(/** @scope SC.RunLoop.prototype */ {
     @returns {Boolean} YES if items were found in any queue, NO otherwise
   */
   flushApplicationQueues: function() {
-    var hadContent = NO ;
-    
-    // execute any methods in the invokeQueue.
-    var queue = this._invokeQueue;
+    var hadContent = NO,
+        // execute any methods in the invokeQueue.
+        queue = this._invokeQueue;
     if (queue && queue.targets > 0) {
       this._invokeQueue = null; // reset so that a new queue will be created
       hadContent = YES ; // needs to execute again

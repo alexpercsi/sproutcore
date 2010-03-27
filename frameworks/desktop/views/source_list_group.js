@@ -2,7 +2,7 @@
 // Project:   SproutCore - JavaScript Application Framework
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            Portions ©2008-2009 Apple Inc. All rights reserved.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 
 sc_require('mixins/collection_group');
@@ -73,9 +73,9 @@ SC.SourceListGroupView = SC.View.extend(SC.Control, SC.CollectionGroup,
   groupVisibleKey: null,
   
   render: function(context, firstTime) {
-    context.push('<a href="javascript:;" class="sc-source-list-label sc-disclosure-view sc-button-view button disclosure no-disclosure">') ;
-    context.push('<img src="'+SC.BLANK_IMAGE_URL+'" class="button" />') ;
-    context.push('<span class="label"></span></a>') ;
+    context.push('<div role="button" class="sc-source-list-label sc-disclosure-view sc-button-view button disclosure no-disclosure">',
+              '<img src="'+SC.BLANK_IMAGE_URL+'" class="button" />',
+              '<span class="label"></span></div>') ;
   },
   
   /** @private */

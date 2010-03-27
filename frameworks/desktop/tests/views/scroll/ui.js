@@ -2,7 +2,7 @@
 // Project:   SproutCore - JavaScript Application Framework
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            portions copyright @2009 Apple Inc.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 
 /*global module test ok equals same stop start */
@@ -68,9 +68,7 @@
     ok(view.get('hasVerticalScroller'), 'default scroll view wants a vertical scroller');
     ok(verticalScrollerView, 'default scroll view has a vertical scroller');
   });
-  
-  
-  
+
   test("basic2", function() {
     var view = pane.view('basic2');
     ok(view.$().hasClass('sc-scroll-view'), 'should have sc-scroll-view class');    
@@ -88,7 +86,16 @@
     ok(verticalScrollerView.$().hasClass('sc-vertical'), 'should have sc-vertical class');    
 	  var maxVScroll = view.maximumVerticalScrollOffset();    
 	  ok((maxVScroll > 0), 'Max vertical scroll should be greater than zero');
+
+    view.scrollTo(0,100);
+    SC.RunLoop.begin().end();
+    var elem = view.get('containerView').$()[0];
+    equals(elem.scrollTop, 100, 'vertical scrolling should adjust scrollTop of container view');
     
+    view.scrollTo(50,0);
+    SC.RunLoop.begin().end();
+    elem = view.get('containerView').$()[0];
+    equals(elem.scrollLeft, 50, 'horizontal scrolling should adjust scrollLeft of container view');
   });
    
   test("basic3", function() {
@@ -118,66 +125,7 @@
      ok(view.$().hasClass('disabled'), 'should have disabled class');
      ok(!view.$().hasClass('sel'), 'should not have sel class');
    });
-   
-   test("Setting the scroller to a specific value", function() {
-     var viewsc = pane.view('basic2');
-     // should be testing against the layer.scrollTop property
-     SC.RunLoop.begin();
-     viewsc.scrollTo(0, 10);
-     SC.RunLoop.end();
-     equals(viewsc.get('verticalScrollOffset'), 10, "1After setting the value to the 10 on a vertical scroller, the verticalscrollOffset property of the layer must be");
-     equals(viewsc.get('verticalScrollerView').get('layer').scrollTop, 10, "2After setting the value to the 10 on a vertical scroller, the scrollTop property of the layer must be");
-     SC.RunLoop.begin();
-     viewsc.scrollTo(0, 0);
-     SC.RunLoop.end();
-     equals(viewsc.get('verticalScrollOffset'), 0, "1After setting the value to the 0 on a vertical scroller, the verticalscrollOffset property of the layer must be");
-     equals(viewsc.get('verticalScrollerView').get('layer').scrollTop, 0, "2After setting the value to the 0 on a vertical scroller, the scrollTop property of the layer must be");
-     SC.RunLoop.begin();
-     viewsc.scrollTo(0, 100);
-     SC.RunLoop.end();
-     equals(viewsc.get('verticalScrollOffset'), 100, "1After setting the value to the 100 on a vertical scroller, the verticalscrollOffset property of the layer must be");
-     equals(viewsc.get('verticalScrollerView').get('layer').scrollTop, 100, "2After setting the value to the 100 on a vertical scroller, the scrollTop property of the layer must be");
-     SC.RunLoop.begin();
-     viewsc.scrollTo(0, -1);
-     SC.RunLoop.end();
-     equals(viewsc.get('verticalScrollOffset'), 0, "1After setting the value to the -1 on a vertical scroller, the verticalscrollOffset property of the layer must be");
-     equals(viewsc.get('verticalScrollerView').get('layer').scrollTop, 0, "2After setting the value to the -1 on a vertical scroller, the scrollTop property of the layer must be");
-     SC.RunLoop.begin();
-     viewsc.scrollTo(0, 101);
-     SC.RunLoop.end();
-     equals(viewsc.get('verticalScrollOffset'), 101, "1After setting the value to the 101 on a vertical scroller, the verticalscrollOffset property of the layer must be");
-     equals(viewsc.get('verticalScrollerView').get('layer').scrollTop, 101, "2After setting the value to the 101 on a vertical scroller, the scrollTop property of the layer must be");
 
-     // should be testing against the layer.scrollLeft property
-     viewsc.set('layoutDirection', SC.LAYOUT_HORIZONTAL);
-     SC.RunLoop.begin();
-     viewsc.scrollTo(10, 0);
-     SC.RunLoop.end();
-     equals(viewsc.get('horizontalScrollOffset'), 10, "After setting the value to the 10 on a horizontal scroller, the horizontalScrollOffset property of the layer must be");
-     equals(viewsc.get('horizontalScrollerView').get('layer').scrollLeft, 10, "After setting the value to the 10 on a horizontal scroller, the scrollLeft property of the layer must be");
-     SC.RunLoop.begin();
-     viewsc.scrollTo(0, 0);
-     SC.RunLoop.end();
-     equals(viewsc.get('horizontalScrollOffset'), 0, "After setting the value to the 0 on a horizontal scroller, the horizontalScrollOffset property of the layer must be");
-     equals(viewsc.get('horizontalScrollerView').get('layer').scrollLeft, 0, "After setting the value to the 0 on a horizontal scroller, the scrollLeft property of the layer must be");
-     SC.RunLoop.begin();
-     viewsc.scrollTo(50, 0);
-     SC.RunLoop.end();
-     equals(viewsc.get('horizontalScrollOffset'), 50, "After setting the value to the 50 on a horizontal scroller, the horizontalScrollOffset property of the layer must be");
-     equals(viewsc.get('horizontalScrollerView').get('layer').scrollLeft, 50, "After setting the value to the 50 on a horizontal scroller, the scrollLeft property of the layer must be");
-     SC.RunLoop.begin();
-     viewsc.scrollTo( - 1, 0);
-     SC.RunLoop.end();
-     equals(viewsc.get('horizontalScrollOffset'), 0, "After setting the value to the -1 on a horizontal scroller, the horizontalScrollOffset property of the layer must be");
-     equals(viewsc.get('horizontalScrollerView').get('layer').scrollLeft, 0, "After setting the value to the -1 on a horizontal scroller, the scrollLeft property of the layer must be");
-     SC.RunLoop.begin();
-     viewsc.scrollTo(101, 0);
-     SC.RunLoop.end();
-     equals(viewsc.get('horizontalScrollOffset'), 73, "After setting the value to the 101 on a horizontal scroller, the horizontalScrollOffset property of the layer must be");
-     equals(viewsc.get('horizontalScrollerView').get('layer').scrollLeft, 73, "After setting the value to the 101 on a horizontal scroller, the scrollLeft property of the layer must be");
-  });
-   
-   
    test("non-zero bottom in vertical scrollbar", function() {
       var view = pane.view('verticalScrollerBottom'); 
       equals(view.get('verticalScrollerBottom'),16, "should have verticalScrollerBottom as ");

@@ -2,7 +2,7 @@
 // Project:   SproutCore - JavaScript Application Framework
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            Portions ©2008-2009 Apple Inc. All rights reserved.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 
 // test
@@ -70,6 +70,11 @@ SC.mapDisplayNames = function(obj, level, path, seenHash, seenArray) {
     if (key === "constructor") continue ;
     if (key === "superclass") continue ;
     if (key === "document") continue ;
+
+    // Avoid TypeError's in WebKit based browsers
+    if (obj.type && obj.type === 'file') {
+      if (key === 'selectionStart' || key === 'selectionEnd') continue;
+    }
 
     val = obj[key];
     if (key === "SproutCore") key = "SC";

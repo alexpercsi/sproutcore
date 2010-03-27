@@ -1,3 +1,4 @@
+
 require('views/table_header_cell')
 SC.TableHeaderView = SC.DividerView.extend({
 	

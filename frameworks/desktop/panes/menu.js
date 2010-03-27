@@ -2,10 +2,19 @@
 // Project:   SproutCore - JavaScript Application Framework
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            Portions ©2008-2009 Apple Inc. All rights reserved.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 require('panes/picker');
 require('views/menu_item');
+
+
+/** 
+  Default heights for menu items.
+*/
+if (!SC.DEFAULT_MENU_ITEM_HEIGHT)           SC.DEFAULT_MENU_ITEM_HEIGHT           = 20;
+if (!SC.DEFAULT_MENU_ITEM_SEPARATOR_HEIGHT) SC.DEFAULT_MENU_ITEM_SEPARATOR_HEIGHT = 9;
+if (!SC.DEFAULT_MENU_HEIGHT_PADDING)        SC.DEFAULT_MENU_HEIGHT_PADDING        = 0;
+
 
 /**
   @class
@@ -84,9 +93,9 @@ SC.MenuPane = SC.PickerPane.extend(
     You can override this on a per-item basis by setting the (by default) @height@ property on your object.
 
     @type Number
-    @default 20
+    @default SC.DEFAULT_MENU_ITEM_HEIGHT
   */
-  itemHeight: 20,
+  itemHeight: SC.DEFAULT_MENU_ITEM_HEIGHT,
 
   /**
     The default height for separator menu items.
@@ -95,9 +104,9 @@ SC.MenuPane = SC.PickerPane.extend(
     @height@ property on your object.
 
     @type Number
-    @default 9
+    @default SC.DEFAULT_MENU_ITEM_SEPARATOR_HEIGHT
   */
-  itemSeparatorHeight: 9,
+  itemSeparatorHeight: SC.DEFAULT_MENU_ITEM_SEPARATOR_HEIGHT,
 
   /**
     The height of the menu pane.  This is updated every time menuItemViews
@@ -116,9 +125,9 @@ SC.MenuPane = SC.PickerPane.extend(
     bottom is created.
 
     @type Number
-    @default 0
+    @default SC.DEFAULT_MENU_HEIGHT_PADDING
   */
-  menuHeightPadding: 0,
+  menuHeightPadding: SC.DEFAULT_MENU_HEIGHT_PADDING,
 
   /**
     The last menu item to be selected by the user.
@@ -183,13 +192,18 @@ SC.MenuPane = SC.PickerPane.extend(
     anchor itself to the view, and intelligently reposition itself if the
     contents of the menu exceed the available space.
 
-    @param  SC.View|Rect  anchorViewOrElement the view or element to which the menu
-    should anchor. May also be specified as a rect relative to the viewport.
-    @param preferMatrix The prefer matrix used to position the
-    pane. (optional)
+    @param SC.View anchorViewOrElement the view or element to which the menu
+    should anchor.
+    @param preferMatrix The prefer matrix used to position the pane.
+    (optional)
   */
   popup: function(anchorViewOrElement, preferMatrix) {
-    var anchor = anchorViewOrElement.isView ? anchorViewOrElement.get('layer') : anchorViewOrElement;
+    var anchor;
+
+    if (anchorViewOrElement) {
+      anchor = anchorViewOrElement.isView ? anchorViewOrElement.get('layer') : anchorViewOrElement;
+    }
+
     this.beginPropertyChanges();
     this.set('anchorElement',anchor) ;
     this.set('anchor',anchorViewOrElement);
@@ -199,6 +213,11 @@ SC.MenuPane = SC.PickerPane.extend(
     this.endPropertyChanges();
     this.adjust('height', this.get('menuHeight'));
     this.positionPane();
+
+    // Because panes themselves do not receive key events, we need to set the
+    // pane's defaultResponder to itself. This way key events can be
+    // interpreted in keyUp.
+    this.set('defaultResponder', this);
     this.append();
   },
 
@@ -342,6 +361,21 @@ SC.MenuPane = SC.PickerPane.extend(
   itemKeyEquivalentKey: 'keyEquivalent',
 
   /**
+    The name of the property that determines whether menu flash should be
+    disabled.
+
+    When you click on a menu item, it will flash several times to indicate
+    selection to the user. Some browsers block windows from opening outside of
+    a mouse event, so you may wish to disable menu flashing if the action of
+    the menu item should open a new window.
+
+    @type String
+    @default "disableMenuFlash"
+    @commonTask Menu Item Properties
+  */
+  itemDisableMenuFlashKey: 'disableMenuFlash',
+
+  /**
     The array of keys used by SC.MenuItemView when inspecting your menu items
     for display properties.
 
@@ -380,21 +414,6 @@ SC.MenuPane = SC.PickerPane.extend(
   // ..........................................................
   // INTERNAL METHODS
   //
-
-  /**
-    Because panes themselves do not receive key events, we need to set the
-    pane's defaultResponder to itself. This way key events can be interpreted
-    in keyUp.
-
-    @private
-    @returns {SC.MenuPane} receiver
-  */
-  init: function() {
-    var ret = sc_super();
-    this.set('defaultResponder', this);
-
-    return ret;
-  },
 
   /**
     Creates the child scroll view, and sets its contentView to a new
@@ -474,10 +493,22 @@ SC.MenuPane = SC.PickerPane.extend(
       }
     }
 
-
     this.set('menuHeight', menuHeight+menuHeightPadding);
     return views;
   }.property('displayItems').cacheable(),
+
+  /**
+    Returns the menu item view for the content object at the specified index.
+
+    @param {Number} idx the item index
+    @returns {SC.MenuItemView} instantiated view
+  */
+  menuItemViewForContentIndex: function(idx) {
+    var menuItemViews = this.get('menuItemViews');
+
+    if (!menuItemViews) return undefined;
+    return menuItemViews.objectAt(idx);
+  },
 
   /**
     An associative array of the shortcut keys. The key is the shortcut in the
@@ -499,10 +530,10 @@ SC.MenuPane = SC.PickerPane.extend(
   rootMenu: function() {
     if (this.get('isSubMenu')) return this.getPath('parentMenu.rootMenu');
     return this;
-  }.property().cacheable(),
+  }.property('isSubMenu').cacheable(),
 
   /**
-    If the window resizes, we need to make sure that the height of the pane expands to fill the viewport as much as possible.
+    Close the menu if the user resizes the window.
 
     @private
   */
@@ -557,7 +588,7 @@ SC.MenuPane = SC.PickerPane.extend(
 
       itemType = SC.typeOf(item);
       if (itemType === SC.T_STRING) {
-        item = SC.Object.create({ title: item.humanize().titleize(),
+        item = SC.Object.create({ title: item,
                                   value: item,
                                   isEnabled: YES
                                });
@@ -628,16 +659,6 @@ SC.MenuPane = SC.PickerPane.extend(
     return ret;
   },
 
-  mouseEntered: function() {
-    this.becomeKeyPane();
-    this.set('mouseHasEntered', YES);
-  },
-
-  mouseExited: function() {
-    this.set('currentMenuItem', null);
-    this.set('mouseHasEntered', NO);
-  },
-
   currentMenuItem: function(key, value) {
     if (value !== undefined) {
       if (this._currentMenuItem !== null) {
@@ -694,6 +715,7 @@ SC.MenuPane = SC.PickerPane.extend(
 
   /** @private */
   mouseDown: function(evt) {
+    this.modalPaneDidClick();
     return YES ;
   },
 

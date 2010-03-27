@@ -2,7 +2,7 @@
 // Project:   SproutCore Test Runner
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            Portions ©2008-2009 Apple Inc. All rights reserved.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 /*globals TestRunner */
 
@@ -224,7 +224,7 @@ TestRunner.mainPage = SC.Page.design({
     
     webView: SC.WebView.design({
       layout: { top: 33, left: 2, right: 0, bottom: 0 },
-      valueBinding: "TestRunner.detailController.uncachedUrl"
+      valueBinding: SC.Binding.oneWay("TestRunner.detailController.uncachedUrl")
     })
   })  
 

@@ -158,7 +158,7 @@ SC.RootResponder = SC.RootResponder.extend(
   
   setup: function() {
     // handle basic events        
-    this.listenFor('keydown keyup mousedown mouseup click dblclick mouseout mouseover mousemove selectstart contextmenu'.w(), document)
+    this.listenFor('keydown keyup beforedeactivate mousedown mouseup click dblclick mouseout mouseover mousemove selectstart contextmenu'.w(), document)
         .listenFor('resize focus blur'.w(), window);
 
     // handle special case for keypress- you can't use normal listener to block the backspace key on Mozilla
@@ -495,14 +495,42 @@ SC.RootResponder = SC.RootResponder.extend(
     return this.sendEvent('keyUp', evt) ? evt.hasCustomEventHandling:YES;
   },
   
+  /**
+    We'll listen for the 'beforedeactivate' event in IE because the default
+    behavior is for the active element to be deactivated whenever another
+    element is clicked, regardless of whether that element belongs to a view
+    that has 'acceptsFirstResponder' set to NO.
+    
+    If we detect that the active element is “losing out” to an element that
+    belongs to a view that does not accept keyPane or firstResponder, then
+    cancel the event.  In this way, clients can create elements that behave as
+    if they're part of a single user interface element — for example, a text
+    field with a drop-down menu.  (Without this, clicking on a menu item
+    element would cause the text field to lose focus!)
+  */
+  beforedeactivate: function(evt) {
+    var toElement = evt.toElement;
+    if (toElement) {
+      var view = SC.$(toElement).view()[0];
+      if (view  &&  !view.get('acceptsKeyPane')  &&  !view.get('acceptsFirstResponder')) return NO;
+    }
+
+    return YES;
+  },
+  
   mousedown: function(evt) {
     try {
       // make sure the window gets focus no matter what.  FF is inconsistant 
       // about this. You have to regain focus on the window for the key events
       // to get triggered. This happens when we don't let the browser trigger
       // the default action and we have something in the app like an iframe.
-      window.focus();
-      this.focus();
+      //
+      // However, doing this causes all sorts of bogus activate/deactivate
+      // events in Internet Explorer
+      if (SC.browser.mozilla) {
+        window.focus();
+        this.focus();
+      }
 
       // First, save the click count. The click count resets if the mouse down
       // event occurs more than 200 ms later than the mouse up event or more
@@ -522,6 +550,7 @@ SC.RootResponder = SC.RootResponder.extend(
       this._lastMouseDownY = evt.clientY ;
 
       var fr, view = this.targetViewForEvent(evt) ;
+
       // InlineTextField needs to loose firstResponder whenever you click outside
       // the view. This is a special case as textfields are not supposed to loose 
       // focus unless you click on a list, another textfield or an special
@@ -554,14 +583,15 @@ SC.RootResponder = SC.RootResponder.extend(
     sent.
   */
   mouseup: function(evt) {
-
+    this.targetViewForEvent(evt);
     try {
       if (this._drag) {
         this._drag.tryToPerform('mouseUp', evt) ;
         this._drag = null ;
       }
       
-      var handler = null, view = this._mouseDownView ;
+      var handler = null, view = this._mouseDownView,
+          targetView = this.targetViewForEvent(evt);
       this._lastMouseUpAt = Date.now() ;
       
       // record click count.
@@ -585,16 +615,15 @@ SC.RootResponder = SC.RootResponder.extend(
       
       // try whoever's under the mouse if we haven't handle the mouse up yet
       if (!handler) {
-        view = this.targetViewForEvent(evt) ;
       
         // try doubleClick
         if (this._clickCount === 2) {
-          handler = this.sendEvent('doubleClick', evt, view);
+          handler = this.sendEvent('doubleClick', evt, targetView);
         }
       
         // try singleClick
         if (!handler) {
-          handler = this.sendEvent('click', evt, view) ;
+          handler = this.sendEvent('click', evt, targetView) ;
         }
       }
       

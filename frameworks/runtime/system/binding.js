@@ -2,7 +2,7 @@
 // Project:   SproutCore Costello - Property Observing Library
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            Portions ©2008-2009 Apple Inc. All rights reserved.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 
 sc_require('system/object') ;
@@ -893,6 +893,60 @@ SC.Binding = {
       if (t === SC.T_ERROR) return v ;
       return (t == SC.T_ARRAY) ? (v.length > 0) : (v === '') ? NO : !!v ;
     }) ;
+  },
+
+  /**
+    Adds a transform that forwards the logical 'AND' of values at 'pathA' and
+    'pathB' whenever either source changes.  Note that the transform acts strictly
+    as a one-way binding, working only in the direction
+    
+      'pathA' AND 'pathB' --> value  (value returned is the result of ('pathA' && 'pathB'))
+
+    Usage example where a delete button's 'isEnabled' value is determined by whether
+    something is selected in a list and whether the current user is allowed to delete:
+    
+      deleteButton: SC.ButtonView.design({
+        isEnabledBinding: SC.Binding.logicalAnd('MyApp.itemsController.hasSelection', 'MyApp.userController.canDelete')
+      })
+
+  */
+  and: function(pathA, pathB) {
+
+    // create an object to do the logical computation
+    var gate = SC.Object.create({
+      valueABinding: pathA,
+      valueBBinding: pathB,
+
+      and: function() {
+        return (this.get('valueA') && this.get('valueB'));
+      }.property('valueA', 'valueB').cacheable()
+    });
+
+    // add a transform that depends on the result of that computation.
+    return this.from('and', gate).oneWay();
+  },
+
+  /**
+    Adds a transform that forwards the 'OR' of values at 'pathA' and
+    'pathB' whenever either source changes.  Note that the transform acts strictly
+    as a one-way binding, working only in the direction
+
+      'pathA' AND 'pathB' --> value  (value returned is the result of ('pathA' || 'pathB'))
+
+  */
+  or: function(pathA, pathB) {
+    
+    // create an object to the logical computation
+    var gate = SC.Object.create({
+      valueABinding: pathA,
+      valueBBinding: pathB,
+      
+      or: function() {
+        return (this.get('valueA') || this.get('valueB'));
+      }.property('valueA', 'valueB').cacheable()
+    });
+    
+    return this.from('or', gate).oneWay();
   },
   
   /**

@@ -2,7 +2,7 @@
 // Project:   SproutCore - JavaScript Application Framework
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            Portions ©2008-2009 Apple Inc. All rights reserved.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 
 sc_require('mixins/collection_view_delegate') ;
@@ -434,7 +434,7 @@ baseView: SC.View.extend({
     specified index.  This layout will be applied to the view just before it
     is rendered.
     
-    @param {Number} contentIndex the index of content beind rendered by
+    @param {Number} contentIndex the index of content being rendered by
       itemView
     @returns {Hash} a view layout
   */
@@ -584,9 +584,6 @@ baseView: SC.View.extend({
   }.property('delegate', 'content').cacheable(),
   
 
-  
-
-
 
   columnViews: function() {
     var containerView = this.get('containerView') || this
@@ -600,7 +597,16 @@ baseView: SC.View.extend({
   }.observes('columnViews'),
   
 
-
+  
+  /** @private
+    A cache of the contentGroupIndexes value returned by the delegate.  This
+    is frequently accessed and usually involves creating an SC.IndexSet
+    object, so it's worthwhile to cache.
+  */
+  _contentGroupIndexes: function() {
+    return this.get('contentDelegate').contentGroupIndexes(this, this.get('content'));
+  }.property('contentDelegate', 'content').cacheable(),
+  
   // ..........................................................
   // CONTENT CHANGES
   // 
@@ -734,7 +740,7 @@ baseView: SC.View.extend({
     var content = this.get('content'),
         lfunc   = this.contentLengthDidChange ;
 
-    if (content === this._content) return this; // nothing to do
+    if (content === this._content) return; // nothing to do
 
     // cleanup old content
     this.removeContentRangeObserver();
@@ -789,7 +795,10 @@ baseView: SC.View.extend({
       if (invalid) invalid.add(indexes);
       else invalid = this._invalidIndexes = indexes.clone();
 
-    } else this._invalidIndexes = YES ; // force a total reload
+    }
+    else {
+      this._invalidIndexes = YES ; // force a total reload
+    }
     
     if (this.get('isVisibleInWindow')) this.invokeOnce(this.reloadIfNeeded);
     
@@ -821,7 +830,7 @@ baseView: SC.View.extend({
     this._invalidIndexes = NO ;
 
     var content = this.get('content'),
-        len     = content ? content.get('length'): 0,
+        i, len, existing,
         layout  = this.computeLayout(),
         bench   = SC.BENCHMARK_RELOAD,
         del  = this.get('contentDelegate'),
@@ -829,6 +838,7 @@ baseView: SC.View.extend({
 				columns = this.get('columns') || NO,
 				containerView = this.get('containerView') || this,
         views, idx, view, layer, itemViews, existing, context;
+
 
     // if the set is defined but it contains the entire nowShowing range, just
     // replace
@@ -848,6 +858,7 @@ baseView: SC.View.extend({
 		// this.$().css('display', 'none')
     	// if (layout) this.adjust(layout);
 			// return
+
       if (bench) {
         bench=("%@#reloadIfNeeded (Partial)"+ Math.random(10000) + " " + invalid.get('length')).fmt(this)
 // + Math.random(10000)
@@ -871,11 +882,11 @@ baseView: SC.View.extend({
 			// this.get('layer').appendChild(this.fragment)
 			// this.fragment = null
 
+
       if (bench) SC.Benchmark.end(bench);
 		// this.$().css('display', 'block')
     // if set is NOT defined, replace entire content with nowShowing
     } else {
-
       if (bench) {
         bench=("%@#reloadIfNeeded (Full)").fmt(this)
         SC.Benchmark.start(bench);
@@ -884,6 +895,7 @@ baseView: SC.View.extend({
       containerView.beginPropertyChanges();
       containerView.destroyLayer().removeAllChildren();
       // containerView.set('childViews', views); // quick swap
+
       containerView.replaceLayer();
       containerView.endPropertyChanges();
 
@@ -1002,6 +1014,8 @@ baseView: SC.View.extend({
   _TMP_ATTRS: {},
   _COLLECTION_CLASS_NAMES: 'sc-collection-item'.w(),
   _GROUP_COLLECTION_CLASS_NAMES: 'sc-collection-item sc-group-item'.w(),
+  _VIEW_POOL: null,
+  _GROUP_VIEW_POOL: null,
   
   /**
     Returns the item view for the content object at the specified index. Call
@@ -1026,6 +1040,7 @@ baseView: SC.View.extend({
     @param {Boolean} rebuild internal use only
     @returns {SC.View} instantiated view
   */
+
   // viewForRowAndColumn: function(idx, rebuild, containerView) {
   viewForRowAndColumn: function(row, column, containerView, rebuild) {
 		var factory, E, view, attrs
@@ -1055,6 +1070,30 @@ baseView: SC.View.extend({
       ret.set('layout', this.layoutForCell(row, column))
 			itemViews[row][SC.none(column) ? "base" : column] = ret
     }
+    
+    
+    // Collect other state that we'll need whether we're re-using a previous
+    // view or creating a new view.
+    parentView        = this.get('containerView') || this;
+    layerId           = this.layerIdFor(idx);
+    isEnabled         = del.contentIndexIsEnabled(this, content, idx);
+    isSelected        = del.contentIndexIsSelected(this, content, idx);
+    outlineLevel      = del.contentIndexOutlineLevel(this, content, idx);
+    disclosureState   = del.contentIndexDisclosureState(this, content, idx);
+    isVisibleInWindow = this.isVisibleInWindow;
+    layout            = this.layoutForContentIndex(idx);    
+    
+    
+    // If the view is reusable and there is an appropriate view inside the
+    // pool, simply reuse it to avoid having to create a new view.
+    if (E  &&  E.isReusableInCollections) {
+      // Lazily create the view pool.
+      viewPool = this[viewPoolKey];
+      if (!viewPool) viewPool = this[viewPoolKey] = [];
+      
+      // Is there a view we can re-use?
+      if (viewPool.length > 0) {
+        ret = viewPool.pop();
 
     return ret
   },
@@ -1118,6 +1157,7 @@ baseView: SC.View.extend({
       // } else {
       //   delete attrs.layout ;
       // }
+
 
   },
 
@@ -1363,7 +1403,7 @@ baseView: SC.View.extend({
         last = this._cv_selection,
         func = this._cv_selectionContentDidChange;
         
-    if (sel === last) return this; // nothing to do
+    if (sel === last) return; // nothing to do
     if (last) last.removeObserver('[]', this, func);
     if (sel) sel.addObserver('[]', this, func);
     
@@ -1485,8 +1525,7 @@ baseView: SC.View.extend({
 
     var content = this.get('content'),
         del     = this.get('selectionDelegate'),
-        cdel    = this.get('contentDelegate'),
-        groupIndexes = cdel.contentGroupIndexes(this, content),
+        groupIndexes = this.get('_contentGroupIndexes'),
         sel;
         
     if(!this.get('isSelectable')) return this;
@@ -1586,8 +1625,7 @@ baseView: SC.View.extend({
         range   = SC.IndexSet.create(), 
         content = this.get('content'),
         del     = this.get('selectionDelegate'),
-        cdel    = this.get('contentDelegate'),
-        groupIndexes = cdel.contentGroupIndexes(this, content),
+        groupIndexes = this.get('_contentGroupIndexes'),
         ret, sel ;
 
     // fast path
@@ -1629,8 +1667,7 @@ baseView: SC.View.extend({
     var range   = SC.IndexSet.create(), 
         content = this.get('content'),
         del     = this.get('selectionDelegate'),
-        cdel    = this.get('contentDelegate'),
-        groupIndexes = cdel.contentGroupIndexes(this, content),
+        groupIndexes = this.get('_contentGroupIndexes'),
         ret ;
 
     if (SC.none(proposedIndex)) proposedIndex = -1;
@@ -2277,6 +2314,46 @@ baseView: SC.View.extend({
     return YES ;
   },
   
+  // ..........................................................
+  // TOUCH EVENTS
+  //
+  touchStart: function(touch, evt) {
+    // When the user presses the mouse down, we don't do much just yet.
+    // Instead, we just need to save a bunch of state about the mouse down
+    // so we can choose the right thing to do later.
+
+    // Toggle selection only triggers on mouse up.  Do nothing.
+    if (this.get('useToggleSelection')) return true;
+
+    // find the actual view the mouse was pressed down on.  This will call
+    // hitTest() on item views so they can implement non-square detection
+    // modes. -- once we have an item view, get its content object as well.
+    var itemView      = this.itemViewForEvent(touch),
+        content       = this.get('content'),
+        contentIndex  = itemView ? itemView.get('contentIndex') : -1,
+        info, anchor ;
+
+    // become first responder if possible.
+    this.becomeFirstResponder() ;
+    this.select(contentIndex, NO);
+    return YES;
+  },
+
+  touchesDragged: function(evt, touches) {
+    touches.forEach(function(t){
+      if (Math.abs(t.pageY - t.startY) > 4) t.makeTouchResponder(t.nextTouchResponder);
+    });
+    this.select(null, NO);
+  },
+  
+  touchEnd: function(touch) {
+    
+  },
+
+  touchCancelled: function(evt) {
+    this.select(null, NO);
+  },
+
   /** @private */
   _findSelectionExtendedByShift: function(sel, contentIndex) {
     
@@ -2386,8 +2463,7 @@ baseView: SC.View.extend({
         content = this.get('content'),
         sel     = this.get('selection'),
         info    = this.mouseDownInfo,
-        cdel    = this.get('contentDelegate'),
-        groupIndexes = cdel.contentGroupIndexes(this, content),
+        groupIndexes = this.get('_contentGroupIndexes'),
         dragContent, dragDataTypes, dragView;
     
     // if the mouse down event was cleared, there is nothing to do; return.

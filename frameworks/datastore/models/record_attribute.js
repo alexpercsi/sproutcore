@@ -2,7 +2,7 @@
 // Project:   SproutCore - JavaScript Application Framework
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            Portions ©2008-2009 Apple Inc. All rights reserved.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 
 sc_require('models/record');
@@ -216,8 +216,7 @@ SC.RecordAttribute = SC.Object.extend(
   call: function(record, key, value) {
     var attrKey = this.get('key') || key, nvalue;
     
-    if (value !== undefined) {
-
+    if ((value !== undefined) && this.get('isEditable')) {
       // careful: don't overwrite value here.  we want the return value to 
       // cache.
       nvalue = this.fromType(record, key, value) ; // convert to attribute.

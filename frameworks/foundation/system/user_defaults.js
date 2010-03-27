@@ -2,7 +2,7 @@
 // Project:   SproutCore - JavaScript Application Framework
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            Portions ©2008-2009 Apple Inc. All rights reserved.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 /*globals ie7userdata openDatabase*/
 /**
@@ -69,7 +69,6 @@ SC.UserDefaults = SC.Object.extend(/** @scope SC.UserDefaults.prototype */ {
   */
   readDefault: function(keyName) {
     var ret= undefined, userKeyName, localStorage, key, del, storageSafari3;
-    
     // namespace keyname
     keyName = this._normalizeKeyName(keyName);
     userKeyName = this._userKeyName(keyName);
@@ -80,19 +79,19 @@ SC.UserDefaults = SC.Object.extend(/** @scope SC.UserDefaults.prototype */ {
     // attempt to read from localStorage
     
     if(SC.browser.msie=="7.0"){
-       localStorage=document.body;
-       try{
-         localStorage.load("SC.UserDefaults");
-       }catch(e){
-         console.err("Couldn't load userDefaults in IE7: "+e.description);
-       }
+      localStorage=document.body;
+      try{
+        localStorage.load("SC.UserDefaults");
+      }catch(e){
+        console.err("Couldn't load userDefaults in IE7: "+e.description);
+      }
     }else if(this.HTML5DB_noLocalStorage){
-         storageSafari3 = this._safari3DB;
+      storageSafari3 = this._safari3DB;
     }else{
-       localStorage = window.localStorage ;
-       if (!localStorage && window.globalStorage) {
-         localStorage = window.globalStorage[window.location.hostname];
-       }
+      localStorage = window.localStorage ;
+      if (!localStorage && window.globalStorage) {
+        localStorage = window.globalStorage[window.location.hostname];
+      }
     }
     if (localStorage || storageSafari3) {
       key=["SC.UserDefaults",userKeyName].join('-at-');
@@ -100,6 +99,7 @@ SC.UserDefaults = SC.Object.extend(/** @scope SC.UserDefaults.prototype */ {
         ret=localStorage.getAttribute(key.replace(/\W/gi, ''));        
       }else if(storageSafari3){
         ret = this.dataHash[key];
+        
       }else{
         ret = localStorage[key];
       }
@@ -303,6 +303,10 @@ SC.UserDefaults = SC.Object.extend(/** @scope SC.UserDefaults.prototype */ {
   
   init: function() {
     sc_super();
+    if(SC.userDefaults && SC.userDefaults.get('dataHash')){
+      var dh = SC.userDefaults.get('dataHash');
+      if (dh) this.dataHash=SC.userDefaults.get('dataHash')
+    }
     this._scud_userDomain = this.get('userDomain');
     this._scud_appDomain  = this.get('appDomain');
     if(SC.browser.msie=="7.0"){
@@ -347,6 +351,7 @@ SC.UserDefaults = SC.Object.extend(/** @scope SC.UserDefaults.prototype */ {
         );
         myDB.transaction(
           function (transaction) {
+            
             transaction.parent = obj;
             transaction.executeSql('SELECT * from SCLocalStorage;', 
                 [], function(transaction, results){
@@ -356,7 +361,7 @@ SC.UserDefaults = SC.Object.extend(/** @scope SC.UserDefaults.prototype */ {
                     hash[row['key']]=row['value'];
                   }
                   transaction.parent.dataHash = hash;
-                  SC.userDefaults.set('ready', YES);
+                  SC.run(function() { SC.userDefaults.set('ready', YES); });
                 }, obj.killTransaction);
           }
         );

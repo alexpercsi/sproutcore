@@ -2,7 +2,7 @@
 // Project:   SproutCore - JavaScript Application Framework
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            Portions ©2008-2009 Apple Inc. All rights reserved.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 
 sc_require('system/core_query') ;
@@ -28,11 +28,13 @@ sc_require('system/core_query') ;
   @since SproutCore 1.0
 */
 SC.Event = function(originalEvent) { 
-
+  var idx, len;
   // copy properties from original event, if passed in.
   if (originalEvent) {
     this.originalEvent = originalEvent ;
-    var props = SC.Event._props, len = props.length, idx = len , key;
+    var props = SC.Event._props, key;
+    len = props.length;
+    idx = len;
     while(--idx >= 0) {
       key = props[idx] ;
       this[key] = originalEvent[key] ;
@@ -77,14 +79,14 @@ SC.Event = function(originalEvent) {
   
   // normalize wheelDelta, wheelDeltaX, & wheelDeltaY for Safari
   if (SC.browser.safari && originalEvent.wheelDelta!==undefined) {
-    this.wheelDelta = this.wheelDeltaY = 0-(originalEvent.wheelDeltaY || originalEvent.wheelDelta);
-    this.wheelDeltaX = 0-(originalEvent.wheelDeltaX||0) ;
-    
+    this.wheelDelta = 0-(originalEvent.wheelDeltaY || originalEvent.wheelDeltaX);
+    this.wheelDeltaY = 0-(originalEvent.wheelDeltaY||0);
+    this.wheelDeltaX = 0-(originalEvent.wheelDeltaX||0);
   // normalize wheelDelta for Firefox
   // note that we multiple the delta on FF to make it's acceleration more 
   // natural.
   } else if (!SC.none(originalEvent.detail)) {
-    var detail = Math.floor(originalEvent.detail * 2);
+    var detail = Math.floor(originalEvent.detail * 40);
     if (originalEvent.axis && (originalEvent.axis === originalEvent.HORIZONTAL_AXIS)) {
       this.wheelDeltaX = detail;
       this.wheelDeltaY = this.wheelDelta = 0;
@@ -99,6 +101,48 @@ SC.Event = function(originalEvent) {
     this.wheelDeltaX = 0 ;
   }
   
+  // translate X/Y coordinates of touch into a real target
+  if (SC.browser.touch && this.type == "touchstart") {
+    var touches = this.changedTouches, target, elem;
+    if (touches && touches.length > 0) {
+      var firstTouch = touches[0];
+      this.pageX = firstTouch.pageX;
+      this.pageY = firstTouch.pageY;
+    }
+
+    target = elem = this.target;
+
+    if (target === SC.RootResponder.responder._touchInterceptElement) {
+      elem.style.display = 'none';
+      // document.body.removeChild(elem);
+      
+      // adjust target for whole event
+      target = document.elementFromPoint(this.pageX, this.pageY);
+      this.target = target;
+      
+      // adjust target for all touches in event
+      var touch;
+      len = this.touches.length;
+      for (idx = 0; idx < len; idx++) {
+        touch = this.touches[idx];
+        
+        // use targetNode because apparently "target" is not modifiable
+        touch.targetNode = document.elementFromPoint(touch.pageX, touch.pageY);
+      }
+      
+      // and the changed touches
+      len = this.changedTouches.length;
+      for (idx = 0; idx < len; idx++) {
+        touch = this.changedTouches[idx];
+        touch.targetNode = document.elementFromPoint(touch.pageX, touch.pageY);
+      }
+      
+      // document.body.appendChild(elem);
+      elem.style.display = 'block';
+    }
+    target = elem = null; //cleanup
+  }
+
   return this; 
 } ;
 
@@ -711,6 +755,21 @@ SC.Event.prototype = {
     Set to YES if you have called either preventDefault() or stopPropagation().  This allows a generic event handler to notice if you want to provide detailed control over how the browser handles the real event.
   */
   hasCustomEventHandling: NO,
+  
+  /**
+    Returns the touches owned by the supplied view.
+  */
+  touchesForView: function(view) {
+    if (this.touchContext) return this.touchContext.touchesForView(view);
+  },
+  
+  /**
+    Returns average data--x, y, and d (distance)--for the touches owned by the supplied view.
+  */
+  averagedTouchesForView: function(view) {
+    if (this.touchContext) return this.touchContext.averagedTouchesForView(view);
+    return null;
+  },
   
   /**
     Indicates that you want to allow the normal default behavior.  Sets

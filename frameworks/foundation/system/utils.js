@@ -2,7 +2,7 @@
 // Project:   SproutCore - JavaScript Application Framework
 // Copyright: ©2006-2009 Sprout Systems, Inc. and contributors.
 //            Portions ©2008-2009 Apple Inc. All rights reserved.
-// License:   Licened under MIT license (see license.js)
+// License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 
 // These are helpful utility functions for calculating range and rect values
@@ -211,7 +211,7 @@ SC.mixin( /** @scope SC */ {
     @returns {String} A string representation of the rect.
   */
   stringFromRect: function(r) {
-    return '{'+r.x+', '+r.y+', '+r.width+', '+r.height+'}';
+    return '{x:'+r.x+', y:'+r.y+', width:'+r.width+', height:'+r.height+'}';
   },
   
   /**
