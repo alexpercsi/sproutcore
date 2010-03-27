@@ -7,14 +7,13 @@
 
 sc_require('views/list');
 
-SC.DataView = SC.ListView.extend({
+SC.ListView = SC.ListView.extend({
 	
 	// rowHeight: 6,
 	
 	childViews: ["containerView"],
 	
 	containerView: SC.View,
-	
 	
 	conformCells: function() {
 		var nowShowing = this.get('nowShowing'),
@@ -67,21 +66,31 @@ SC.DataView = SC.ListView.extend({
 	},
 	
 	createCell: function(idx) {
-		var cell = document.createElement('div');
-		(this.get('containerView') || this).get('layer').appendChild(cell)
-		cell.id = "row-" + idx
-		SC.$(cell).html("<label></label>")
-		SC.$(cell).css("position", "absolute")
-		return cell
+		var renderer = this.cellRenderer,
+			context = SC.RenderContext("div").id("row-" + idx),
+			element
+		
+		if(!renderer)
+			renderer = this.cellRenderer = SC.EmptyTheme.renderers.listItem()
+
+		renderer.render(context)
+		element = context.element();
+		(this.get('containerView') || this).get('layer').appendChild(element)
+		return element
 	},
 
 	reloadCell: function(cell, row) {
 		var cells = this.get('cells'),
-			cell = cells.objectAt(cell)
-
+			cell = cells.objectAt(cell),
+			renderer = this.cellRenderer,
+			content = this.get('content'),
+			item = content.objectAt(row)
+			
+		renderer.attachLayer(cell)
+		// renderer.attr('title', "row " + row)
+		renderer.attr('content', item)
+		renderer.update()
 		SC.$(cell).css(this.layoutForContentIndex(row))
-		// cell.innerHTML = "row " + row
-		cell.childNodes[0].innerText = "row " + row
 		return cell
 	},
 
@@ -103,7 +112,7 @@ SC.DataView = SC.ListView.extend({
 			
 		this.conformCells()
 
-		bench=("%@ dataview reload").fmt(this)
+		bench=("%@ dataview reload" + Math.random(10000)).fmt(this)
 		SC.Benchmark.start(bench);
 
 		nowShowing.forEach(function(idx, i) {

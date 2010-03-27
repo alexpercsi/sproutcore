@@ -873,8 +873,7 @@ baseView: SC.View.extend({
     // if an index set, just update indexes
     if (invalid.isIndexSet) {
       if (bench) {
-        bench=("%@#reloadIfNeeded (Partial)"+ Math.random(10000) + " " + invalid.get('length')).fmt(this)
-// + Math.random(10000)
+        bench=("%@#reloadIfNeeded (Partial)" + Math.random(10000) + " " + invalid.get('length')).fmt(this)
         SC.Benchmark.start(bench);
       }
             
@@ -961,7 +960,6 @@ baseView: SC.View.extend({
       
 
       if (bench) SC.Benchmark.end(bench);
-		// this.$().css('display', 'block')
     // if set is NOT defined, replace entire content with nowShowing
     } else {
       if (bench) {

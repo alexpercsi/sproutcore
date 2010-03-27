@@ -62,6 +62,7 @@ SC.EmptyTheme.renderers.Title = SC.Renderer.extend({
     imgTitle = image + title;
     
     elem = this.$('label');  
+
     if ( (htmlNode = elem[0])){
       if(needsTitle) { 
         if(this.needsEllipsis){
