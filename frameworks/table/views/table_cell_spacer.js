@@ -1,4 +1,5 @@
 SC.TableCellSpacerView = SC.View.extend(SC.Control, {
+	useFactory: YES,
   classNames: ['endash-table-cell', 'endash-table-cell-spacer'],
 
   render: function(context, firstTime) {
