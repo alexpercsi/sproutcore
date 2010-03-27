@@ -71,7 +71,7 @@ SC.EmptyTheme.renderers.ListItem = SC.Renderer.extend({
       controlSize: this.controlSize
     });
     this._titleRenderer.attr({
-      title: this.content.get('title'),
+      title: this.content.get('subject'),
       icon: this.icon,
       needsEllipsis: this.needsEllipsis,
       escapeHTML: this.escapeHTML
