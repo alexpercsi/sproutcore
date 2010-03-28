@@ -9,6 +9,12 @@ sc_require('views/list');
 
 SC.DataView = SC.ListView.extend({
 	
+	init: function() {
+		sc_super()
+		this.cellRenderer = this.get('theme').listItem({contentDelegate: this})
+		return this
+	},
+	
 	addCell: function() {
 		var cells = this.get('cells'),
 			hiddenCells = this.get('hiddenCells'),
@@ -33,30 +39,25 @@ SC.DataView = SC.ListView.extend({
 	_createCell: function() {
 		var renderer = this.cellRenderer,
 			idx = this.get('cells').get('length'),
-			context = SC.RenderContext("div").id(this.layerIdFor(idx)),
+			context = SC.RenderContext("div").css("position", "absolute").id(this.layerIdFor(idx)),
+			containerView = this.get('containerView') || this,
 			element
 		
-		if(!renderer)
-			renderer = this.cellRenderer = this.get('theme').listItem({contentDelegate: this})
-
-		renderer.render(context)
+		renderer.render(context);
 		element = context.element();
-		(this.get('containerView') || this).get('layer').appendChild(element)
-		SC.$(element).css("position", "absolute")
+		containerView.get('layer').appendChild(element)
 		return element
 	},
 	
-	reloadCell: function(cell, attrs) {
+	reloadCell: function(cellIdx, attrs) {
 		var renderer = this.cellRenderer,
 			cells = this.get('cells'),
-			row = this._rowsHash[cell],
-			cell = cells.objectAt(cell)
+			cell = cells.objectAt(cellIdx)
 
 		renderer.attachLayer(cell)
 		renderer.attr(attrs)
 		renderer.update()
-		SC.$(cell).css(this.layoutForContentIndex(row))
-		return cell
+		SC.$(cell).css(this.layoutForContentIndex(this.contentIndexForCell(cellIdx)))
 	},
 
   reloadIfNeeded: function() {
@@ -73,7 +74,7 @@ SC.DataView = SC.ListView.extend({
 		if(!this.get('hiddenCells')) this.set('hiddenCells', [])
 		
 		sc_super()
-
+		
 		SC.$(this.get('hiddenCells')).css("left", "-9999px")
 
 		return this
@@ -88,7 +89,6 @@ SC.DataView = SC.ListView.extend({
 			
 		if(!SC.none(hash)) {
 			this.hideCell(hash)
-			
 			delete cellsHash[key]	
 			delete rowsHash[cellIdx]
 		}

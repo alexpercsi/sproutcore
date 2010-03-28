@@ -2111,7 +2111,7 @@ baseView: SC.View.extend({
     var itemView      = this.itemViewForEvent(ev),
         content       = this.get('content'),
         // contentIndex  = itemView ? itemView.get('contentIndex') : -1, 
-				contentIndex  = itemView ? (itemView.get ? itemView.get('contentIndex') : this.rowForCell(itemView)) : -1,
+				contentIndex  = itemView ? (itemView.get ? itemView.get('contentIndex') : this.contentIndexForCell(itemView)) : -1,
         info, anchor ;
             
     info = this.mouseDownInfo = {
