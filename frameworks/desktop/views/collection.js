@@ -858,6 +858,7 @@ baseView: SC.View.extend({
     // if (invalid.isIndexSet && invalid.contains(nowShowing)) invalid = YES ;
 		if(!invalid.isIndexSet)
 			invalid = nowShowing
+		
     if (this.willReload) this.willReload(invalid === YES ? null : invalid);
 
     
@@ -960,6 +961,7 @@ baseView: SC.View.extend({
       
 
       if (bench) SC.Benchmark.end(bench);
+
     // if set is NOT defined, replace entire content with nowShowing
     } else {
       if (bench) {
@@ -1585,7 +1587,7 @@ baseView: SC.View.extend({
     if (this.get('isVisibleInWindow')) {
       this.invokeOnce(this.reloadSelectionIndexesIfNeeded);
     } 
-    
+
     return this ;
   },
 
@@ -1644,7 +1646,6 @@ baseView: SC.View.extend({
     @returns {SC.CollectionView} receiver
   */
   select: function(indexes, extend) {
-
     var content = this.get('content'),
         del     = this.get('selectionDelegate'),
         groupIndexes = this.get('_contentGroupIndexes'),
@@ -2395,7 +2396,7 @@ baseView: SC.View.extend({
       
     } else if(info) {
       idx = info.contentIndex;
-      contentIndex = (view) ? view.get('contentIndex') : -1 ;
+      contentIndex = (view) ? (view.get ? view.get('contentIndex') : this.contentIndexForLayerId(view.id)) : -1 ;
       
       // this will be set if the user simply clicked on an unselected item and 
       // selectOnMouseDown was NO.
@@ -3175,6 +3176,13 @@ baseView: SC.View.extend({
         last        = this._sccv_lastNowShowing,
         diff, diff1, diff2;
 
+		diff1 = this._TMP_DIFF1
+		diff2 = this._TMP_DIFF2
+
+    if (diff1) diff1.clear();
+    if (diff2) diff2.clear();
+
+
     // find the differences between the two
     // NOTE: reuse a TMP IndexSet object to avoid creating lots of objects
     // during scrolling
@@ -3191,11 +3199,12 @@ baseView: SC.View.extend({
       this._sccv_lastNowShowing = nowShowing ? nowShowing.frozenCopy() : null;
       this.updateContentRangeObserver();
       this.reload(diff);
+
     }
     
     // cleanup tmp objects
-    if (diff1) diff1.clear();
-    if (diff2) diff2.clear();
+    // if (diff1) diff1.clear();
+    // if (diff2) diff2.clear();
     
   }.observes('nowShowing'),
   
