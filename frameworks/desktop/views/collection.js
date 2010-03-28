@@ -845,6 +845,7 @@ baseView: SC.View.extend({
     // if (invalid.isIndexSet && invalid.contains(nowShowing)) invalid = YES ;
 		if(!invalid.isIndexSet)
 			invalid = nowShowing
+		
     if (this.willReload) this.willReload(invalid === YES ? null : invalid);
 
 
@@ -856,7 +857,12 @@ baseView: SC.View.extend({
         SC.Benchmark.start(bench);
       }
 
-			// this.fragment = document.createDocumentFragment();
+			// not entirely sure if this is the 100% best way to do this... 
+			var invalid2 = invalid.remove(this._TMP_DIFF2).toArray().concat(this._TMP_DIFF2.toArray())
+			if(invalid2.length > 0)
+				invalid = invalid2
+			else
+				invalid = invalid.add(this._TMP_DIFF2)
 
       invalid.forEach(function(idx) {
       	if (nowShowing.contains(idx)) {
@@ -866,11 +872,12 @@ baseView: SC.View.extend({
 					if(columns)
 						this.addItemViewForRowAndColumn(idx, columns.get('length'), containerView)
 				} else {
-					this.removeItemViewForRowAndColumn(idx)
+					this.removeItemViewForRowAndColumn(idx, 0)
 				}
       }, this)
 
       if (bench) SC.Benchmark.end(bench);
+
     // if set is NOT defined, replace entire content with nowShowing
     } else {
       if (bench) {
@@ -1425,7 +1432,7 @@ baseView: SC.View.extend({
     if (this.get('isVisibleInWindow')) {
       this.invokeOnce(this.reloadSelectionIndexesIfNeeded);
     } 
-    
+
     return this ;
   },
 
@@ -1484,7 +1491,6 @@ baseView: SC.View.extend({
     @returns {SC.CollectionView} receiver
   */
   select: function(indexes, extend) {
-
     var content = this.get('content'),
         del     = this.get('selectionDelegate'),
         groupIndexes = this.get('_contentGroupIndexes'),
@@ -2104,7 +2110,8 @@ baseView: SC.View.extend({
     // modes. -- once we have an item view, get its content object as well.
     var itemView      = this.itemViewForEvent(ev),
         content       = this.get('content'),
-        contentIndex  = itemView ? itemView.get('contentIndex') : -1, 
+        // contentIndex  = itemView ? itemView.get('contentIndex') : -1, 
+				contentIndex  = itemView ? (itemView.get ? itemView.get('contentIndex') : this.rowForCell(itemView)) : -1,
         info, anchor ;
             
     info = this.mouseDownInfo = {
@@ -2177,7 +2184,7 @@ baseView: SC.View.extend({
       
       // determine if item is selected. If so, then go on.
       sel = this.get('selection') ;
-      contentIndex = (view) ? view.get('contentIndex') : -1 ;
+      contentIndex = (view) ? (view.get ? view.get('contentIndex') : this.contentIndexForLayerId(view.id)) : -1 ;
       isSelected = sel && sel.include(contentIndex) ;
 
       if (isSelected) this.deselect(contentIndex) ;
@@ -2185,7 +2192,7 @@ baseView: SC.View.extend({
       
     } else if(info) {
       idx = info.contentIndex;
-      contentIndex = (view) ? view.get('contentIndex') : -1 ;
+      contentIndex = (view) ? (view.get ? view.get('contentIndex') : this.contentIndexForLayerId(view.id)) : -1 ;
       
       // this will be set if the user simply clicked on an unselected item and 
       // selectOnMouseDown was NO.
@@ -2965,6 +2972,13 @@ baseView: SC.View.extend({
         last        = this._sccv_lastNowShowing,
         diff, diff1, diff2;
 
+		diff1 = this._TMP_DIFF1
+		diff2 = this._TMP_DIFF2
+
+    if (diff1) diff1.clear();
+    if (diff2) diff2.clear();
+
+
     // find the differences between the two
     // NOTE: reuse a TMP IndexSet object to avoid creating lots of objects
     // during scrolling
@@ -2981,11 +2995,12 @@ baseView: SC.View.extend({
       this._sccv_lastNowShowing = nowShowing ? nowShowing.frozenCopy() : null;
       this.updateContentRangeObserver();
       this.reload(diff);
+
     }
     
     // cleanup tmp objects
-    if (diff1) diff1.clear();
-    if (diff2) diff2.clear();
+    // if (diff1) diff1.clear();
+    // if (diff2) diff2.clear();
     
   }.observes('nowShowing'),
   

@@ -7,88 +7,53 @@
 
 sc_require('views/list');
 
-SC.ListView = SC.ListView.extend({
-	
-	// rowHeight: 6,
-	
-	childViews: ["containerView"],
-	
-	containerView: SC.View,
-	
-	conformCells: function() {
-		var nowShowing = this.get('nowShowing'),
-			columns = 1,
-			//this.get('columns') || 
-			len = nowShowing.get('length') * columns,
-			cells = this.get('cells'),
-			numCells = cells ? cells.get('length') : 0, i
-			
-		if(!cells)
-			cells = this.set('cells', [])
-			
-		for(i = len; i < numCells; i++)
-			this.hideCell()
-	
-		for(i = numCells; i < len; i++)
-			this.addCell()
-	},
-
-	hideCell: function() {
-		var cells = this.get('cells'),
-			hiddenCells = this.get('hiddenCells'),
-			cell = cells.pop()
-		
-		if(!cell)
-			return
-
-		SC.$(cell).css('display', 'none')
-		
-		if(!hiddenCells)
-			this.set('hiddenCells', (hiddenCells = []))
-			
-		hiddenCells.push(cell)
-	},
+SC.DataView = SC.ListView.extend({
 	
 	addCell: function() {
 		var cells = this.get('cells'),
 			hiddenCells = this.get('hiddenCells'),
 			cell = hiddenCells ? hiddenCells.shiftObject() : null
 			
-		if(cell)
+		if(!cell) {
+			cell = this._createCell()
 			cells.push(cell)
-		else {
-			cells.push(this.createCell(cells.get('length') + (hiddenCells ? hiddenCells.get('length') : 0)))
-		}	
-		
-		cell = cells.objectAt(-1)
-		SC.$(cell).css('display', 'block')
+		}
+
 		return cell
 	},
 	
-	createCell: function(idx) {
+	hideCell: function(cell) {
+		if(!cell)
+			return
+
+		var hiddenCells = this.get('hiddenCells')
+		hiddenCells.push(cell)
+	},
+
+	_createCell: function() {
 		var renderer = this.cellRenderer,
-			context = SC.RenderContext("div").id("row-" + idx),
+			idx = this.get('cells').get('length'),
+			context = SC.RenderContext("div").id(this.layerIdFor(idx)),
 			element
 		
 		if(!renderer)
-			renderer = this.cellRenderer = SC.EmptyTheme.renderers.listItem()
+			renderer = this.cellRenderer = this.get('theme').listItem({contentDelegate: this})
 
 		renderer.render(context)
 		element = context.element();
 		(this.get('containerView') || this).get('layer').appendChild(element)
+		SC.$(element).css("position", "absolute")
 		return element
 	},
+	
+	reloadCell: function(cell, attrs) {
+		var renderer = this.cellRenderer,
+			cells = this.get('cells'),
+			row = this._rowsHash[cell],
+			cell = cells.objectAt(cell)
 
-	reloadCell: function(cell, row) {
-		var cells = this.get('cells'),
-			cell = cells.objectAt(cell),
-			renderer = this.cellRenderer,
-			content = this.get('content'),
-			item = content.objectAt(row)
-			
 		renderer.attachLayer(cell)
-		// renderer.attr('title', "row " + row)
-		renderer.attr('content', item)
+		renderer.attr(attrs)
 		renderer.update()
 		SC.$(cell).css(this.layoutForContentIndex(row))
 		return cell
@@ -98,81 +63,88 @@ SC.ListView = SC.ListView.extend({
 	  var invalid = this._invalidIndexes;
     if (!invalid || !this.get('isVisibleInWindow')) return this ; // delay
   
-    this._invalidIndexes = NO ;
+		var nowShowing = this.get('nowShowing')
+		if(!invalid.isIndexSet)
+			this._invalidIndexes = nowShowing
 
-		var cells = this.get('cells'),
-			layout  = this.computeLayout(),
-			nowShowing = this.get('nowShowing'),
-			containerView = this.get('containerView') || this,
-			columns = this.get('columns') || NO,
-			cellsHash = this._cellsHash, cell
+		if(!this._cellsHash) this._cellsHash = {}
+		if(!this._rowsHash) this._rowsHash = {}
+		if(!this.get('cells')) this.set('cells', [])
+		if(!this.get('hiddenCells')) this.set('hiddenCells', [])
 		
-		if(!cellsHash)
-			cellsHash = this._cellsHash = []
+		sc_super()
+
+		SC.$(this.get('hiddenCells')).css("left", "-9999px")
+
+		return this
+	},
+	
+	removeItemViewForRowAndColumn: function(row, column) {
+		var cellsHash = this._cellsHash,
+			rowsHash = this._rowsHash,
+			key = row + "," + column,
+			hash = cellsHash[key],
+			cellIdx = this.get('cells').indexOf(hash)
 			
-		this.conformCells()
-
-		bench=("%@ dataview reload" + Math.random(10000)).fmt(this)
-		SC.Benchmark.start(bench);
-
-		nowShowing.forEach(function(idx, i) {
-			// (columns || [this]).forEach(function(col, j) {
-				this.reloadCell(i, idx)
-			// }, this)
-		}, this)
+		if(!SC.none(hash)) {
+			this.hideCell(hash)
+			
+			delete cellsHash[key]	
+			delete rowsHash[cellIdx]
+		}
+	},
 	
-		// complex updating might benefit from 
-		// leaving unchanged views intact and
-		// merely shifting around detritus,
-		// but it's actually slow for super simple
-		// stuff
-	
-		// if(!invalid.isIndexSet)
-		// 	invalid = nowShowing
-		// 
-		//     invalid.forEach(function(idx) {
-		//      	if (nowShowing.contains(idx)) {
-		// 		// console.log("add " + idx)
-		// 		cell = this.addCell()
-		// 		cellsHash[idx] = cells.indexOf(cell)
-		// 		this.reloadCell(cell, idx)
-		// 	} else {
-		// 		// console.log("remove " + idx)
-		// 		if(cellsHash[idx])
-		// 			this.hideCell(cellsHash[idx])
-		// 		delete cellsHash[idx]
-		// 	}
-		// }, this)
+	addItemViewForRowAndColumn: function(row, column) {
+		var cells = this.get('cells'),
+			cellsHash = this._cellsHash,
+			rowsHash = this._rowsHash,
+			key = row + "," + column,
+			cell = cellsHash[key],
+			content = this.get('content'),
+			item = content.objectAt(row),
+			cellIdx
+			
+			if(!cell) {
+				cell = this.addCell()
+				cellIdx = cells.indexOf(cell)
+				cellsHash[key] = cell
+				rowsHash[cellIdx] = row
+			} else
+				cellIdx = cells.indexOf(cell)
+				
+			this.reloadCell(cellIdx, {content: item})
+	},
 
-		SC.Benchmark.end(bench)
+	reloadSelectionIndexesIfNeeded: function() {
+		var invalid = this._invalidSelection
+		if (!invalid || !this.get('isVisibleInWindow')) return this 
+		this._invalidSelection = NO
+		this.reload(invalid)
+	},
 
-    // adjust my own layout if computed
-    if (layout) { this.adjust(layout); }
-		
+	cellForRowAndColumn: function(row, column) {
+		if(SC.none(column)) column = 0
+		return this.get('cells').indexOf(this._cellsHash[row + "," + column])
+	},
+	
+	viewForRowAndColumn: function(row) {
+		return this.cellForRowAndColumn(row, 0)
+	},
+	
+  contentIndexForLayerId: function(id) {
+		var ret = sc_super()
+		return ret ? this.contentIndexForCell(ret) : ret
+	},
 
-    return this ;
-  },
-	
-	frameDidChange: function() {
-		var frame = this.get('frame')
-	
-		this.get('containerView').adjust({
-			top: frame.y * -1,
-			left: frame.x,
-			width: frame.width,
-			height: frame.height
-		})
-	}.observes('frame'),
-	
-	layoutForContentIndex: function(contentIndex) {
-		var frame = this.get('frame')
-	    return {
-	      top:    this.rowOffsetForContentIndex(contentIndex) - (frame.y * -1),
-	      height: this.rowHeightForContentIndex(contentIndex),
-	      left:   0, 
-	      right:  0
-	    };
-	  }
-  
+	contentIndexForCell: function(cell) {
+		return this._rowsHash[cell]
+	},
 
+  scrollToItemView: function(view) {},
+
+	isSelected: function(item) {
+		var sel = this.get('selection')
+		return sel ? sel.contains(item) : NO
+	}
+	
 });

@@ -45,6 +45,9 @@ SC.EmptyTheme.renderers.ListItem = SC.Renderer.extend({
     // 
     // // add some standard attributes & classes.
     // classes = this._TEMPORARY_CLASS_HASH ? this._TEMPORARY_CLASS_HASH : this._TEMPORARY_CLASS_HASH = {};
+
+		context.addClass(["sc-collection-item"])
+
     // classes.def = this.isDefault;
     // classes.cancel = this.isCancel;
     // classes.icon = !!this.icon;
@@ -64,10 +67,13 @@ SC.EmptyTheme.renderers.ListItem = SC.Renderer.extend({
   },
   
   update: function() {
+		var del = this.contentDelegate	
+	
     this._controlRenderer.attr({
       isEnabled: this.isEnabled,
       isActive: this.isActive,
-      isSelected: this.isSelected,
+      // isSelected: this.isSelected,
+			isSelected: del.isSelected(this.content),
       controlSize: this.controlSize
     });
     this._titleRenderer.attr({
