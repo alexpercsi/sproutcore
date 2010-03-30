@@ -12,9 +12,11 @@ require('views/list') ;
   @author    Charles Jolley  
   @version 1.0
 */
-SC.GridView = SC.ListView.extend(
+SC.GridView = SC.DataView.extend(
 /** @scope SC.GridView.prototype */ {
     classNames: ['sc-grid-view'],
+
+	// useRenderer: NO,
   
   layout: { left:0, right:0, top:0, bottom:0 },
 
@@ -23,21 +25,23 @@ SC.GridView = SC.ListView.extend(
     
     The value should be an integer expressed in pixels.
   */
-  rowHeight: 48,
+  rowHeight: 18,
   
   /**
     The minimum column width for grid items.  Items will actually
     be laid out as needed to completely fill the space, but the minimum
     width of each item will be this value.
   */
-  columnWidth: 64,
+  columnWidth: 120,
 
   /**
     The default example item view will render text-based items.
     
     You can override this as you wish.
   */
-  exampleView: SC.LabelView,
+  exampleView: SC.LabelView.extend({
+		useFactory: YES
+	}),
   
   insertionOrientation: SC.HORIZONTAL_ORIENTATION,
   
@@ -193,15 +197,16 @@ SC.GridView = SC.ListView.extend(
     on screen are potentially in the wrong position.  Update all of their
     layouts if different.
   */
-  _gv_clippingFrameDidChange: function() {
-    var nowShowing = this.get('nowShowing'), itemView, idx, len;
-    this.notifyPropertyChange('itemsPerRow');
-
-    len = nowShowing.get('length');
-
-    for (idx=0; idx < len; idx++) {
-      itemView = this.itemViewForContentIndex(idx);
-      itemView.adjust(this.layoutForContentIndex(idx));
-    }
-  }.observes('clippingFrame')
+  // _gv_clippingFrameDidChange: function() {
+  //   var nowShowing = this.get('nowShowing'), itemView, idx, len;
+  //   this.notifyPropertyChange('itemsPerRow');
+  // 
+  //   // len = nowShowing.get('length');
+  // 
+  //   // for (idx=0; idx < len; idx++) {
+  //     // itemView = this.itemViewForContentIndex(idx);
+  //     // itemView.adjust(this.layoutForContentIndex(idx));
+  //   // }
+  // 		this.reload(nowShowing)
+  // }.observes('clippingFrame')
 }) ;
