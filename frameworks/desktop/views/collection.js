@@ -842,35 +842,29 @@ baseView: SC.View.extend({
 
     // if the set is defined but it contains the entire nowShowing range, just
     // replace
-    // if (invalid.isIndexSet && invalid.contains(nowShowing)) invalid = YES ;
-		if(!invalid.isIndexSet)
-			invalid = nowShowing
-		
+    if (invalid.isIndexSet && invalid.contains(nowShowing) && !this.useRenderer) invalid = YES ;
     if (this.willReload) this.willReload(invalid === YES ? null : invalid);
 
+
+		// if(!invalid.isIndexSet)
+			// invalid = nowShowing
 
     // if an index set, just update indexes
     if (invalid.isIndexSet) {
 	
+	
       if (bench) {
-        bench=("%@#reloadIfNeeded (Partial)" + Math.random(10000) + " " + invalid.get('length')).fmt(this)
+        bench=("%@#reloadIfNeeded (Partial)" + Math.random(100000)).fmt(this)
         SC.Benchmark.start(bench);
       }
-
-			// not entirely sure if this is the 100% best way to do this... 
-			var invalid2 = invalid.remove(this._TMP_DIFF2).toArray().concat(this._TMP_DIFF2.toArray())
-			if(invalid2.length > 0)
-				invalid = invalid2
-			else
-				invalid = invalid.add(this._TMP_DIFF2)
 
       invalid.forEach(function(idx) {
       	if (nowShowing.contains(idx)) {
 					(columns || [this]).forEach(function(column, colIdx) {
-       			this.addItemViewForRowAndColumn(idx, colIdx, containerView)
+       			this.addItemViewForRowAndColumn(idx, colIdx)
 					}, this)
 					if(columns)
-						this.addItemViewForRowAndColumn(idx, columns.get('length'), containerView)
+						this.addItemViewForRowAndColumn(idx, columns.get('length'))
 				} else {
 					this.removeItemViewForRowAndColumn(idx, 0)
 				}
@@ -887,24 +881,26 @@ baseView: SC.View.extend({
 
       containerView.beginPropertyChanges();
       containerView.destroyLayer().removeAllChildren();
-      // containerView.set('childViews', views); // quick swap
-
-      containerView.replaceLayer();
-      containerView.endPropertyChanges();
+			
+			var views = [], view, context, html = []
+			delete this._itemViews
 
       nowShowing.forEach(function(idx) {
-					if(columns) {
-							containerView2 = this.addItemViewForRowAndColumn(idx, null, containerView)
-							columns.forEach(function(column, colIdx) {
-	        			this.addItemViewForRowAndColumn(idx, colIdx, containerView2)
-							}, this)
-							// this.addItemViewForRowAndColumn(idx, columns.get('length'), containerView)
-					} else
-						this.addItemViewForRowAndColumn(idx, 0, containerView)
+				(columns || [this]).forEach(function(column, colIdx) {
+     			view = this.addItemViewForRowAndColumn(idx, colIdx, YES)
+					if(!SC.typeOf(view) == "string")
+						views.push(view)
+					else
+						html.push(view)
+				}, this)
       }, this)
 
-      if (bench) SC.Benchmark.end(bench);
+      containerView.set('childViews', views); // quick swap
+			this._additionalContent = html.join("")			
+			containerView.replaceLayer();
+      containerView.endPropertyChanges();
 
+      if (bench) SC.Benchmark.end(bench);
     }
 
     // adjust my own layout if computed
@@ -914,19 +910,34 @@ baseView: SC.View.extend({
     return this ;
   },
 
-  addItemViewForRowAndColumn: function(row, column, containerView) {
+  renderContent: function(context) {
+		sc_super()
+		if(!this._additionalContent)
+			return
+		context.push(this._additionalContent)
+		this._additionalContent = null
+  },
+
+  addItemViewForRowAndColumn: function(row, column, fullReload) {
     var view, itemViews, layer, existing, element,
 			del  = this.get('contentDelegate')
 			
     itemViews  = this._sc_itemViews,
-    existing = itemViews ? (itemViews[row] ? itemViews[row][(SC.none(column) ? "base" : column)] : null) : null;  
+    existing = itemViews ? (itemViews[row] ? itemViews[row][column] : null) : null;  
+		containerView = this.get('containerView') || this
 		
-    if(!view)
+    if(!view) {
       view = this.viewForRowAndColumn(row, column)
+			view.set('layout', this.layoutForCell(row, column))
+		}
+		
+    itemViews  = this._sc_itemViews
 
-    itemViews  = this._sc_itemViews,
+		if(existing && SC.typeOf(existing) == "string")
+			existing = itemViews[row][column] = document.getElementById(existing)
 
-    if(existing) {
+    if(existing && !fullReload) {
+	
        if(existing.get) {
          layer = existing.get('layer');
          if (layer && layer.parentNode) {
@@ -943,14 +954,19 @@ baseView: SC.View.extend({
        }
      }
 
-		if(del.collectionViewWillDisplayCellForRowAndColumn)
-			del.collectionViewWillDisplayCellForRowAndColumn(this, view, row, column)
+			
 			
     if(view.isFactory) {
       context = view.renderContext(view.get('tagName')) ;
       view.prepareContext(context, YES) ;
+
+			if(fullReload) {
+				itemViews[row][column] = view.get('layerId')
+				return context.join("")
+			}
+			
 			element = context.element()
-			itemViews[row][(SC.none(column) ? "base" : column)] = element
+			itemViews[row][column] = element
 			if(containerView.get) {
 				if(!containerView.get('layer'))
 					containerView.createLayer()
@@ -960,8 +976,9 @@ baseView: SC.View.extend({
 			}
 			view = element
     }
-      
-		containerView.appendChild(view)
+    
+		if(!fullReload)
+			containerView.appendChild(view)
 
     return view
   },
@@ -979,8 +996,12 @@ baseView: SC.View.extend({
 		view.forEach(function(v) {
 	    if(v.get)
 	      v.destroy()
-	    else
-				v.parentNode.removeChild(v)			
+	    else {
+				if(SC.typeOf(v) == "string")
+					v = document.getElementById(v)
+				if(v)
+					v.parentNode.removeChild(v)			
+			}
 		})
 
     delete itemViews[row]
@@ -1035,18 +1056,16 @@ baseView: SC.View.extend({
   */
 
   // viewForRowAndColumn: function(idx, rebuild, containerView) {
-  viewForRowAndColumn: function(row, column, containerView, rebuild) {
-		var factory, E, view, attrs
-			
-    var itemViews = this._sc_itemViews, ret
-    if (!itemViews) itemViews = this._sc_itemViews = [] ;
+  viewForRowAndColumn: function(row, column, rebuild) {
+		var factory, E, view, attrs,
+			del  = this.get('contentDelegate'),
+			containerView = this.get('containerView') || this,
+			itemViews = this._sc_itemViews, ret
+
+		if (!itemViews) itemViews = this._sc_itemViews = [] ;
 		if (!itemViews[row]) itemViews[row] = []
 
-		if(SC.none(column))
-			E = this.get('baseView')
-
     if (rebuild || !(ret = itemViews[row][column]) || !ret.get) {
-
 
 			if(!E)
 				E = this.viewClassForRowAndColumn(row, column ? column : 0)
@@ -1060,10 +1079,12 @@ baseView: SC.View.extend({
 				ret = this.createChildView(E, attrs)
 			}
 
-      ret.set('layout', this.layoutForCell(row, column))
-			itemViews[row][SC.none(column) ? "base" : column] = ret
+			// itemViews[row][column] = ret
     }
     
+		if(del.collectionViewWillDisplayCellForRowAndColumn)
+			del.collectionViewWillDisplayCellForRowAndColumn(this, ret, row, column)
+
     return ret
   },
 
@@ -1187,7 +1208,7 @@ baseView: SC.View.extend({
     @param {Object} object
   */
   itemViewForContentObject: function(object) {
-    return this.itemViewForContentIndex(this.get('content').indexOf(object), null, this.get('columnViews').firstObject());
+    return this.viewForRowAndColumn(this.get('content').indexOf(object), 0);
   },
   
   _TMP_LAYERID: [],
@@ -1229,23 +1250,6 @@ baseView: SC.View.extend({
     return ret.join('-');
   },
 
-  containerViewForLayerId: function(id) {
-      if (!id || !(id = id.toString())) return null ; // nothing to do
-
-      var base = this._baseLayerId;
-      if (!base) base = this._baseLayerId = SC.guidFor(this)+"-";
-
-      // no match
-      if ((id.length <= base.length) || (id.indexOf(base) !== 0)) return null ; 
-      var ret = id.split("-")[1]
-
-      var containersHash = this._containersHash
-      if(SC.none(containersHash))
-        return this.get('containerView') || this
-      else
-        return containersHash[ret]
-  },
-  
   /**
     Extracts the content index from the passed layerID.  If the layer id does
     not belong to the receiver or if no value could be extracted, returns NO.
@@ -1312,7 +1316,7 @@ baseView: SC.View.extend({
     }
 
     // return this.viewForRowAndColumn(contentIndex, NO, this.containerViewForLayerId(id));
-    return this.viewForRowAndColumn(contentIndex, NO);
+    return this.viewForRowAndColumn(contentIndex, 0);
   },
   
   // ..........................................................
@@ -1472,8 +1476,7 @@ baseView: SC.View.extend({
     // iterate through each item and set the isSelected state.
     invalid.forEach(function(idx) {
       if (!nowShowing.contains(idx)) return; // not showing
-      // var view = this.itemViewForContentIndex(idx, NO);
-      var view = this.viewForRowAndColumn(idx, NO);
+      var view = this.viewForRowAndColumn(idx, 0);
       if (view) view.set('isSelected', sel ? sel.contains(content, idx) : NO);
     },this);
     
@@ -1835,7 +1838,6 @@ baseView: SC.View.extend({
     @returns {SC.CollectionView} receiver
   */
   scrollToContentIndex: function(contentIndex) {
-    // var itemView = this.itemViewForContentIndex(contentIndex, null, this.get('columnViews').firstObject()) ;
     var itemView = this.viewForRowAndColumn(contentIndex, 0) ;
     if (itemView) this.scrollToItemView(itemView) ;
     return this; 
@@ -2111,9 +2113,9 @@ baseView: SC.View.extend({
     var itemView      = this.itemViewForEvent(ev),
         content       = this.get('content'),
         // contentIndex  = itemView ? itemView.get('contentIndex') : -1, 
-				contentIndex  = itemView ? (itemView.get ? itemView.get('contentIndex') : this.contentIndexForCell(itemView)) : -1,
+				contentIndex  = this.contentIndexForItemView(itemView),
         info, anchor ;
-            
+
     info = this.mouseDownInfo = {
       event:        ev,  
       itemView:     itemView,
@@ -2184,7 +2186,7 @@ baseView: SC.View.extend({
       
       // determine if item is selected. If so, then go on.
       sel = this.get('selection') ;
-      contentIndex = (view) ? (view.get ? view.get('contentIndex') : this.contentIndexForLayerId(view.id)) : -1 ;
+      contentIndex = this.contentIndexForItemView(view)
       isSelected = sel && sel.include(contentIndex) ;
 
       if (isSelected) this.deselect(contentIndex) ;
@@ -2192,7 +2194,7 @@ baseView: SC.View.extend({
       
     } else if(info) {
       idx = info.contentIndex;
-      contentIndex = (view) ? (view.get ? view.get('contentIndex') : this.contentIndexForLayerId(view.id)) : -1 ;
+      contentIndex = this.contentIndexForItemView(view)
       
       // this will be set if the user simply clicked on an unselected item and 
       // selectOnMouseDown was NO.
@@ -2364,7 +2366,7 @@ baseView: SC.View.extend({
         max = anchor ;
       }
     }
-
+      // return SC.IndexSet.create(contentIndex);
     return SC.IndexSet.create(min, max - min + 1);
   },
   
@@ -2513,12 +2515,12 @@ baseView: SC.View.extend({
   _cv_dragViewFor: function(dragContent) {
     // find only the indexes that are in both dragContent and nowShowing.
     var indexes = this.get('nowShowing').without(dragContent);
-    var containers = this.get('columnViews')
+    // var containers = this.get('columnViews')
     indexes = this.get('nowShowing').without(indexes);
     
     // var dragLayer = this.get('layer').cloneNode(false); 
     // var view = SC.View.create({ layer: dragLayer, parentView: this });
-    var view = SC.View.create({ parentView: this.get('containerView') });
+    var view = SC.View.create({ parentView: (this.get('containerView') || this) });
     var first = last = null
     var containerLayer, containerWidth, containerLeft, itemView, isSelected, layer, dragLayer
     
@@ -2528,7 +2530,9 @@ baseView: SC.View.extend({
     // cleanup weird stuff that might make the drag look out of place
     SC.$(dragLayer).css('backgroundColor', 'rgba(255, 255, 255, .5)')
       .css('border', '1px solid #333')
-      .css('top', 0).css('left', 0);
+      .css('left', 0).css('zIndex', 999999);
+
+		
     
 
     indexes.forEach(function(i) {
@@ -2537,44 +2541,44 @@ baseView: SC.View.extend({
 
       last = i
           
-      containers.forEach(function(containerView) {
-        containerLayer = containerView.get('layer')
-        containerWidth = parseInt(SC.$(containerLayer).css('width'))
-        containerLeft = parseInt(SC.$(containerLayer).css('left'))
-        itemView = this.itemViewForContentIndex(i, YES, containerView)
+
+        itemView = this.viewForRowAndColumn(i, 0)
         
         // render item view without isSelected state.  
         if (itemView) {
-          isSelected = itemView.get('isSelected');
-          itemView.set('isSelected', NO);
+	
+					if(itemView.isView) {
+	          isSelected = itemView.get('isSelected');
+	          itemView.set('isSelected', NO);
         
-          itemView.updateLayerIfNeeded();
-          layer = itemView.get('layer');
-          if (layer) {
-            layer = layer.cloneNode(true);
-            itemView.set('isSelected', isSelected);
-            itemView.updateLayerIfNeeded();
-          } else {
-            context = itemView.renderContext(itemView.get('tagName')) ;
-            itemView.prepareContext(context, YES) ;
-            layer = context.element()
+	          itemView.updateLayerIfNeeded();
+	          layer = itemView.get('layer');
+	          if (layer) {
+	            layer = layer.cloneNode(true);
+	            itemView.set('isSelected', isSelected);
+	            itemView.updateLayerIfNeeded();
+	          } else {
+	            context = itemView.renderContext(itemView.get('tagName')) ;
+	            itemView.prepareContext(context, YES) ;
+	            layer = context.element()
+	            var top = SC.$(layer).css('top')
+	            SC.$(layer).css('top', parseInt(top) - first)
+	          }
+	        }  else {
+						layer = itemView.cloneNode(true)
             var top = SC.$(layer).css('top')
-            SC.$(layer).css('top', parseInt(top) - first).css('left', containerLeft).css('width', containerWidth)
-          }
-        }
-
+            SC.$(layer).css('top', parseInt(top) - first)
+						this._redrawLayer(layer, {isSelected: NO})						
+					}
+				}
         if (layer) dragLayer.appendChild(layer);
         layer = null;
 
-      }, this)      
     }, this);
 
 
     var height = this.rowOffsetForContentIndex(last + 1) - first
-
-    SC.$(dragLayer).css('height', height).css('top', first)
-    // view.adjust({height: height, top: 0, left: 0});
-    // view.updateLayerIfNeeded();
+    view.adjust({height: height, top: first, left: 0});
 
     dragLayer = null;
     return view ;
@@ -2787,7 +2791,7 @@ baseView: SC.View.extend({
     // point
     if (dragOp !== SC.DRAG_NONE) {
       if ((this._lastInsertionIndex !== idx) || (this._lastDropOperation !== dropOp)) {
-        var itemView = this.itemViewForContentIndex(idx) ;
+        var itemView = this.viewForRowAndColumn(idx, 0) ;
         this.showInsertionPoint(itemView, dropOp) ;
       }
       
@@ -2823,7 +2827,6 @@ baseView: SC.View.extend({
     reordering content.
   */
   performDragOperation: function(drag, op) { 
-        
     // Get the correct insertion point, drop operation, etc.
     var state = this._computeDropOperationState(drag, null, op),
         idx   = state[0], dropOp = state[1], dragOp = state[2],
@@ -3076,7 +3079,18 @@ baseView: SC.View.extend({
     } else if (SC.typeOf(view.action) == SC.T_FUNCTION) {
       return view.action(evt) ;
     }
-  }
+  },
+
+	contentIndexForItemView: function(itemView) {
+		if(!itemView)
+			return -1
+
+		if(itemView.get)
+			return itemView.get('contentIndex')
+		else
+			return this.contentIndexForCell(itemView)
+	}
 
   
 });
+	

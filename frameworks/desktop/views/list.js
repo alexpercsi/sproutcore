@@ -440,11 +440,11 @@ SC.ListView = SC.CollectionView.extend(
            = this.get('insertionPointView').create();
     }
     
-    var index  = itemView.get('contentIndex'),
+    var index  = this.contentIndexForItemView(itemView),
         len    = this.get('length'),
-        layout = SC.clone(itemView.get('layout')),
-        level  = itemView.get('outlineLevel'),
-        indent = itemView.get('outlineIndent') || 0,
+        layout = this.layoutForContentIndex(index),
+        level  = 0, //itemView.get('outlineLevel'),
+        indent = 0, //itemView.get('outlineIndent') || 0,
         group;
 
     // show item indented if we are inserting at the end and the last item
@@ -547,35 +547,35 @@ SC.ListView = SC.CollectionView.extend(
     
     // finally, let's decide if we want to actually insert before/after.  Only
     // matters if we are using outlining.
-    if (index>0) {
-
-      itemView = this.itemViewForContentIndex(index-1);
-      pindent  = (itemView ? itemView.get('outlineIndent') : 0) || 0;
-      plevel   = itemView ? itemView.get('outlineLevel') : 0;
-      
-      if (index<len) {
-        itemView = this.itemViewForContentIndex(index);
-        clevel   = itemView ? itemView.get('outlineLevel') : 0;
-        cindent  = (itemView ? itemView.get('outlineIndent') : 0) || 0;
-        cindent  *= clevel;
-      } else {
-        clevel = itemView.get('isGroupView') ? 1 : 0; // special case...
-        cindent = pindent * clevel;  
-      }
-
-      pindent  *= plevel;
-
-      // if indent levels are different, then try to figure out which level 
-      // it should be on.
-      if ((clevel !== plevel) && (cindent !== pindent)) {
-        
-        // use most inner indent as boundary
-        if (pindent > cindent) {
-          index--;
-          dropOperation = SC.DROP_AFTER;
-        }
-      }
-    }
+    // if (index>0) {
+    // 
+    //   itemView = this.itemViewForContentIndex(index-1);
+    //   pindent  = (itemView ? itemView.get('outlineIndent') : 0) || 0;
+    //   plevel   = itemView ? itemView.get('outlineLevel') : 0;
+    //   
+    //   if (index<len) {
+    //     itemView = this.itemViewForContentIndex(index);
+    //     clevel   = itemView ? itemView.get('outlineLevel') : 0;
+    //     cindent  = (itemView ? itemView.get('outlineIndent') : 0) || 0;
+    //     cindent  *= clevel;
+    //   } else {
+    //     clevel = itemView.get('isGroupView') ? 1 : 0; // special case...
+    //     cindent = pindent * clevel;  
+    //   }
+    // 
+    //   pindent  *= plevel;
+    // 
+    //   // if indent levels are different, then try to figure out which level 
+    //   // it should be on.
+    //   if ((clevel !== plevel) && (cindent !== pindent)) {
+    //     
+    //     // use most inner indent as boundary
+    //     if (pindent > cindent) {
+    //       index--;
+    //       dropOperation = SC.DROP_AFTER;
+    //     }
+    //   }
+    // }
 
     // we do not support dropping before a group item.  If dropping before 
     // a group item, always try to instead drop after the previous item.  If
@@ -583,25 +583,25 @@ SC.ListView = SC.CollectionView.extend(
     // allowed.  Note also that dropping at 0, first item must not be group
     // and dropping at length, last item must not be a group
     //
-    if (dropOperation === SC.DROP_BEFORE) {
-      itemView = (index<len) ? this.itemViewForContentIndex(index) : null;
-      if (!itemView || itemView.get('isGroupView')) {
-        if (index>0) {
-          itemView = this.itemViewForContentIndex(index-1);
-          
-          // don't allow a drop if the previous item is a group view and we're
-          // insert before the end.  For the end, allow the drop if the 
-          // previous item is a group view but OPEN.
-          if (!itemView.get('isGroupView') || (itemView.get('disclosureState') === SC.BRANCH_OPEN)) {
-            index = index-1;
-            dropOperation = SC.DROP_AFTER;
-          } else index = -1;
-
-        } else index = -1;
-      }
-      
-      if (index<0) dropOperation = SC.DRAG_NONE ;
-    } 
+    // if (dropOperation === SC.DROP_BEFORE) {
+    //   itemView = (index<len) ? this.itemViewForContentIndex(index) : null;
+    //   if (!itemView || itemView.get('isGroupView')) {
+    //     if (index>0) {
+    //       itemView = this.itemViewForContentIndex(index-1);
+    //       
+    //       // don't allow a drop if the previous item is a group view and we're
+    //       // insert before the end.  For the end, allow the drop if the 
+    //       // previous item is a group view but OPEN.
+    //       if (!itemView.get('isGroupView') || (itemView.get('disclosureState') === SC.BRANCH_OPEN)) {
+    //         index = index-1;
+    //         dropOperation = SC.DROP_AFTER;
+    //       } else index = -1;
+    // 
+    //     } else index = -1;
+    //   }
+    //   
+    //   if (index<0) dropOperation = SC.DRAG_NONE ;
+    // } 
     
     // return whatever we came up with
     return [index, dropOperation];
