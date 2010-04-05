@@ -292,7 +292,7 @@ SC.ListView = SC.CollectionView.extend(
     
     // find the smallest index changed; invalidate everything past it
     if (indexes && indexes.isIndexSet) indexes = indexes.get('min');
-    this.reload(SC.IndexSet.create(indexes, len-indexes));
+    // this.reload(SC.IndexSet.create(indexes, len-indexes));
     return this ;
   },
   

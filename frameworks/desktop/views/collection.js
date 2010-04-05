@@ -496,7 +496,7 @@ baseView: SC.View.extend({
           max = r.get('max');
       if (max > len) r = r.copy().remove(len, max-len).freeze();
     }
-    
+
     return r ;
   },
   
@@ -811,7 +811,6 @@ baseView: SC.View.extend({
     }
     
     if (this.get('isVisibleInWindow')) this.invokeOnce(this.reloadIfNeeded);
-    
     return this ;
   },
 
@@ -3167,6 +3166,8 @@ baseView: SC.View.extend({
   
   _TMP_DIFF1: SC.IndexSet.create(),
   _TMP_DIFF2: SC.IndexSet.create(),
+  _TMP_DIFF3: SC.IndexSet.create(),
+  _TMP_DIFF4: SC.IndexSet.create(),
   
   /** @private
   
@@ -3185,7 +3186,6 @@ baseView: SC.View.extend({
 
     if (diff1) diff1.clear();
     if (diff2) diff2.clear();
-
 
     // find the differences between the two
     // NOTE: reuse a TMP IndexSet object to avoid creating lots of objects
