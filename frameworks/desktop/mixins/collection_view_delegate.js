@@ -56,8 +56,8 @@ SC.CollectionViewDelegate = {
 	collectionViewWillDisplayCellForRowAndColumn: function(collectionView, view, row, column) {
 		var content = collectionView.get('content'),
 			item = content.objectAt(row),
-			// del  = this.get('contentDelegate')	
 			del = this
+		view.set('parentView', collectionView)
 		view.set('content', item)
     view.set('isEnabled', del.contentIndexIsEnabled(this, content, row));
     view.set('isSelected', del.contentIndexIsSelected(this, content, row));

@@ -889,7 +889,7 @@ baseView: SC.View.extend({
       nowShowing.forEach(function(idx) {
 				(columns || [this]).forEach(function(column, colIdx) {
      			view = this.addItemViewForRowAndColumn(idx, colIdx, YES)
-					if(!SC.typeOf(view) == "string")
+					if(SC.typeOf(view) != "string")
 						views.push(view)
 					else
 						html.push(view)
@@ -976,7 +976,9 @@ baseView: SC.View.extend({
 				return element
 			}
 			view = element
-    }
+    } else {
+			itemViews[row][column] = view
+		}
     
 		if(!fullReload)
 			containerView.appendChild(view)
@@ -1265,7 +1267,11 @@ baseView: SC.View.extend({
     
     // no match
     if ((id.length <= base.length) || (id.indexOf(base) !== 0)) return null ; 
-    var ret = Number(id.slice(id.lastIndexOf('-')+1));
+
+		var ret = Number(id.split('-').objectAt(-2))
+		
+    // var ret = Number(id.slice(id.lastIndexOf('-')+1));
+
     return isNaN(ret) ? null : ret ;
   },
   
