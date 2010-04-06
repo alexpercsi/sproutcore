@@ -1716,6 +1716,9 @@ SC.View = SC.Responder.extend(SC.DelegateSupport,
         parentView = this.get('parentView'),
         parentNode = parentView ? parentView.get('containerLayer') : null ;
     
+if(SC.DEBUGMEYES)
+	debugger
+
     // remove node from current parentNode if the node does not match the new 
     // parent node.
     if (node && node.parentNode && node.parentNode !== parentNode) {
@@ -1744,7 +1747,9 @@ SC.View = SC.Responder.extend(SC.DelegateSupport,
       }
       
       var siblings = parentView.get('childViews'),
-          nextView = siblings.objectAt(siblings.indexOf(this)+1),
+					index = siblings.indexOf(this),
+          // nextView = index > 0 ? siblings.objectAt(index+1) : null,
+          nextView = siblings.objectAt(index+1),
           nextNode = (nextView) ? nextView.get('layer') : null ;
       
       // before we add to parent node, make sure that the nextNode exists...

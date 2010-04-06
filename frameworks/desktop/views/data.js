@@ -437,7 +437,6 @@ SC.DataView = SC.ListView.extend({
 	},
 
 	reloadSelectionIndexesIfNeeded: function() {
-		// debugger
 		var invalid = this._invalidSelection
 		if (!invalid || !this.get('isVisibleInWindow')) return this 
 		this._invalidSelection = NO
