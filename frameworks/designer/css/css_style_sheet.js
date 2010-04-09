@@ -37,10 +37,10 @@ SC.CSSStyleSheet = SC.Object.extend(
     ssObjects[SC.guidFor(ss)] ;
     
     // create rules array
-    var rules = ss.rules || SC.EMPTY_ARRAY ;
+    var rules = ss.cssRules || SC.EMPTY_ARRAY ;
     var array = SC.SparseArray.create(rules.length) ;
     array.delegate = this ;
-    this.rules = array ;
+    this.cssRules = array ;
     
     return this ;
   },
@@ -88,20 +88,21 @@ SC.CSSStyleSheet = SC.Object.extend(
   /**
     @property {SC.Array} contains SC.CSSRule objects
   */
-  rules: null,
+  cssRules: null,
   
   /**
     You can also insert and remove rules on the rules property array.
   */
   insertRule: function(rule) {
-    var rules = this.get('rules') ;
+    var rules = this.get('cssRules') ;
+		rules.pushobject(rule)
   },
   
   /**
     You can also insert and remove rules on the rules property array.
   */
   deleteRule: function(rule) {
-    var rules = this.get('rules') ;
+    var rules = this.get('cssRules') ;
     rules.removeObject(rule) ;
   },
   
@@ -115,7 +116,7 @@ SC.CSSStyleSheet = SC.Object.extend(
   */
   sparseArrayDidRequestIndex: function(array, idx) {
     // sc_assert(this.rules === array) ;
-    var rules = this.styleSheet.rules || SC.EMPTY_ARRAY ;
+    var rules = this.styleSheet.cssRules || SC.EMPTY_ARRAY ;
     var rule = rules[idx] ;
     if (rule) {
       array.provideContentAtIndex(idx, SC.CSSRule.create({ 
@@ -128,7 +129,7 @@ SC.CSSStyleSheet = SC.Object.extend(
   /** @private synchronize the browser's rules array with our own */
   sparseArrayDidReplace: function(array, idx, amt, objects) {
     var cssRules = objects.collect(function(obj) { return obj.rule; }) ;
-    this.styleSheet.rules.replace(idx, amt, cssRules) ;
+    this.styleSheet.cssRules.replace(idx, amt, cssRules) ;
   }
   
 });

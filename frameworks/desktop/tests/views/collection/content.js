@@ -245,5 +245,3 @@ test("editing properties", function() {
 
 
 
-
-

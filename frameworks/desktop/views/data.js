@@ -31,6 +31,7 @@ SC.DataView = SC.ListView.extend({
       levels = this.get('levels'),
       cells = this.get('cells'),
       itemsPerLevel = this._itemsPerLevel,
+			columns = this.get('columns'),
       power, one, inside, two, left, right, contents = []
 
 
@@ -49,7 +50,7 @@ SC.DataView = SC.ListView.extend({
     }
   
     if(length > 1) {
-      context.id(this.layerIdFor('level-' + level)).classNames(['cv-level retain'])
+      context.id(this.layerIdFor('level-' + level)).classNames(['cv-level release'])
 
       if(length <= Math.ceil(itemsPerLevel / 2) * 2) {
         one = set
@@ -93,15 +94,26 @@ SC.DataView = SC.ListView.extend({
       // if(level <   this._drawLevel)
         // context.css(this.layoutForCell(set[0], 0))
 
-      cells[set[0]] = this.layerIdFor(set[0])
-      context.id(cells[set[0]]).css('height', this.get('rowHeight'))
-      
-      if(this.useRenderer) {
-        var renderer = this.cellRenderer
-        if(!renderer)
-          renderer = this.cellRenderer = this.get('theme').listItem({contentDelegate: this})
-        renderer.render(context)
-      }
+      // cells[set[0]] = this.layerIdFor(set[0])
+      // context.id(this.layerIdFor(set[0])).css('height', this.get('rowHeight'));
+      context = [];
+
+			(columns || [this]).forEach(function(column, col) {
+				var num = cells.get('length'), id = this.layerIdFor(num)
+				cells.push(id)
+				context2 = SC.RenderContext("div")
+	      context2.id(id)
+
+	      if(this.useRenderer) {
+	        var renderer = this.cellRenderer
+	        if(!renderer)
+	          renderer = this.cellRenderer = this.get('theme').listItem({contentDelegate: this})
+	        renderer.render(context2)
+	      }
+	
+				context.push(context2.join(""))
+			}, this)
+
     }
 
     var ret = context.join("")
@@ -162,6 +174,7 @@ SC.DataView = SC.ListView.extend({
     var levels = this.get('levels'),
       levelDivs = this.get('levelDivs'),
       cells = this.get('cells'),
+      hiddenCells = this.get('hiddenCells'),
       contents = levels.objectAt(level), div, layout, layout2
     
     div = levelDivs[level]
@@ -173,6 +186,8 @@ SC.DataView = SC.ListView.extend({
     div.style.top = "0px"
     
     contents.forEach(function(c) {
+			if(hiddenCells.indexOf(c) >= 0)
+				return
       var layout = this.layoutForCell(c, 0)
       SC.$(this.cellForIndex(c)).css('top', layout.top)
     }, this)
@@ -188,15 +203,20 @@ SC.DataView = SC.ListView.extend({
         })
     }
 
-    if(level < levels.get('length') - 1) {
-      div = levelDivs[level + 1]
-      layout = this.layoutForCell(levels[level + 1][0], 0)
-      SC.$(div).css({top: layout.top})
-    }
+    // if(level < levels.get('length') - 1) {
+    //   div = levelDivs[level + 1]
+    //   layout = this.layoutForCell(levels[level + 1][0], 0)
+    //   SC.$(div).css({top: layout.top})
+    // }
   },
   
   layoutForCell: function(row, column) {
-    return this.layoutForContentIndex(this.contentIndexForCell(row), column)
+    return {
+      top:    this.rowOffsetForContentIndex(row) + "px",
+      height: this.rowHeightForContentIndex(row) + "px",
+      left:   (column * 120) + 'px', 
+			width:  '120px'
+    };
   },
 
   addCell: function(fullReload) {
@@ -207,20 +227,21 @@ SC.DataView = SC.ListView.extend({
     if(cell)
       hiddenCells.removeObject(cell)
 
+		if(cell)
+			cell = cells.objectAt(cell)
+
     return cell
   },
 
-  reloadCell: function(cellIdx, attrs) {
+  reloadCell: function(row, column, cellIdx, attrs) {
     var cells = this.get('cells'),
-      cell = this.cellForIndex(cellIdx)
-      row = this.contentIndexForCell(cellIdx),
-      column = 0
+      cell = this.cellForIndex(cellIdx),
+			content = this.get('content'),
+			item = content.objectAt(row),
+			attrs = {content: item, contentIndex: row},
+			ret = this._redrawLayer(cell, attrs, row, column)
 
-    var ret = this._redrawLayer(cell, attrs, row, column)
-    // if(!this.useRenderer)
-      // cell.innerHTML = ret.join("")
-    
-    // SC.$(cell).css(this.layoutForCell(row, 0))
+    SC.$(cell).css(this.layoutForCell(row, column))
   },
   
   _redrawLayer: function(layer, attrs, row, column) {
@@ -264,7 +285,7 @@ SC.DataView = SC.ListView.extend({
       var ret = this.createDivs(nowShowing.toArray(), 0);
       (this.get('containerView') || this).get('layer').innerHTML = ret
       this.get('cells').forEach(function(cell, i) {
-        hiddenCells.push(this.cellForIndex(i))
+        hiddenCells.push(i)
       }, this)
     }
 
@@ -286,8 +307,9 @@ SC.DataView = SC.ListView.extend({
       contents = levels[drawLevel],
       content = this.get('content'),
       start = nowShowing.get('min'),
-      end = nowShowing.get('max'), css,
-      bench = NO
+      end = nowShowing.get('max'),
+			columns = this.get('columns'),
+      bench = YES, css
     
     if(bench) {
       bench=("%@#reloadIfNeeded (Partial)"+ Math.random(100000) + " : " +  invalid.get('length')).fmt(this)
@@ -295,6 +317,7 @@ SC.DataView = SC.ListView.extend({
     }
     
     if(contents) {
+alert(1)
       var i = contents.objectAt(0), 
         j = contents.objectAt(-1), 
         idx = start + i, 
@@ -328,7 +351,7 @@ SC.DataView = SC.ListView.extend({
         if(cell = this.cellForRowAndColumn(idx, 0))
           this.removeItemViewForRowAndColumn(idx, 0)
         this.retainCell(i)
-        this.reloadCell(i, {content: content.objectAt(idx), contentIndex: idx})
+        this.reloadCell(idx, 0, i, {content: content.objectAt(idx), contentIndex: idx})
         this._cellsHash[idx + ",0"] = i
         this._rowsHash[i] = idx + ",0"
       }
@@ -343,14 +366,16 @@ SC.DataView = SC.ListView.extend({
 
     if(drawLevel > 0) {
       invalid.uniq().forEach(function(idx) {
-        if(contents && idx >= left && idx < right)
-          return
-        //     
-        if(nowShowing.contains(idx)) {
-          this.addItemViewForRowAndColumn(idx, 0)
-        } else {
-          this.removeItemViewForRowAndColumn(idx, 0)
-        }
+				(columns || [this]).forEach(function(column, col) {
+	        if(contents && idx >= left && idx < right)
+	          return
+
+	        if(nowShowing.contains(idx)) {
+	          this.addItemViewForRowAndColumn(idx, col)
+	        } else {
+	          this.removeItemViewForRowAndColumn(idx, col)
+	        }
+				}, this)
       }, this)
     }
 
@@ -360,14 +385,15 @@ SC.DataView = SC.ListView.extend({
     this.adjust(this.computeLayout())
     this.get('containerView').adjust(this.computeLayout())
 
-    SC.$(this.get('hiddenCells')).css("left", "-9999px")
+		var cells = this.get('cells')
+    SC.$(this.get('hiddenCells').map(function(i) { return cells.objectAt(i) })).css("left", "-9999px")
 
     return this
   },
   
-  retainCell: function(cellIdx) {
-    var cell = this.cellForIndex(cellIdx)
-      hiddenCells = this.get('hiddenCells')
+  retainCell: function(cell) {
+    // var cell = this.cellForIndex(cellIdx)
+    var hiddenCells = this.get('hiddenCells')
     hiddenCells.removeObject(cell)
     return cell
   },
@@ -376,7 +402,7 @@ SC.DataView = SC.ListView.extend({
     var cell = this.cellForIndex(cellIdx),
       hiddenCells = this.get('hiddenCells')
     
-    hiddenCells.push(cell)
+    hiddenCells.push(cellIdx)
     return cell
   },
   
@@ -387,10 +413,12 @@ SC.DataView = SC.ListView.extend({
       cellIdx = cellsHash[key]
     
     hash = this.cellForIndex(cellIdx)
-    
+
     if(!SC.none(hash) && rowsHash[cellIdx] == key) {
       this.releaseCell(cellIdx)
       delete rowsHash[cellIdx]
+			// SC.$(hash).removeClass("row-" + row).removeClass("column-" + column)
+			// hash.className = ""
     }
     delete cellsHash[key]
     
@@ -415,22 +443,21 @@ SC.DataView = SC.ListView.extend({
       item = content.objectAt(row),
       key = row + "," + column,
       layout, cell = cellsHash[key]
-      
+
       if(cell) {
         cellIdx = cell
-        cell = this.cellForIndex(cell)
+      	cell = this.cellForIndex(cell)
       } else {
         cell = this.addCell()
         if(!cell)
           return NO
         cellIdx = cells.indexOf(cell)
       }
-
       cellsHash[key] = cellIdx
       this._rowsHash[cellIdx] = key
-
-      this.reloadCell(cellIdx, {content: item, contentIndex: row})
-      SC.$(cell).css(this.layoutForCell(cellIdx, 0))
+			// SC.$(cell).addClass("row-" + row).addClass("column-" + column)
+			cell.className = "row-" + row + " column-" + column
+      this.reloadCell(row, column, cellIdx)
       return YES
   },
 
@@ -468,14 +495,14 @@ SC.DataView = SC.ListView.extend({
   //   containerView.adjust(this.computeLayout())
   // }.observes('clippingFrame'),
   
-  layoutForContentIndex: function(contentIndex) {
-    return {
-      top:    this.rowOffsetForContentIndex(contentIndex) + "px",
-      height: this.rowHeightForContentIndex(contentIndex) + "px",
-      left:   '0px', 
-      right:  '0px'
-    };
-  },
+  // layoutForContentIndex: function(contentIndex) {
+  //   return {
+  //     top:    this.rowOffsetForContentIndex(contentIndex) + "px",
+  //     height: this.rowHeightForContentIndex(contentIndex) + "px",
+  //     left:   '0px', 
+  //     right:  '0px'
+  //   };
+  // },
 
   contentIndexForCell: function(cell) {
     return this._rowsHash[cell] ? this._rowsHash[cell].split(",")[0] : cell
