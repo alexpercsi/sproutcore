@@ -14,96 +14,63 @@ SC.DataView = SC.ListView.extend({
   childViews: ["containerView"],
   containerView: SC.View,
   
-  drawLevel: -1,
+	canSelectCells: NO,
 
-  levelDivs: function() {
-    var divs = []
-    var levels = this.get('levels')
-    for(var i = 0, len = levels.get('length'); i < len; i ++)
-      divs.push(document.getElementById(this.layerIdFor('level-' + i)))
-    
-    return divs
-  }.property('cells').cacheable(),
+	content: function() {
+		return this.get('dataSource')
+	}.property('dataSource').cacheable(),
 
-  createDivs: function(set, level) {
-    var context = SC.RenderContext("div"),
-      length = set.get('length'),
-      levels = this.get('levels'),
-      cells = this.get('cells'),
-      itemsPerLevel = this._itemsPerLevel,
-			columns = this.get('columns'),
-      power, one, inside, two, left, right, contents = []
+  _dv_lengthDidChange: function() {
+    delete this.cells
+    delete this._cellsHash
+    delete this._rowsHash
+    delete this.hiddenCells
+    this.reload(this.get('nowShowing'))
+  }.observes('length'),
 
+	row: function() {
+    var rows = this.get('rows'),
+      hiddenRows = this.get('hiddenRows'),
+			row, idx
 
-    if(SC.none(cells))
-      cells = this.set('cells', [])
-  
-    if(SC.none(level))
-      level = 0
-              
-    if(SC.none(itemsPerLevel))
-        itemsPerLevel = this._itemsPerLevel = Math.ceil(length * 0.10)
-          
-    if(SC.none(levels)) {
-      levels = []
-      this.set('levels',levels)
-    }
-  
-    if(length > 1) {
-      context.id(this.layerIdFor('level-' + level)).classNames(['cv-level release'])
+		if(!hiddenRows) {
+			hiddenRows = []
+			this.set('hiddenRows', hiddenRows)
+		}
 
-      if(length <= Math.ceil(itemsPerLevel / 2) * 2) {
-        one = set
-      } else {
-        left = Math.max(1, Math.ceil(itemsPerLevel / 2)), right = left * -1
-        one = set.slice(0, left)
-        inside = set.slice(left, right)
-        two = set.slice(right)
-      }
-      
-      
-      if(level == 0 && two) {
-        for(var i = length, j = (i + Math.max(5, Math.ceil(i * .01))); i < j; i++)
-          two.push(i)
-      }
-      
-      level++
-      
-      contents = contents.concat(one)
-      if(two)
-        contents = contents.concat(two)
+		if(!rows) {
+			rows = []
+			this.set('rows', rows)
+		}
+		
+		row = hiddenRows.pop()
+		
+		if(row && SC.typeOf(row) == "string") {
+			idx = rows.indexOf(row)
+			rows.replace(idx, 1, [document.getElementById(row)])
+			row = rows.objectAt(idx)
+		}
+		
+		if(!row) {
+			var context = SC.RenderContext('div'),
+				idx = rows.get('length'),
+				cells = this.get('cells'),
+				columns = this.get('columns'),
+				rowCells = [],
+				context2
 
-      levels.push(contents)
-
-      one.forEach(function(d) {
-        context.push(this.createDivs([d], level))
-      }, this)
-      
-      if(inside)
-        context.push(this.createDivs(inside, level))
-
-      if(two)
-        two.forEach(function(d) {
-          context.push(this.createDivs([d], level))
-        }, this)
-      
-      
-      
-    } else {
-      // being absolutely positioned
-      // if(level <   this._drawLevel)
-        // context.css(this.layoutForCell(set[0], 0))
-
-      // cells[set[0]] = this.layerIdFor(set[0])
-      // context.id(this.layerIdFor(set[0])).css('height', this.get('rowHeight'));
-      context = [];
-
+			if(!cells) {
+				cells = []
+				this.set('cells', cells)
+			}
+			
+			context.id(this.layerIdFor(idx)).classNames(['sc-dataview-row']);
+			
 			(columns || [this]).forEach(function(column, col) {
-				var num = cells.get('length'), id = this.layerIdFor(num)
-				cells.push(id)
+				rowCells.push(this.layerIdFor(idx, col))
 				context2 = SC.RenderContext("div")
-	      context2.id(id)
-
+	      context2.id(this.layerIdFor(idx, col))
+				context2.classNames(["cell", "column-" + col])
 	      if(this.useRenderer) {
 	        var renderer = this.cellRenderer
 	        if(!renderer)
@@ -112,182 +79,103 @@ SC.DataView = SC.ListView.extend({
 	      }
 	
 				context.push(context2.join(""))
-			}, this)
+			}, this);
 
-    }
+			cells.push(rowCells)
+			row = context.element();
+			rows.push(row);
+			(this.get('containerView') || this).get('layer').appendChild(row)
+		}
+		
+		return row
+	},
+	
 
-    var ret = context.join("")
-    return ret
-  },
-  
-  _dv_lengthDidChange: function() {
-    delete this.cells
-    delete this.levels
-    delete this._cellsHash
-    delete this._rowsHash
-    delete this.hiddenCells
-    delete this._oldDrawLevel
-    this.drawLevel = -1
-    this.reload(this.get('nowShowing'))
-  }.observes('length'),
+	viewForRow: function(row) {
+		var rowViewsHash = this.get('rowViewsHash'),
+			rowsHash = this.get('rowsHash'),
+			layout
 
-  drawLevelDidChange: function() {
-    var drawLevel = this.get('drawLevel'),
-      oldDrawLevel = (this._oldDrawLevel || 0),
-      levels = this.get('levels'), len, i
+		if(!rowViewsHash) {
+			rowViewsHash = {}
+			this.set('rowViewsHash', rowViewsHash)
+		}
+		
+		if(!rowsHash) {
+			rowsHash = {}
+			this.set('rowsHash', rowsHash)
+		}
 
-    if(levels) {
-      len = levels.get('length')
-
-      if(drawLevel > oldDrawLevel)
-        for(i = oldDrawLevel; i < drawLevel; i++)
-          this.releaseLevel(i)
-      else {
-        this.retainLevel(drawLevel)
-      }
-    }
-    
-    this._oldDrawLevel = drawLevel
-  }.observes('drawLevel'),
-  
-  retainLevel: function(level) {
-    var levels = this.get('levels'),
-      cells = this.get('cells'),
-      levelDivs = this.get('levelDivs'), 
-      contents = levels.objectAt(level)
-      
-    if(level >= levels.get('length'))
-      return
-    
-    var layout = this.layoutForCell(contents[0], 0)
-
-
-    div = levelDivs[level]
-
-    SC.$(div).removeClass('release').addClass('retain')
-    SC.$(div).css({
-      top: layout.top
-    })
-  },
-  
-  releaseLevel: function(level) {
-    var levels = this.get('levels'),
-      levelDivs = this.get('levelDivs'),
-      cells = this.get('cells'),
-      hiddenCells = this.get('hiddenCells'),
-      contents = levels.objectAt(level), div, layout, layout2
-    
-    div = levelDivs[level]
-    
-    if(SC.none(contents))
-      return 
-
-    div.className = "cv-level release"
-    div.style.top = "0px"
-    
-    contents.forEach(function(c) {
-			if(hiddenCells.indexOf(c) >= 0)
-				return
-      var layout = this.layoutForCell(c, 0)
-      SC.$(this.cellForIndex(c)).css('top', layout.top)
-    }, this)
-    
-    if(level == 0) {
-      var containerView = this.get('containerView')
-      if(containerView)
-        containerView.adjust({
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0
-        })
-    }
-
-    // if(level < levels.get('length') - 1) {
-    //   div = levelDivs[level + 1]
-    //   layout = this.layoutForCell(levels[level + 1][0], 0)
-    //   SC.$(div).css({top: layout.top})
-    // }
-  },
-  
-  layoutForCell: function(row, column) {
+		var view = rowViewsHash[row]
+		if(!view) {
+			layout = this.layoutForRow(row)
+			view = rowViewsHash[row] = this.row()
+			SC.$(view).css(layout)
+			rowsHash[this.get('rows').indexOf(view)] = row
+		}
+		
+		view.className = "sc-dataview-row" + (row % 2 == 0 ? " even" : "") + (this.isSelected(row) ? " sel" : "")
+		return view
+	},
+	
+  layoutForRow: function(row, column) {
     return {
+			position: "absolute",
       top:    this.rowOffsetForContentIndex(row) + "px",
       height: this.rowHeightForContentIndex(row) + "px",
-      left:   (column * 120) + 'px', 
-			width:  '120px'
+      left:   0,
+			right:  0
     };
   },
+	
+	viewForRowAndColumn: function(row, column) {
+		return this.viewForCell(row, column)
+	},
+	
+	viewForCell: function(row, column) {
+		var rowView = this.viewForRow(row),
+		rowIdx = this.get('rows').indexOf(rowView),
+		view = this.get('cells').objectAt(rowIdx).objectAt(column),
+		div
+		
+		if(!view)
+			var view = this.createCell(row)
+		
+		if(view && SC.typeOf(view) == "string") {
+			div = document.getElementById(view)
+			this.get('cells').objectAt(rowIdx).replace(column, 1, div)
+			view = this.get('cells').objectAt(rowIdx).objectAt(column)
+		}
 
-  addCell: function(fullReload) {
-    var cells = this.get('cells'),
-      hiddenCells = this.get('hiddenCells'),
-      cell = hiddenCells ? hiddenCells.objectAt(-1) : null
-    
-    if(cell)
-      hiddenCells.removeObject(cell)
+		return view
+	},
 
-		if(cell)
-			cell = cells.objectAt(cell)
-
-    return cell
-  },
-
-  reloadCell: function(row, column, cellIdx, attrs) {
-    var cells = this.get('cells'),
-      cell = this.cellForIndex(cellIdx),
-			content = this.get('content'),
-			item = content.objectAt(row),
-			attrs = {content: item, contentIndex: row},
-			ret = this._redrawLayer(cell, attrs, row, column)
-
-    SC.$(cell).css(this.layoutForCell(row, column))
+  reloadCell: function(row, column, attrs) {
+    var view = this.viewForCell(row, column),
+			value = this.get('dataSource').valueForRowAndColumnInTableView(row, column, this)
+			
+		this._redrawLayer(view, value)
   },
   
-  _redrawLayer: function(layer, attrs, row, column) {
-    var renderer = this.cellRenderer, context
-    if(!renderer)
-      renderer = this.cellRenderer = this.get('theme').listItem({contentDelegate: this})
-
-    if(this.useRenderer) {
-      if(!layer)
-        return
-      renderer.attachLayer(layer)
-      renderer.attr(attrs)
-      renderer.update()
-    } else {
-      view = this.viewForRowAndColumn(row, column, YES) 
-      context = view.renderContext(view.get('tagName'))
-      view.renderToContext(context) ;
-      return context
-    }
+  _redrawLayer: function(layer, value) {
+		layer.childNodes[0].innerHTML = (value || "")
   },
 
   reloadIfNeeded: function() {
     var invalid = this._invalidIndexes, bench = YES;
     if (!invalid || !this.get('isVisibleInWindow')) return this ; // delay
-  
-    var nowShowing = this.get('nowShowing')
+
+		var columns = this.get('allColumns'),
+   		nowShowing = this.get('nowShowing')
+
     if(nowShowing.get('length') == 0)
       return
       
     this._invalidIndexes = NO ;
+    this._invalidColumns = NO ;
 
-    if(!this._cellsHash) cellsHash = this._cellsHash = {}
-    if(!this._rowsHash) rowsHash = this._rowsHash = {}
-    var hiddenCells = this.get('hiddenCells')
-    if(!hiddenCells) {
-      hiddenCells = []
-      this.set('hiddenCells', hiddenCells)
-    }
-
-    if(!this.get('cells')) {
-      var ret = this.createDivs(nowShowing.toArray(), 0);
-      (this.get('containerView') || this).get('layer').innerHTML = ret
-      this.get('cells').forEach(function(cell, i) {
-        hiddenCells.push(i)
-      }, this)
-    }
+		if(!columns.isIndexSet)
+			columns = this.get('nowShowingColumns')
 
     if(!invalid.isIndexSet) {
       invalid = nowShowing.toArray()
@@ -298,86 +186,21 @@ SC.DataView = SC.ListView.extend({
         invalid = invalid.toArray()
     }
     
-    var levels = this.get('levels'),
-      drawLevel = this.get('drawLevel')
-
-    this.set('drawLevel', levels.get('length'))
-
-    var drawLevel = this.get('drawLevel'),
-      contents = levels[drawLevel],
-      content = this.get('content'),
-      start = nowShowing.get('min'),
-      end = nowShowing.get('max'),
-			columns = this.get('columns'),
-      bench = YES, css
-    
     if(bench) {
       bench=("%@#reloadIfNeeded (Partial)"+ Math.random(100000) + " : " +  invalid.get('length')).fmt(this)
       SC.Benchmark.start(bench);
     }
     
-    if(contents) {
-alert(1)
-      var i = contents.objectAt(0), 
-        j = contents.objectAt(-1), 
-        idx = start + i, 
-        left = idx,
-        right = end = Math.min(end, idx + j - i + 1),
-        set = SC.IndexSet.create(idx, end-idx),
-        lastSlate = this._last_slateReload,
-        rolledIn, rolledOut
-    
-      if(drawLevel > 0 && lastSlate && lastSlate.isIndexSet) {
-        rolledOut = this._TMP_DIFF3.add(lastSlate).remove(set)
-        rolledIn = this._TMP_DIFF4.add(set).remove(lastSlate)
-        
-        if(!rolledIn.contains(set)) {
-          rolledOut.forEach(function(idx) {
-            this.removeItemViewForRowAndColumn(idx, 0)
-            invalid.push(idx)
-          }, this)
-        
-          rolledIn.forEach(function(idx) {
-            this.removeItemViewForRowAndColumn(idx, 0)
-          }, this)
-        }
-        
-        rolledOut.clear()
-        rolledIn.clear()
-      }
-    
-    
-      for(; i <= j && idx < end; i++, idx++) {
-        if(cell = this.cellForRowAndColumn(idx, 0))
-          this.removeItemViewForRowAndColumn(idx, 0)
-        this.retainCell(i)
-        this.reloadCell(idx, 0, i, {content: content.objectAt(idx), contentIndex: idx})
-        this._cellsHash[idx + ",0"] = i
-        this._rowsHash[i] = idx + ",0"
-      }
-    
-      this._last_slateReload = set.frozenCopy()
-    
-      if(drawLevel < this.get('levels').get('length'))
-        SC.$(this.get('levelDivs')[drawLevel]).css({
-          top: this.rowOffsetForContentIndex(this.contentIndexForCell(contents[0])) + "px"
-        })
-    }
 
-    if(drawLevel > 0) {
-      invalid.uniq().forEach(function(idx) {
-				(columns || [this]).forEach(function(column, col) {
-	        if(contents && idx >= left && idx < right)
-	          return
-
-	        if(nowShowing.contains(idx)) {
-	          this.addItemViewForRowAndColumn(idx, col)
-	        } else {
-	          this.removeItemViewForRowAndColumn(idx, col)
-	        }
+		invalid.uniq().forEach(function(idx) {
+			if(nowShowing.contains(idx)) {
+				(columns || [0]).forEach(function(column, colIdx) {
+					this.reloadCell(idx, colIdx)
 				}, this)
-      }, this)
-    }
+			} else {
+				this.releaseRow(idx)
+			}
+		}, this)
 
     if(bench)
       SC.Benchmark.end(bench);
@@ -385,128 +208,69 @@ alert(1)
     this.adjust(this.computeLayout())
     this.get('containerView').adjust(this.computeLayout())
 
-		var cells = this.get('cells')
-    SC.$(this.get('hiddenCells').map(function(i) { return cells.objectAt(i) })).css("left", "-9999px")
+    SC.$(this.get('hiddenRows')).css("left", "-9999px")
 
     return this
   },
   
-  retainCell: function(cell) {
-    // var cell = this.cellForIndex(cellIdx)
-    var hiddenCells = this.get('hiddenCells')
-    hiddenCells.removeObject(cell)
-    return cell
+  releaseRow: function(row, column) {
+		var view, hiddenRow
+		hiddenRows = this.get('hiddenRows')
+		view = this.viewForRow(row)
+		hiddenRows.push(view)
+		delete this.get('rowsHash')[this.get('rows').indexOf(view)]
+		delete this.get('rowViewsHash')[row]
   },
   
-  releaseCell: function(cellIdx) {
-    var cell = this.cellForIndex(cellIdx),
-      hiddenCells = this.get('hiddenCells')
-    
-    hiddenCells.push(cellIdx)
-    return cell
-  },
-  
-  removeItemViewForRowAndColumn: function(row, column) {
-    var cellsHash = this._cellsHash,
-      rowsHash = this._rowsHash,
-      key = row + "," + (column || 0),
-      cellIdx = cellsHash[key]
-    
-    hash = this.cellForIndex(cellIdx)
-
-    if(!SC.none(hash) && rowsHash[cellIdx] == key) {
-      this.releaseCell(cellIdx)
-      delete rowsHash[cellIdx]
-			// SC.$(hash).removeClass("row-" + row).removeClass("column-" + column)
-			// hash.className = ""
-    }
-    delete cellsHash[key]
-    
-  },
-  
-  cellForIndex: function(idx) {
-    var cells = this.get('cells'),
-      cell = cells.objectAt(idx),
-
-    if(SC.typeOf(cell) == "string") {
-      cell = document.getElementById(cell)
-      cells.replace(idx, 1, cell)
-    }
-    
-    return cell
-  },
-  
-  addItemViewForRowAndColumn: function(row, column, fullReload) {
-    var cells = this.get('cells'),
-      cellsHash = this._cellsHash,
-      content = this.get('content'),
-      item = content.objectAt(row),
-      key = row + "," + column,
-      layout, cell = cellsHash[key]
-
-      if(cell) {
-        cellIdx = cell
-      	cell = this.cellForIndex(cell)
-      } else {
-        cell = this.addCell()
-        if(!cell)
-          return NO
-        cellIdx = cells.indexOf(cell)
-      }
-      cellsHash[key] = cellIdx
-      this._rowsHash[cellIdx] = key
-			// SC.$(cell).addClass("row-" + row).addClass("column-" + column)
-			cell.className = "row-" + row + " column-" + column
-      this.reloadCell(row, column, cellIdx)
-      return YES
-  },
-
   reloadSelectionIndexesIfNeeded: function() {
-    var invalid = this._invalidSelection
+    var invalid = this._invalidSelection, view
     if (!invalid || !this.get('isVisibleInWindow')) return this 
     this._invalidSelection = NO
-    this.reload(invalid)
-  },
-
-  cellForRowAndColumn: function(row, column) {
-    if(SC.none(column)) column = 0
-    var ret = this_cellsHash[row = "," + column]
-    return ret >= 0 ? ret : NO
-  },
-  
-  viewForRowAndColumn: function(row, column) {
-    if(!this.useRenderer)
-      return sc_super()
-
-    var cellsHash = this._cellsHash,
-      key = row + "," + column,
-      cell = this._cellsHash[key]
-
-    return this.cellForIndex(cell)
+		invalid.forEach(function(index) {
+			view = this.viewForRow(index)
+			SC.$(view).setClass("sel", this.isSelected(index))
+		}, this)
   },
   
   contentIndexForLayerId: function(id) {
-    var ret = sc_super()
-    return ret ? this.contentIndexForCell(ret) : ret
-  },
-  
-  // adjustFrame: function() {
-  //   var containerView = this.get('containerView')
-  //   containerView.adjust(this.computeLayout())
-  // }.observes('clippingFrame'),
-  
-  // layoutForContentIndex: function(contentIndex) {
-  //   return {
-  //     top:    this.rowOffsetForContentIndex(contentIndex) + "px",
-  //     height: this.rowHeightForContentIndex(contentIndex) + "px",
-  //     left:   '0px', 
-  //     right:  '0px'
-  //   };
-  // },
+		var rowsHash = this.get('rowsHash')
+    if (!id || !(id = id.toString())) return null ; // nothing to do
+    
+    var base = this._baseLayerId;
+    if (!base) base = this._baseLayerId = SC.guidFor(this)+"-";
+    
+    // no match
+    if ((id.length <= base.length) || (id.indexOf(base) !== 0)) return null ; 
 
-  contentIndexForCell: function(cell) {
-    return this._rowsHash[cell] ? this._rowsHash[cell].split(",")[0] : cell
+    var ret = Number(id.split('-').objectAt(1))
+    return isNaN(ret) ? null : rowsHash[ret] ;
   },
+  
+  contentIndexForCell: function(cell) {
+		var rowsHash = this.get('rowsHash')
+		var row = this.get('rows').indexOf(cell.parentNode)
+		console.log("contentindexforcell", row, rowsHash[row])
+		return rowsHash[row]
+  },
+
+	selectionIndexForItemView: function(cell) {
+		return this.selectionIndexForCell(cell)
+	},
+
+  selectionIndexForCell: function(cell) {
+		var rowsHash = this.get('rowsHash')
+		var row = this.get('rows').indexOf(cell.parentNode),
+			index = rowsHash[row]
+
+		if(!this.get('canSelectCells'))
+			return index
+		
+		var columns = this.get('columns'),
+			column = cell.id.split('-')[2]
+		
+		return index * columns.get('length') + column
+  },
+
 
   scrollToItemView: function(view) {},
 
@@ -514,10 +278,134 @@ alert(1)
     var sel = this.get('selection')
     return sel ? sel.contains(this.get('content'), item) : NO
   },
-  
-  contentIndexForItemView: function(itemView) {
-    if(!itemView) return -1
-    return parseInt(this.contentIndexForCell(this.get('cells').indexOf(itemView)))
-  }
+
+  columnsInRect: function(rect) {
+    var columns = this.get('columns'),
+        left       = SC.minY(rect),
+        right    = SC.maxY(rect),
+        width    = rect.height || 0,
+        len, offset, start, end;
+
+		if(SC.none(columns))
+			return null
+			
+  	start = -1
+		while(this.offsetForColumn(start + 1) < left) {
+			start++
+		}
+
+		end = start
+		do {
+			end++
+		} while(this.offsetForColumn(end) < right) 
+		
+		
+		//     end = start + ((height - (height % rowHeight)) / rowHeight) ;
+		//     // if (end > len) end = len;
+		//     offset = this.rowOffsetForContentIndex(end);
+		// 
+		// end = len
+		// while(this.offsetForColumn(end) > right) {
+		// 	end--
+		// }
+		
+    return SC.IndexSet.create(start, end-start);
+  },
+
+  nowShowingColumns: function() {
+    return this.computeNowShowingColumns();
+  }.property('columns', 'clippingFrame').cacheable(),
+
+	allColumns: function() {
+   return SC.IndexSet.create(0, this.getPath('columns.length')).freeze();
+  }.property('columns').cacheable(),
+
+
+	// 
+	//   computeNowShowingColumns: function() {
+	//     var r = this.columnsInRect(this.get('clippingFrame'));
+	//     if (!r) r = this.get('allColumns'); // default show all
+	// 
+	//     // make sure the index set doesn't contain any indexes greater than the
+	//     // actual content.
+	//     else {
+	//       var len = this.getPath('columns.length'), 
+	//           max = r.get('max');
+	//       if (max > len) r = r.copy().remove(len, max-len).freeze();
+	//     }
+	// 
+	//     return r ;
+	//   },
+	// 
+	// 
+	//   _cv_nowShowingColumnsDidChange: function() {
+	//     var nowShowing  = this.get('nowShowingColumns'),
+	//         last        = this._sccv_lastNowShowingColumns,
+	//         diff, diff1, diff2;
+	// 
+	//     diff1 = this._TMP_DIFF5
+	//     diff2 = this._TMP_DIFF6
+	// 
+	//     if (diff1) diff1.clear();
+	//     if (diff2) diff2.clear();
+	// 
+	//     // find the differences between the two
+	//     // NOTE: reuse a TMP IndexSet object to avoid creating lots of objects
+	//     // during scrolling
+	//     if (last !== nowShowing) {
+	//       if (last && nowShowing) {
+	//         diff1 = this._TMP_DIFF1.add(last).remove(nowShowing);
+	//         diff2 = this._TMP_DIFF2.add(nowShowing).remove(last);
+	//         diff = diff1.add(diff2);
+	//       } else diff = last || nowShowing ;
+	//     }
+	// 
+	//     // if nowShowing has actually changed, then update
+	//     if (diff && diff.get('length') > 0) {
+	//       this._sccv_lastNowShowing = nowShowing ? nowShowing.frozenCopy() : null;
+	//       this.reload(null, diff);
+	//     }
+	//   }.observes('nowShowingColumns'),
+	// 
+	// offsetForColumn: function(column) {
+	// 	var offsets = this._columnOffests,
+	// 		offset = offsets.objectAt(column)
+	// 	
+	// 	if(!offset)
+	// 		offset = column > 0 ? this.offsetForColumn(column - 1) + this.widthForColumn(column - 1) : 0
+	// 		
+	// 	offsets.replace(column, 1, offset)
+	// 	
+	// 	return offset
+	// },
+	// 
+	// widthForColumn: function(column) {
+	// 	var columns = this.get('columns'),
+	// 		column = columns.objectAt(column)
+	// 	
+	// 	return column ? column.get('width') || 120 : 120
+	// }
+
+  computeLayout: function() {
+    var ret = this._sclv_layout;
+    if (!ret) ret = this._sclv_layout = {};
+    ret.minHeight = this.rowOffsetForContentIndex(this.get('length'))+4;
+		ret.minWidth = this.get('calculatedWidth');
+    this.set('calculatedHeight',ret.minHeight);
+    return ret ;
+  },
+
+	ghostForColumn: function(column) {
+		var nowShowing = this.get('nowShowing'),
+			el = document.createElement('div')
+			
+		nowShowing.forEach(function(idx) {
+			el.appendChild(this.viewForCell(idx, column).cloneNode(YES))
+		}, this)
+		
+		el.className = "column-" + column + " ghost";
+		
+		return el
+	}
   
 });

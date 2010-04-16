@@ -796,17 +796,29 @@ SC.CollectionView = SC.View.extend(
     @param {SC.IndexSet} indexes
     @returns {SC.CollectionView} receiver
   */
-  reload: function(indexes) {
-    var invalid = this._invalidIndexes ;
-    if (indexes && invalid !== YES) {
-      if (invalid) invalid.add(indexes);
-      else invalid = this._invalidIndexes = indexes.clone();
-
-    }
-    else {
-      this._invalidIndexes = YES ; // force a total reload
-    }
-    
+  reload: function(rows, columns) {
+		// if(rows !== undefined) {
+			// if(rows != null)
+				// console.log(rows.toArray())
+	    var invalid = this._invalidIndexes ;
+	    if (rows && invalid !== YES) {
+	      if (invalid) invalid.add(rows);
+	      else invalid = this._invalidIndexes = rows.clone();
+	    } else {
+	      this._invalidIndexes = YES ; // force a total reload
+	    }
+		// }
+		// 
+		// if(columns !== undefined) {
+		// 	    var invalid = this._invalidColumns ;
+		// 	    if (columns && invalid !== YES) {
+		// 	      if (invalid) invalid.add(columns);
+		// 	      else invalid = this._invalidColumns = columns.clone();
+		// 	    } else {
+		// 	      this._invalidColumns = YES ; // force a total reload
+		// 	    }
+		// }
+		// 
     if (this.get('isVisibleInWindow')) this.invokeOnce(this.reloadIfNeeded);
     return this ;
   },
@@ -1664,6 +1676,7 @@ SC.CollectionView = SC.View.extend(
     @returns {SC.CollectionView} receiver
   */
   select: function(indexes, extend) {
+	console.log("select", indexes)
     var content = this.get('content'),
         del     = this.get('selectionDelegate'),
         groupIndexes = this.get('_contentGroupIndexes'),
@@ -2413,7 +2426,7 @@ SC.CollectionView = SC.View.extend(
       
     } else if(info) {
       idx = info.contentIndex;
-      contentIndex = this.contentIndexForItemView(view)
+      contentIndex = this.selectionIndexForItemView(view)
       
       // this will be set if the user simply clicked on an unselected item and 
       // selectOnMouseDown was NO.
@@ -3179,7 +3192,9 @@ SC.CollectionView = SC.View.extend(
   _TMP_DIFF2: SC.IndexSet.create(),
   _TMP_DIFF3: SC.IndexSet.create(),
   _TMP_DIFF4: SC.IndexSet.create(),
-  
+  _TMP_DIFF5: SC.IndexSet.create(),
+  _TMP_DIFF6: SC.IndexSet.create(),
+
   /** @private
   
     Whenever the nowShowing range changes, update the range observer on the 
@@ -3297,6 +3312,10 @@ SC.CollectionView = SC.View.extend(
       return view.action(evt) ;
     }
   },
+
+	selectionIndexForItemView: function(itemView) {
+		return this.contentIndexForItemView(itemView)
+	},
 
   contentIndexForItemView: function(itemView) {
     if(!itemView)

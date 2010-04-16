@@ -5,6 +5,13 @@
 .endash-table-header {
 /*	background: static_url('tableheader.png') top left repeat-x;*/
 	background: #9a9a9a !important;
+	overflow: hidden;
+	-webkit-border-top-left-radius: 8px;
+}
+
+.endash-table-view {
+/*			-webkit-border-top-left-radius: 8px;*/
+/*			-webkit-border-top-right-radius: 8px;*/
 }
 
 .endash-table-header .endash-table-cell {
@@ -13,16 +20,38 @@
 	background-repeat: repeat-x !important;
 	border-radius: 0px !important;
 	-moz-border-radius: 0px !important;
+/*	background: #F9F9F9 !important;*/
+	border-bottom: 1px solid #DDD !important;
+/*	bottom: 1px !important;*/
 }
 
-	.endash-table-header .endash-table-cell.selected {
-		background-image: static_url('tableheader-sel.png') !important;
-		background-position: top left !important;
-		background-repeat: repeat-x !important;
+	.endash-table-header .endash-table-cell:hover label {
+/*		-webkit-border-top-left-radius: 8px;*/
+	background: rgba(0, 0, 0, .10) !important;
+	border-top: 1px solid rgba(0, 0, 0, .15);
+/*	color: white !important;*/
+	top: 11px !important;
+	bottom: 13px !important;
+	-webkit-border-radius: 10px !important;
+/*	font-weight: normal !important;*/
+/*	color: #999 !important;*/
 	}
+
+.endash-table-header .endash-table-cell label {
+	font-family: Helvetica;
+	text-align: left !important;
+	font-size: 12px !important;
+	top: 12px;
+	bottom: 10px;
+	margin: 0px 5px !important;
+	line-height: 19px !important;
+	font-weight: bold !important;
+	text-align: center !important;
+}
 
 .endash-table-header .endash-table-cell * {
 	background: none !important;
+	color: #555;
 }
 
 /*.endash-table-header .endash-table-cell.asc {
@@ -33,14 +62,7 @@
 	color: blue !important;
 }
 */
-	.endash-table-header .endash-table-cell label {
-		text-align: left !important;
-		font-size: 11px !important;
-		margin: 0px 6px !important;
-		line-height: 16px !important;
-		font-weight: bold !important;
-		background: none !important;
-	}
+
 
 	.endash-table-data-view .endash-table-cell label {
 		left: 6px !important;
@@ -77,12 +99,21 @@
 
 .endash-table-header .sc-thumb-view {
 	z-index: 1000;
-	background-image: static_url('tableheaderdivider.png') !important;
-	background-position: top center !important;
-	background-repeat: no-repeat !important;
-	background-color: transparent !important;
+/*	background-image: static_url('tableheaderdivider.png') !important;*/
+/*	background-position: top center !important;*/
+/*	background-repeat: no-repeat !important;*/
+/*	background-color: transparent !important;*/
 	cursor: "col-resize"
 }
+
+	.endash-table-header .sc-thumb-view .inner {
+		position: absolute;
+		top: 7px !important; bottom: 7px !important;
+		width: 2px;
+		background-color: white;
+		left: 2px;
+		border-left: 1px solid rgba(0, 0, 0, .1);
+	}
 
 .endash-table-header .sc-thumb-view:hover {
 	cursor: col-resize !important
@@ -98,5 +129,5 @@ body.resizing-horizontally {
 	
 .dragging {
 	z-index: 999999 !important;
-	opacity: .6;
+/*	opacity: .6;*/
 }

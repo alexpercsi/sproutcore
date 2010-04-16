@@ -20,7 +20,6 @@
 
   @extends SC.View
 	@author Christopher Swasey
-  @author Erich Ocean
 */
 Endash = {}
 Endash.ThumbView = SC.View.extend(
@@ -32,6 +31,11 @@ Endash.ThumbView = SC.View.extend(
   isEnabledBindingDefault: SC.Binding.bool(),
   
 	delegate: null,	
+	
+	render: function(context, firstTime) {
+		if(firstTime)
+			context.push("<div class='inner'></div>")
+	},
   
   mouseDown: function(evt) {
     if (!this.get('isEnabled')) return NO ;
