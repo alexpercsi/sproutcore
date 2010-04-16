@@ -34,6 +34,7 @@
 	top: 11px !important;
 	bottom: 13px !important;
 	-webkit-border-radius: 10px !important;
+	-moz-border-radius: 10px !important;
 /*	font-weight: normal !important;*/
 /*	color: #999 !important;*/
 	}
