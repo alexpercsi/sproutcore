@@ -19,9 +19,10 @@ SC.TableHeaderView = SC.DividerView.extend({
 			}))
 		}, this)
 		
-		headers.push(this.createChildView(SC.TableHeaderCellView.extend({
-			spacer: YES
-		})))
+		// headers.push(this.createChildView(SC.TableHeaderCellView.extend({
+			// classNames: ['spacer'],
+			// spacer: YES
+		// })))
 		
 		this.set('headers', headers.slice())
 				

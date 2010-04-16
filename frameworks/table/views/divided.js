@@ -138,8 +138,8 @@ SC.DividerView = SC.View.extend(SC.SimpleLayout, {
  
 	_resizeDividerByOffset: function(divider, offset) {
 
-		var dividers = this.get('dividers')
-		var position = dividers.indexOf(divider)
+		var headers = this.get('headers')
+		var position = headers.indexOf(divider)
 		return this._adjustContentThickness(position, offset)
 	
 		// for splitview:

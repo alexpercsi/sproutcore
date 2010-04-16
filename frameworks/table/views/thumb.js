@@ -24,7 +24,7 @@
 Endash = {}
 Endash.ThumbView = SC.View.extend(
 /** @scope Endash.ThumbView.prototype */ {
-	
+
   classNames: ['sc-thumb-view'],
   
   isEnabled: YES,
@@ -32,9 +32,10 @@ Endash.ThumbView = SC.View.extend(
   
 	delegate: null,	
 	
+	
 	render: function(context, firstTime) {
 		if(firstTime)
-			context.push("<div class='inner'></div>")
+			context.begin('div').classNames(["dragger"]).end()
 	},
   
   mouseDown: function(evt) {
@@ -45,12 +46,13 @@ Endash.ThumbView = SC.View.extend(
     
 		this._offset = {x: 0, y: 0}
 		
-  	this.invokeDelegateMethod(this.delegate, 'thumbViewDidBeginDrag', this, evt)
+  	this.invokeDelegateMethod(this.delegate, 'thumbViewDidBeginDrag', this.parentView, evt)
     responder.dragDidStart(this) ;
     
     this._mouseDownX = this._lastX = evt.pageX ;
     this._mouseDownY = this._lastY = evt.pageY ;
     
+		this.parentView.set('dragging', YES)
     return YES ;
   },
 
@@ -66,13 +68,14 @@ Endash.ThumbView = SC.View.extend(
 		this._lastX = evt.pageX
 		this._lastY = evt.pageY
 		
-		this.invokeDelegateMethod(this.delegate, 'thumbViewWasDragged', this, evt)
+		this.invokeDelegateMethod(this.delegate, 'thumbViewWasDragged', this.parentView, evt)
     return YES;
   },
 
 	mouseUp: function(evt) {
 		this._lastX = this._lastY = this._offset = this._mouseDownX = this.mouseDownY = null
-  	this.invokeDelegateMethod(this.delegate, 'thumbViewDidEndDrag', this, evt)
+  	this.invokeDelegateMethod(this.delegate, 'thumbViewDidEndDrag', this.parentView, evt)
+		this.parentView.set('dragging', NO)
 	},
     
   // doubleClick: function(evt) {
