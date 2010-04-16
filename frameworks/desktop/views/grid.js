@@ -12,7 +12,7 @@ require('views/list') ;
   @author    Charles Jolley  
   @version 1.0
 */
-SC.GridView = SC.DataView.extend(
+SC.GridView = SC.ListView.extend(
 /** @scope SC.GridView.prototype */ {
     classNames: ['sc-grid-view'],
 

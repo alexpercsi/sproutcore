@@ -41,6 +41,9 @@ SC.TableView = SC.ListView.extend(SC.TableDelegate, {
 	cellPadding: 5,
 	columnBorder: 1,
 	
+	sortDescriptor: null,
+	sortDescriptorBinding: '*dataSource.orderBy',
+	
 	init: function() {
 		sc_super()
 		if(!this.columnsBinding)
@@ -50,6 +53,11 @@ SC.TableView = SC.ListView.extend(SC.TableDelegate, {
 	content: function() {
 		return this.get('dataSource')
 	}.property('dataSource').cacheable(),
+
+	contentDidChange: function() {
+		this.notifyPropertyChange('dataSource')
+		this.getPath('dataView.contentView').reload(null)
+	}.observes('*content.[]'),
 	
   dataView: SC.ScrollView.design({
     isVisible: YES,
@@ -64,6 +72,7 @@ SC.TableView = SC.ListView.extend(SC.TableDelegate, {
 			rowHeight: 22,
 			classNames: ['endash-table-data-view'],
  			tableBinding: '.parentView.parentView.parentView',
+			sortDescriptorBinding: '*table.sortDescriptor',
  			columnsBinding: '*table.columns',
 			dataSourceBinding: '*table.dataSource'
 		}),
@@ -89,6 +98,7 @@ SC.TableView = SC.ListView.extend(SC.TableDelegate, {
     contentView: SC.TableHeaderView.extend({
  			tableBinding: '.parentView.parentView.parentView',
  			columnsBinding: '*table.columns',
+			sortDescriptorBinding: '*table.sortDescriptor'
  		})
   }),
 	
@@ -125,7 +135,6 @@ SC.TableView = SC.ListView.extend(SC.TableDelegate, {
 
 		columns.forEach(function(column, i) {
 			width = column.get('width')
-			// width -= (this.get('cellPadding') * 2 + this.get('columnBorder'))
 			stylesheet.styleSheet.insertRule(['div.column-' + i + ' {',
 					'width: ' + width + 'px !important;',
 					'left: ' + left + 'px !important;',
@@ -143,7 +152,6 @@ SC.TableView = SC.ListView.extend(SC.TableDelegate, {
 			col = columns.objectAt(column),
 			width = col.get('width')
 		this._widths[column] = width
-		// width -= (this.get('cellPadding') * 2 + this.get('columnBorder'))
 		return ['div.column-' + column + ' {',
 				'width: ' + width + 'px !important;',
 				'left: ' + this._offsets[column] + 'px !important;',
@@ -175,25 +183,14 @@ SC.TableView = SC.ListView.extend(SC.TableDelegate, {
 			
 		this.getPath('dataView.contentView').calculatedWidth += diff
 		this.getPath('dataView.contentView').adjust(this.getPath('dataView.contentView').computeLayout())
-		console.log("columnsrangedidchange", indexes.toArray ? indexes.toArray() : indexes, key)
 	},
 	
 	ghostForColumn: function(column) {
 		var el = this.getPath('dataView.contentView').ghostForColumn(column)
 		this._ghostLeft = this._offsets[column] - 1
-		
-		// var blocker = el.cloneNode()
-		// blocker.className = "blocker column-" + column;
-		// SC.$(blocker).css({left: this._ghostLeft + "px !important", top: 17, width: this._widths[column] + "px !important"})
-		SC.$(el).css({left: this._ghostLeft, top: 40})
-		
 		this._ghost = el
-		// this._blocker = blocker
-		
-		// this.get('layer').appendChild(blocker)
+		SC.$(el).css({left: this._ghostLeft, top: 40})
 		this.get('layer').appendChild(el)
-
-		return el
 	},
 	
 	beginResize: function() {
@@ -208,44 +205,36 @@ SC.TableView = SC.ListView.extend(SC.TableDelegate, {
 	},
 	
 	draggingColumn: function(column) {
+		this.$().addClass('reordering-columns')
 		this.ghostForColumn(column)
 		this._dragging = column
 		var css = this._stylesheet.styleSheet
 		// css.insertRule('div.cell, div.blocker { -webkit-transition-property: width, left; -webkit-transition-duration: .3s, .3s; }')
 		css.insertRule('div.sc-dataview-row div.cell.column-' + this._dragging + " {opacity: .1 !important}")
-
-		// this.beginResize()
 	},
 	
 	columnDragged: function(offset) {
-		// console.log(offset)
 		this._ghostLeft += offset
-		// console.log(this._ghostLeft)
 		SC.$(this._ghost).css('left', this._ghostLeft + "px !important")
 	},
 	
 	endColumnDrag: function() {
-		console.log("end column drag")
+		this.$().removeClass('reordering-columns')
 		this.get('layer').removeChild(this._ghost)
-		// this.get('layer').removeChild(this._blocker)
 		this._ghost = this._blocker = null
-		// this._aStyleSheet.destroy()
-		// this._aStyleSheet = null
-		// this._direction = null
 		this.resetRules()
 		this.getPath('dataView.contentView').reload(null)
-		// this.endResize()
 	},
 	
 	swapColumns: function(col1, col2) {
-
-		// this.resetRules()
-		// css.insertRule('div.sc-dataview-row div.cell.column-' + col2 + " {opacity: .1 !important}")
-		return
-		this.getPath('dataView.contentView').reload(null)
+	},
 	
-		var css = this._stylesheet.styleSheet
-
+	sortByColumn: function(column, sortState) {
+		if(sortState != "ASC")
+			sortState = "ASC"
+		else
+			sortState = "DESC"
+		this.set('sortDescriptor', sortState + " " + column.get('key'))
 	}
 		
 })

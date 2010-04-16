@@ -5,6 +5,31 @@ SC.TableHeaderCellView = SC.ButtonView.extend({
 	
 	tagName: 'div',
 	
+	sortDescriptor: null,
+	sortDescriptorBinding: '.parentView*sortDescriptor',
+	
+	sortState: function() {
+		var key = this.get('sortDescriptor')
+		if(!key || this.spacer)
+			return
+		
+		var descending = NO
+
+		if(SC.typeOf(key) == "array")
+			key = key[0]
+			
+	  if (key.indexOf('ASC') > -1) {
+	     	key = key.split('ASC ')[1];
+	     } else if (key.indexOf('DESC') > -1) {
+	       key = key.split('DESC ')[1];
+	       descending = YES;
+	     }
+		if(key == this.get('column').get('key'))
+			return descending ? "DESC" : "ASC"
+		
+		return "none"
+	}.property('sortDescriptor').cacheable(),
+	
   displayProperties: ['dragging', 'sortState'],
 
 	sortStateBinding: '*column.sortState',
@@ -35,7 +60,7 @@ SC.TableHeaderCellView = SC.ButtonView.extend({
     classes = this._TEMPORARY_CLASS_HASH;
 		classes.asc = (sortState  == "ASC")
 		classes.desc = (sortState == "DESC")
-		classes.selected = !SC.none(sortState)
+		classes.selected = !SC.none(sortState) && sortState !== "none"
     classes.def = this.get('isDefault');
     classes.cancel = this.get('isCancel');
 		
@@ -77,7 +102,7 @@ SC.TableHeaderCellView = SC.ButtonView.extend({
 			this.invokeDelegateMethod(this.delegate, 'anchorViewDidEndDrag', this, evt)
 			this._dragging = false
 		} else {
-			// this.get('parentView').get('table').sortByColumn(this.get('column'))
+			this.get('parentView').get('table').sortByColumn(this.get('column'), this.get('sortState'))
 		}
 		return sc_super()
 	}
