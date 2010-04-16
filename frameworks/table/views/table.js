@@ -189,7 +189,7 @@ SC.TableView = SC.ListView.extend(SC.TableDelegate, {
 		var el = this.getPath('dataView.contentView').ghostForColumn(column)
 		this._ghostLeft = this._offsets[column] - 1
 		this._ghost = el
-		SC.$(el).css({left: this._ghostLeft, top: 40})
+		SC.$(el).css({left: this._ghostLeft, top: 41})
 		this.get('layer').appendChild(el)
 	},
 	
