@@ -18,6 +18,7 @@
 	background-image: static_url('tableheader.png') !important;
 	background-position: top left !important;
 	background-repeat: repeat-x !important;
+	background-opacity: .5;
 	border-radius: 0px !important;
 	-moz-border-radius: 0px !important;
 /*	background: #F9F9F9 !important;*/
@@ -112,7 +113,7 @@
 		width: 2px;
 		background-color: white;
 		left: 2px;
-		border-left: 1px solid rgba(0, 0, 0, .1);
+		border-left: 1px solid rgba(0, 0, 0, .12);
 	}
 
 .endash-table-header .sc-thumb-view:hover {

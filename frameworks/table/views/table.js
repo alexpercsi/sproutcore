@@ -158,7 +158,7 @@ SC.TableView = SC.View.extend({
 		// var blocker = el.cloneNode()
 		// blocker.className = "blocker column-" + column;
 		// SC.$(blocker).css({left: this._ghostLeft + "px !important", top: 17, width: this._widths[column] + "px !important"})
-		SC.$(el).css({left: this._ghostLeft, top: 17})
+		SC.$(el).css({left: this._ghostLeft, top: 40})
 		
 		this._ghost = el
 		// this._blocker = blocker
