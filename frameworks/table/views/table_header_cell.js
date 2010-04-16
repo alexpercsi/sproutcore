@@ -71,7 +71,11 @@ SC.TableHeaderCellView = SC.ButtonView.extend({
     if (theme) context.addClass(theme);
 
     // render inner html 
-     this.renderTitle(context, firstTime) ; // from button mixin
+     // this.renderTitle(context, firstTime) ; // from button mixin
+
+		context.begin('label').text(this.get('title')).end()
+		context.begin('div').classNames(["dragger"]).end()
+		// context.push("<div class='dragger'></div>")
    },
 	
   mouseDown: function(evt) {
