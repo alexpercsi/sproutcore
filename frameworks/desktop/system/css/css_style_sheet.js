@@ -21,16 +21,18 @@ SC.CSSStyleSheet = SC.Object.extend(
   init: function() {
     sc_super() ;
     
-    var ss = this.styleSheet ;
+    var ss = this.styleSheetElement ;
     if (!ss) {
       // create the stylesheet object the hard way (works everywhere)
-      ss = this.styleSheet = document.createElement('style') ;
+      ss = this.styleSheetElement = document.createElement('style') ;
       ss.type = 'text/css' ;
       var head = document.getElementsByTagName('head')[0] ;
       if (!head) head = document.documentElement ; // fix for Opera
       head.appendChild(ss) ;
     }
     
+		this.styleSheet = document.styleSheets[document.styleSheets.length - 1]; 
+
     // cache this object for later
     var ssObjects = this.constructor.styleSheets ;
     if (!ssObjects) ssObjects = this.constructor.styleSheets = {} ;
@@ -38,7 +40,8 @@ SC.CSSStyleSheet = SC.Object.extend(
     
     // create rules array
     var rules = ss.cssRules || SC.EMPTY_ARRAY ;
-    var array = SC.SparseArray.create(rules.length) ;
+    var array = SC.SparseArray.create();
+		// array.provideLength(rules.length);
     array.delegate = this ;
     this.rules = array ;
     
@@ -95,7 +98,7 @@ SC.CSSStyleSheet = SC.Object.extend(
   */
   insertRule: function(rule) {
     var rules = this.get('rules') ;
-		rules.pushobject(rule)
+		rules.pushObject(rule)
   },
   
   /**
@@ -109,10 +112,8 @@ SC.CSSStyleSheet = SC.Object.extend(
   // TODO: implement a destroy method
   
 	destroy: function() {
-		var rules = this.get('rules')
-		while(rules.get('length') > 0)
-			this.deleteRule(rules.objectAt(0))
-			
+		var ss = this.get('styleSheetElement')
+		ss.parentNode.removeChild(ss)
 		sc_super()
 	},
 

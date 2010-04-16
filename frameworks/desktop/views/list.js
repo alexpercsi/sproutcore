@@ -374,7 +374,7 @@ SC.ListView = SC.CollectionView.extend(
     // estimate the final row and then get the actual offsets until we are 
     // right. - look at the offset of the _following_ row
     end = start + ((height - (height % rowHeight)) / rowHeight) ;
-    if (end > len) end = len;
+    // if (end > len) end = len;
     offset = this.rowOffsetForContentIndex(end);
     
     // walk backwards until top of row is before or at bottom edge

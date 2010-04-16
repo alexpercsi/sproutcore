@@ -76,8 +76,9 @@ SC.EmptyTheme.renderers.ListItem = SC.Renderer.extend({
 			isSelected: SC.none(this.isSelected) ? del.isSelected(this.contentIndex) : this.isSelected,
       controlSize: this.controlSize
     });
+console.log(this.contentValueKey, this.content.get(this.contentValueKey))
     this._titleRenderer.attr({
-      title: this.content.get('title'),
+      title: this.content.get(this.contentValueKey) + "bob",
       icon: this.icon,
       needsEllipsis: this.needsEllipsis,
       escapeHTML: this.escapeHTML

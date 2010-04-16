@@ -77,7 +77,7 @@ SC.TableHeaderCellView = SC.ButtonView.extend({
 			this.invokeDelegateMethod(this.delegate, 'anchorViewDidEndDrag', this, evt)
 			this._dragging = false
 		} else {
-			this.get('parentView').get('table').sortByColumn(this.get('column'))
+			// this.get('parentView').get('table').sortByColumn(this.get('column'))
 		}
 		return sc_super()
 	}

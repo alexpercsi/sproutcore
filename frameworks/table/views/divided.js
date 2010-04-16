@@ -216,6 +216,7 @@ SC.DividerView = SC.View.extend(SC.SimpleLayout, {
 	
 	
 		this.adjustDrag(divider, offset)
+		return offset
 	},
  
 	/**
@@ -236,6 +237,7 @@ SC.DividerView = SC.View.extend(SC.SimpleLayout, {
 	
 		this._lastPoint = point
 		this.adjustDrag(divider, offset)
+		return offset
 	},
 
 
