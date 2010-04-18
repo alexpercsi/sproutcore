@@ -1,9 +1,11 @@
 .endash-table-header {
 	background-image: static_url('tableheader.png') !important;
+	background-image: static_url('tableheader4.png') !important;
 	background-position: top left !important;
 	background-repeat: repeat-x !important;
 	overflow: visible;
 	border-bottom: 1px solid #DDD !important;
+	border-bottom: 1px solid #d6d6d6 !important;
 }
 
 	.endash-table-header .endash-table-cell {

@@ -1,5 +1,3 @@
-sc_require('views/thumb')
-
 SC.SimpleLayout = {
 	isLayout: YES,
 	isDividedLayout: YES,
@@ -10,6 +8,9 @@ SC.SimpleLayout = {
 	thicknessesBindingDefault: SC.Binding.multiple(),
 
 	totalThickness: 0,
+	
+	widthDelta: null,
+	offsetDelta: null,
 	
 	thicknessPath: null,
 	
@@ -71,12 +72,10 @@ SC.SimpleLayout = {
 			else
 				this._offsetCache[idx] = this.startOffset || 0
 				
-			this._offsetCache[idx] += (this.offsetDelta || 0)
+			// this._offsetCache[idx] += (this.offsetDelta || 0)
 		}
 	
-	
-	
-		return this._offsetCache[idx]
+		return this._offsetCache[idx] + (this.offsetDelta || 0)
 	},
 
 	thicknessesDidChange: function() {
