@@ -207,15 +207,10 @@ SC.TableView = SC.ListView.extend(SC.TableDelegate, {
 		this.$().addClass('reordering-columns')
 		this.ghostForColumn(column)
 		this._dragging = column
-		var css = this._stylesheet.styleSheet
-		// css.insertRule('div.cell, div.blocker { -webkit-transition-property: width, left; -webkit-transition-duration: .3s, .3s; }')
-		// css.insertRule('div.sc-dataview-row div.cell.column-' + this._dragging + " {opacity: .1 !important}")
 	},
 	
 	columnDragged: function(offset) {
-		console.log("dragging", this._ghostLeft, offset)
 		this._ghostLeft += offset
-		console.log(this._ghostLeft)
 		SC.$(this._ghost).css('left', this._ghostLeft + "px !important")
 	},
 	

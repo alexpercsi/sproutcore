@@ -10,7 +10,6 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
 	sortDescriptorBinding: '.parentView*sortDescriptor',
 	
 	childViews: 'labelView thumbView'.w(),
-	// childViews: ['thumbView'],
 	
 	labelView: SC.LabelView.extend({
 		tagName: 'label',
@@ -23,18 +22,6 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
 			top: 0, bottom: 0, right: 0, width: 16
 		}
 	}),
-	
-	init: function() {
-		sc_super()
-		var column = this.get('column')
-		column.addObserver('width', this, this._widthDidChange)
-	},
-	
-	_widthDidChange: function() {
-		var column = this.get('column'),
-			width = column.get('width')
-		this.adjust('width', width)
-	},
 	
 	sortState: function() {
 		var key = this.get('sortDescriptor')
@@ -63,48 +50,26 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
 	sortStateBinding: '*column.sortState',
 	
 	render: function(context, firstTime) {
-		// if(!firstTime)
-			// return
-			
-	    // add href attr if tagName is anchor...
-	    var href, toolTip, classes, theme;
+    var href, toolTip, classes, theme;
 		var sortState = this.get('sortState')
-		
-	    // if (this.get('tagName') === 'a') {
-	    //   href = this.get('href');
-	    //   if (!href || (href.length === 0)) href = "javascript:;";
-	    //   context.attr('href', href);
-	    // }
-	    // 	
-	    // // If there is a toolTip set, grab it and localize if necessary.
-	    // toolTip = this.get('toolTip') ;
-	    // if (SC.typeOf(toolTip) === SC.T_STRING) {
-	    //   if (this.get('localize')) toolTip = toolTip.loc() ;
-	    //   context.attr('title', toolTip) ;
-	    //   context.attr('alt', toolTip) ;
-	    // }
-	    
-	    // add some standard attributes & classes.
-	    classes = this._TEMPORARY_CLASS_HASH || {};
+
+    classes = this._TEMPORARY_CLASS_HASH || {};
 		classes.asc = (sortState  == "ASC")
 		classes.desc = (sortState == "DESC")
 		classes.selected = !SC.none(sortState) && sortState !== "none"
 		classes.draggging = this.get('dragging')
-	    classes.def = this.get('isDefault');
-	    classes.cancel = this.get('isCancel');
+	  classes.def = this.get('isDefault');
+	  classes.cancel = this.get('isCancel');
 		
-	    classes.icon = !!this.get('icon');
+    classes.icon = !!this.get('icon');
 		classes.dragging = this.get('dragging')
-	    context.attr('role', 'button').setClass(classes);
-	    theme = this.get('theme');
-	    if (theme) context.addClass(theme);
-	
-	    // render inner html 
-	     // this.renderTitle(context, firstTime) ; // from button mixin
-		// context.begin('label').text(this.get('title')).end()
-	    if (firstTime) this.renderChildViews(context, firstTime) ;
-		// context.push("<div class='dragger'></div>")
-	   },
+	  
+	  context.attr('role', 'button').setClass(classes);
+	  theme = this.get('theme');
+	  if (theme) context.addClass(theme);
+
+    if (firstTime) this.renderChildViews(context, firstTime) ;
+  },
 	
   mouseDown: function(evt) {
 		this._initialX = evt.pageX
@@ -113,7 +78,6 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
 		
 	mouseDragged: function(evt) {
 		var x = evt.pageX
-
 
 		if(!this._dragging)
 		 	if(Math.abs(this._initialX - x) < 6)
@@ -129,18 +93,8 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
 			if(SC.none(lastX))
 				lastX = this._lastX = x
 
-		
-		// var offset = this._offset
-		// if(!offset)
-			// offset = this._offset = {}
-		
 		var offset = x - lastX
-		
-		// offset.x = evt.pageX - this._lastX
-		// offset.y = evt.pageY - this._lastY
-
 		this._lastX = x
-		// this._lastY = evt.pageY
 		
 		this.invokeDelegateMethod(this.delegate, 'headerWasDragged', this, offset, evt)
 		return YES
