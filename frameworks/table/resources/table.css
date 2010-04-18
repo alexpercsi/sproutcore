@@ -9,9 +9,9 @@
 }
 
 	.endash-table-header .endash-table-cell {
-		height: 40px !important;
+		height: 38px !important;
 		overflow: visible !important;
-		bottom: -1px !important;
+/*		bottom: -1px !important;*/
 		background-image: static_url('tableheader_divider2.png');
 		background-repeat: no-repeat;
 		background-position: center right;
@@ -20,13 +20,17 @@
 	}
 
 
-	.endash-table-header .endash-table-cell:hover, .endash-table-header .endash-table-cell.selected {
-		background-image: static_url('tableheader.png') !important;
-		background-position: top left !important;
+	.endash-table-header .endash-table-cell:hover, .endash-table-header .endash-table-cell.selected, .endash-table-header .endash-table-cell.dragging {
+		background-image: static_url('tableheader4.png') !important;
+		background-position: bottom left !important;
 		background-repeat: repeat-x !important;
 
 		z-index: 3000 !important;
 	}
+
+		.endash-table-header .endash-table-cell.selected {
+			z-index: 9999 !important;
+		}
 	
 		.endash-table-header .endash-table-cell label {
 			font-family: Helvetica;
@@ -42,7 +46,6 @@
 			font-weight: bold !important;
 		}
 	
-
 			.endash-table-header .endash-table-cell:hover label, .endash-table-header .endash-table-cell.dragging label {
 				background: rgba(0, 0, 0, .06) !important;
 			}
@@ -62,16 +65,36 @@
 				right: 0px !important;
 				}
 
-			 .endash-table-header .endash-table-cell.selected  label {
+			.endash-table-header .endash-table-cell.selected  label {
 				background: #4f9fe9 !important;		
 				border-top: 1px solid #3783c6 !important;
 				color: rgba(255, 255, 255, .95);
 		 		z-index: 9999 !important;
 			}
+			
+			
+			.endash-table-header .endash-table-cell.dragging {
+				z-index: 10999 !important;
+				bottom: -1px !important;
+				top: 5px !important;
+				-webkit-border-top-left-radius: 4px !important;
+				-webkit-border-top-right-radius: 4px !important;
+				-moz-border-radius-topright: 4px !important;
+				-moz-border-radius-topleft: 4px !important;
+				opacity: .85 !important;
+			}
+			
+			.endash-table-header .endash-table-cell.dragging label {
+				top: 0px !important;
+			}
+			
+			.endash-table-header .endash-table-cell.dragging div.sc-thumb-view {
+				top: 3px !important;
+			}
 	
 .endash-table-header .endash-table-cell div.sc-thumb-view {
 	position: absolute !important;
-	top: 11px !important;
+	top: 12px !important;
 	left: none !important;
 	right: 0px !important;
 	width: 10px !important;
