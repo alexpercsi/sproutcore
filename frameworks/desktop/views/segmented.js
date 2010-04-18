@@ -291,7 +291,7 @@ SC.SegmentedView = SC.View.extend(SC.Control,
       var loc = items.length, cq = this.$('.sc-segment'), item;
       while(--loc>=0) {
         item = items[loc];
-        names.sel = isArray ? (value.indexOf(item[1])>=0) : (item[1]===value);
+        names.sel = isArray ? (value.indexOf(item[1])>=0) : (item[1]===value || item === value);
         names.active = (activeIndex === loc);
         names.disabled = !item[2];
         SC.$(cq[loc]).setClass(names);
@@ -329,7 +329,7 @@ SC.SegmentedView = SC.View.extend(SC.Control,
       }
 
       classArray.push('sc-segment');
-      
+
       if(!item[2]){
         classArray.push('disabled');
       }
@@ -348,6 +348,9 @@ SC.SegmentedView = SC.View.extend(SC.Control,
       if(activeIndex === i) {
         classArray.push('active') ;
       }
+
+			classArray.push(title.toLowerCase().replace(/ /g, "-"))
+
       if(item[4]){
         width=item[4];
         stylesHash['width'] = width+'px';

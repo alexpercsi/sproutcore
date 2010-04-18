@@ -18,11 +18,23 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
 	}),
 	
 	thumbView: Endash.ThumbView.extend({
-		delegateBinding: '.parentView*delegate',
+		delegateBinding: '.parentView',
 		layout: {
 			top: 0, bottom: 0, right: 0, width: 16
 		}
 	}),
+	
+	init: function() {
+		sc_super()
+		var column = this.get('column')
+		column.addObserver('width', this, this._widthDidChange)
+	},
+	
+	_widthDidChange: function() {
+		var column = this.get('column'),
+			width = column.get('width')
+		this.adjust('width', width)
+	},
 	
 	sortState: function() {
 		var key = this.get('sortDescriptor')
@@ -126,6 +138,20 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
 			this.get('parentView').get('table').sortByColumn(this.get('column'), this.get('sortState'))
 		}
 		return sc_super()
+	},
+	
+	thumbViewWasDragged: function(view, offset, evt) {
+		var column = this.get('column'),
+			width = column.get('width'),
+			minWidth = column.get('minWidth') || 20,
+			maxWidth = column.get('maxWidth'),
+			newWidth
+			
+		newWidth = Math.max(minWidth, width + offset.x)
+		if(maxWidth)
+			newWidth = Math.min(maxWidth, newWidth)
+
+		column.set('width', newWidth)
 	}
 
 })

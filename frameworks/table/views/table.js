@@ -96,7 +96,7 @@ SC.TableView = SC.View.extend({
 	resetRules: function() {
 		var columns = this.get('columns')
 		var stylesheet = this._stylesheet
-		var left = 0
+		var left = 6
 		var offsets = this._offsets = []
 		var widths = this._widths = [],
 			width
@@ -166,6 +166,7 @@ SC.TableView = SC.View.extend({
 	},
 	
 	beginResize: function() {
+		console.log('resizing columns')
 		this.$().addClass('resizing-columns')
 		this.isResizing = YES
 	},
