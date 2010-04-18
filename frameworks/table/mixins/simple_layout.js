@@ -18,11 +18,12 @@ SC.SimpleLayout = {
 	}.observes('childViews'),
 	
 	_sl_layoutChildViews: function(indexes) {
+		console.log("laying out child views")
 		var childViews = this.get('childViews')
 		this._offsetCache = null
 		var last = null
 		childViews.forEach(function(v, i) {
-			// if(!this.handleViewPosition || this.handleViewPosition(v))
+			if(!this.handleViewPosition || this.handleViewPosition(v))
 				v.adjust(this.layoutForView(i, v))
 			if(!v.spacer)
 				last = i

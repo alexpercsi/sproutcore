@@ -143,9 +143,6 @@ SC.TableView = SC.View.extend({
 		var diff = columns.objectAt(indexes).get('width') - this._widths[indexes]
 		var css = this._stylesheet.styleSheet
 		
-		if(this.isResizing)
-			len = indexes + 1
-
 		for(var i = indexes; i < len; i++) {
 			css.deleteRule(i)
 			if(i > indexes)
@@ -157,37 +154,40 @@ SC.TableView = SC.View.extend({
 		this.getPath('dataView.contentView').adjust(this.getPath('dataView.contentView').computeLayout())
 	},
 	
+	sortByColumn: function(column, sortState) {
+		if(sortState != "ASC")
+			sortState = "ASC"
+		else
+			sortState = "DESC"
+		this.set('sortDescriptor', sortState + " " + column.get('key'))
+	},
+	
+	// reordering
+	
 	ghostForColumn: function(column) {
-		var el = this.getPath('dataView.contentView').ghostForColumn(column)
-		this._ghostLeft = this._offsets[column] - 1
+		var columns = this.get('columns'),
+			idx = columns.indexOf(column),
+			el = this.getPath('dataView.contentView').ghostForColumn(idx)
+			
+		this._ghostLeft = this.getPath('tableHeaderView.contentView').offsetForView(idx)
 		this._ghost = el
-		SC.$(el).css({left: this._ghostLeft, top: 41})
+		SC.$(el).css({left: this._ghostLeft, top: 40})
 		this.get('layer').appendChild(el)
 	},
-	
-	beginResize: function() {
-		console.log('resizing columns')
-		this.$().addClass('resizing-columns')
-		this.isResizing = YES
-	},
-	
-	endResize: function() {
-		this.$().removeClass('resizing-columns')
-		this.isResizing = NO
-		this.resetRules()
-	},
-	
+
 	draggingColumn: function(column) {
 		this.$().addClass('reordering-columns')
 		this.ghostForColumn(column)
 		this._dragging = column
 		var css = this._stylesheet.styleSheet
 		// css.insertRule('div.cell, div.blocker { -webkit-transition-property: width, left; -webkit-transition-duration: .3s, .3s; }')
-		css.insertRule('div.sc-dataview-row div.cell.column-' + this._dragging + " {opacity: .1 !important}")
+		// css.insertRule('div.sc-dataview-row div.cell.column-' + this._dragging + " {opacity: .1 !important}")
 	},
 	
 	columnDragged: function(offset) {
+		console.log("dragging", this._ghostLeft, offset)
 		this._ghostLeft += offset
+		console.log(this._ghostLeft)
 		SC.$(this._ghost).css('left', this._ghostLeft + "px !important")
 	},
 	
@@ -195,18 +195,11 @@ SC.TableView = SC.View.extend({
 		this.$().removeClass('reordering-columns')
 		this.get('layer').removeChild(this._ghost)
 		this._ghost = this._blocker = null
+		this._ghostLeft = null
 		this.resetRules()
 		this.getPath('dataView.contentView').reload(null)
 	},
 	
 	swapColumns: function(col1, col2) {
 	},
-	
-	sortByColumn: function(column, sortState) {
-		if(sortState != "ASC")
-			sortState = "ASC"
-		else
-			sortState = "DESC"
-		this.set('sortDescriptor', sortState + " " + column.get('key'))
-	}
 })
