@@ -107,7 +107,6 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
 	   },
 	
   mouseDown: function(evt) {
-	console.log(evt.target.className)
 		this._initialX = evt.pageX
 		return sc_super()
 	},
@@ -115,24 +114,42 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
 	mouseDragged: function(evt) {
 		var x = evt.pageX
 
+
 		if(!this._dragging)
 		 	if(Math.abs(this._initialX - x) < 6)
 				return
 			else {
 				this._dragging = YES
 				this.set('dragging', YES)
-				this.invokeDelegateMethod(this.delegate, 'anchorViewDidBeginDrag', this, evt)
+				this.invokeDelegateMethod(this.delegate, 'headerDidBeginDrag', this, evt)
 				return YES
 			}
+			
+			var lastX = this._lastX
+			if(SC.none(lastX))
+				lastX = this._lastX = x
+
 		
-		this.invokeDelegateMethod(this.delegate, 'anchorViewWasDragged', this, evt)
+		// var offset = this._offset
+		// if(!offset)
+			// offset = this._offset = {}
+		
+		var offset = x - lastX
+		
+		// offset.x = evt.pageX - this._lastX
+		// offset.y = evt.pageY - this._lastY
+
+		this._lastX = x
+		// this._lastY = evt.pageY
+		
+		this.invokeDelegateMethod(this.delegate, 'headerWasDragged', this, offset, evt)
 		return YES
   },
 
 	mouseUp: function(evt) {
 		if(this._dragging) {
 			this.set('dragging', NO)
-			this.invokeDelegateMethod(this.delegate, 'anchorViewDidEndDrag', this, evt)
+			this.invokeDelegateMethod(this.delegate, 'headerDidEndDrag', this, evt)
 			this._dragging = false
 		} else {
 			this.get('parentView').get('table').sortByColumn(this.get('column'), this.get('sortState'))
