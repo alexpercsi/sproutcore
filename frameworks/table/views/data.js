@@ -162,7 +162,7 @@ SC.DataView = SC.ListView.extend({
   },
 
   reloadIfNeeded: function() {
-    var invalid = this._invalidIndexes, bench = YES;
+    var invalid = this._invalidIndexes, bench = NO;
     if (!invalid || !this.get('isVisibleInWindow')) return this ; // delay
 
 		var columns = this.get('allColumns'),

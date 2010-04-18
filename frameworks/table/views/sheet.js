@@ -20,11 +20,11 @@ SC.SheetView = SC.TableView.extend({
 					
 				if(SC.none(rowArray)) {
 					rowArray = []
-					content.replace(row, 1, rowArray)
+					this.replace(row, 1, rowArray)
 				}
 				
-				if(row >= length)
-					this.set('length', row + 1)
+				// if(row >= length)
+					// this.set('length', row + 1)
 				
 				value = rowArray.objectAt(column)
 				return value

@@ -46,6 +46,7 @@ SC.TableHeaderView = SC.View.extend(SC.SimpleLayout, {
 	headerDidBeginDrag: function(view, offset, evt) {
 		this._dragging = view
 		this.get('table').draggingColumn(view.get('column'))
+		SC.$(view).addClass('dragging')
 	},
 	
 	headerWasDragged: function(view, offset, evt) {
@@ -57,6 +58,7 @@ SC.TableHeaderView = SC.View.extend(SC.SimpleLayout, {
 		this.get('table').endColumnDrag()
 		this._dragging = null
 		this._sl_layoutChildViews()
+		SC.$(view).removeClass('dragging')
 	},
 	
 	adjustDrag: function(view, offset) {

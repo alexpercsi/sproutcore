@@ -108,6 +108,7 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
 		} else {
 			this.get('parentView').get('table').sortByColumn(this.get('column'), this.get('sortState'))
 		}
+		this._lastX = null
 		return sc_super()
 	},
 	
