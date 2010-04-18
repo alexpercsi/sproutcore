@@ -18,7 +18,6 @@ SC.SimpleLayout = {
 	}.observes('childViews'),
 	
 	_sl_layoutChildViews: function(indexes) {
-		console.log("laying out child views")
 		var childViews = this.get('childViews')
 		this._offsetCache = null
 		var last = null

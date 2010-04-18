@@ -10,9 +10,6 @@ SC.TableView = SC.View.extend({
 	content: null,
 	dataSource: null,
 	
-	cellPadding: 5,
-	columnBorder: 1,
-	
 	sortDescriptor: null,
 	sortDescriptorBinding: '*dataSource.orderBy',
 	
@@ -94,26 +91,22 @@ SC.TableView = SC.View.extend({
 	}.observes('columns'),
 	
 	resetRules: function() {
-		var columns = this.get('columns')
-		var stylesheet = this._stylesheet
-		var left = 6
-		var offsets = this._offsets = []
-		var widths = this._widths = [],
+		var columns = this.get('columns'),
+			stylesheet = this._stylesheet,
+			left = 6,
+			offsets = this._offsets = [],
+			widths = this._widths = [],
 			width
 		
 		if(stylesheet)
 			stylesheet.destroy()
+			
 		stylesheet = this._stylesheet = SC.CSSStyleSheet.create()
 
 		columns.forEach(function(column, i) {
-			width = column.get('width')
-			stylesheet.styleSheet.insertRule(['div.column-' + i + ' {',
-					'width: ' + width + 'px !important;',
-					'left: ' + left + 'px !important;',
-				'}'].join(""), i)
 			offsets[i] = left
-			widths[i] = column.get('width')
-			left += column.get('width')
+			stylesheet.styleSheet.insertRule(this.ruleForColumn(i), i)
+			left += widths[i]
 		}, this)
 		
     this.getPath('dataView.contentView').set('calculatedWidth', left);
