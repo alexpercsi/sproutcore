@@ -51,8 +51,7 @@ Endash.ThumbView = SC.View.extend(
     
     this._mouseDownX = this._lastX = evt.pageX ;
     this._mouseDownY = this._lastY = evt.pageY ;
-    
-		this.parentView.set('dragging', YES)
+
     return YES ;
   },
 
@@ -62,26 +61,16 @@ Endash.ThumbView = SC.View.extend(
 		offset.x = evt.pageX - this._lastX
 		offset.y = evt.pageY - this._lastY
 		
-		if(offset.x == 500)
-			debugger
-		
 		this._lastX = evt.pageX
 		this._lastY = evt.pageY
 		
-		this.invokeDelegateMethod(this.delegate, 'thumbViewWasDragged', this.parentView, evt)
+		this.invokeDelegateMethod(this.delegate, 'thumbViewWasDragged', this.parentView, offset, evt)
     return YES;
   },
 
 	mouseUp: function(evt) {
 		this._lastX = this._lastY = this._offset = this._mouseDownX = this.mouseDownY = null
   	this.invokeDelegateMethod(this.delegate, 'thumbViewDidEndDrag', this.parentView, evt)
-		this.parentView.set('dragging', NO)
-	},
-    
-  // doubleClick: function(evt) {
-  // 		console.log("click")
-  // 		var del = this.get('eventDelegate')
-  // 		return del.doubleClickInThumbView(this, evt)
-  // }
+	}
 
 });
