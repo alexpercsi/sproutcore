@@ -870,7 +870,7 @@ SC.CollectionView = SC.View.extend(
 
 
     // if an index set, just update indexes
-    if (invalid.isIndexSet) {
+    // if (invalid.isIndexSet) {
 
       if (bench) {
         bench=("%@#reloadIfNeeded (Partial)" + Math.random(100000)).fmt(this)
@@ -880,7 +880,7 @@ SC.CollectionView = SC.View.extend(
       invalid.forEach(function(idx) {
         if (nowShowing.contains(idx)) {
           (columns || [null]).forEach(function(column, colIdx) {
-             this.addItemViewForRowAndColumn(idx, SC.none(column) ? column : colIdx, rebuild)
+             this.addItemViewForRowAndColumn(idx, SC.none(column) ? NO : colIdx, rebuild)
           }, this)
         } else {
           this.removeItemViewForRowAndColumn(idx, 0)
@@ -888,7 +888,7 @@ SC.CollectionView = SC.View.extend(
       }, this)
 
       if (bench) SC.Benchmark.end(bench);
-		}
+		// }
 		
     // adjust my own layout if computed
     if (layout) { this.adjust(layout); }
@@ -911,22 +911,24 @@ SC.CollectionView = SC.View.extend(
       del  = this.get('contentDelegate')
 
     itemViews  = this._sc_itemViews;
-    existing = itemViews ? (itemViews[row] ? itemViews[row][column] : null) : null;  
+		if(!itemViews)
+			itemViews = []
+		
+		if(!itemViews[row])
+			itemViews[row] = []
+			
+    existing = itemViews[row][column];
     containerView = this.get('containerView') || this
 
 		if(!SC.none(column)) {
 			rowView = itemViews[row][-1]
 			
-			if(!rowView || !rowView.get) {
-				rowView = itemViews[row][-1] = this.viewForRowAndColumn(row, null, YES)
-				if(!rowView.get('parentNode'))
-					containerView.appendChild(rowView)
+			if(!rowView || !rowView.get)  {
+				rowView = this.addItemViewForRowAndColumn(row, null, rebuild)
 			}
-
+			
 			containerView = rowView
-		} else {
-			column = NO
-		}
+		} 
 
     if(existing && SC.typeOf(existing) == "string")
       existing = itemViews[row][column] = document.getElementById(existing)
@@ -934,6 +936,9 @@ SC.CollectionView = SC.View.extend(
     view = this.viewForRowAndColumn(row, column, rebuild)
    	view.set('layout', this.layoutForCell(row, column))
     
+		if(SC.none(column))
+			column = -1
+
     if(existing) {
       if(existing.get) {
         layer = existing.get('layer');
@@ -951,7 +956,7 @@ SC.CollectionView = SC.View.extend(
       }
     }
 
-    if(del.collectionViewWillDisplayCellForRowAndColumn)
+    if(del.collectionViewWillDisplayCellForRowAndColumn && column >= 0)
       del.collectionViewWillDisplayCellForRowAndColumn(this, view, row, column)
 
     if(view.isFactory) {
@@ -1041,18 +1046,19 @@ SC.CollectionView = SC.View.extend(
     if (!itemViews) itemViews = this._sc_itemViews = [] ;
     if (!itemViews[row]) itemViews[row] = []
 
+		var viewCache = this._viewCache
+		if(!viewCache)
+			viewCache = this._viewCache = []
+	
+		var colViewCache = viewCache[column]
+	
+		if(!colViewCache)
+			colViewCache = viewCache[column] = []
+
 		if(!SC.none(column)) {
 			if(column == NO)
 				column = 0
 				
-			var viewCache = this._viewCache
-			if(!viewCache)
-				viewCache = this._viewCache = []
-		
-			var colViewCache = viewCache[column]
-		
-			if(!colViewCache)
-				colViewCache = viewCache[column] = []
 				
 			ret = itemViews[row][column]
 		} else {
@@ -1069,7 +1075,7 @@ SC.CollectionView = SC.View.extend(
 	
       E = this.viewClassForRowAndColumn(row, column)
       
-      if(E.prototype.useFactory && (SC.none(column) || !rebuild)) {
+      if(E.prototype.useFactory && (!rebuild)) {
 				// we're scrolling, presumably, so we're going to just use a factory and grab
 				// the layer
         ret = this._factoryForClass(E)
