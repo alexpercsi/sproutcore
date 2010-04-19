@@ -11,22 +11,14 @@ SC.DataView = SC.ListView.extend({
 
   // useRenderer: YES,
     
-  childViews: ["containerView"],
-  containerView: SC.View,
+  // childViews: ["containerView"],
+  // containerView: SC.View,
   
 	canSelectCells: NO,
 
 	content: function() {
 		return this.get('dataSource')
 	}.property('dataSource').cacheable(),
-
-  _dv_lengthDidChange: function() {
-    delete this.cells
-    delete this._cellsHash
-    delete this._rowsHash
-    delete this.hiddenCells
-    this.reload(this.get('nowShowing'))
-  }.observes('length'),
 
 	row: function() {
 		var rows = this.get('rows'),
@@ -48,20 +40,6 @@ SC.DataView = SC.ListView.extend({
 	
 
 	viewForRow: function(row) {
-		// var rowViewsHash = this.get('rowViewsHash'),
-			// rowsHash = this.get('rowsHash'),
-			// layout
-
-		// if(!rowViewsHash) {
-		// 	rowViewsHash = {}
-		// 	this.set('rowViewsHash', rowViewsHash)
-		// }
-		// 
-		// if(!rowsHash) {
-		// 	rowsHash = {}
-		// 	this.set('rowsHash', rowsHash)
-		// }
-
 		var view = rowViewsHash[row]
 		if(!view) {
 			rowView = this.row()
@@ -76,7 +54,6 @@ SC.DataView = SC.ListView.extend({
 				view = rowView
 
 			SC.$(view).css(this.layoutForRow(row))
-			// rowsHash[this.get('rows').indexOf(view)] = row
 		}
 		
 		view.className = "sc-dataview-row" + (row % 2 == 0 ? " even" : "") + (this.isSelected(row) ? " sel" : "")
