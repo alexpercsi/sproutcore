@@ -45,50 +45,9 @@ SC.DataView = SC.ListView.extend({
 		
 		row = hiddenRows.pop()
 		
-		// if(row && SC.typeOf(row) == "string") {
-		// 	idx = rows.indexOf(row)
-		// 	rows.replace(idx, 1, [document.getElementById(row)])
-		// 	row = rows.objectAt(idx)
-		// }
-		// 
 		if(!row)
 			return NO
-		 // {
-		 // 			var context = SC.RenderContext('div'),
-		 // 				idx = rows.get('length'),
-		 // 				cells = this.get('cells'),
-		 // 				columns = this.get('columns'),
-		 // 				rowCells = [],
-		 // 				context2
-		 // 	
-		 // 			if(!cells) {
-		 // 				cells = []
-		 // 				this.set('cells', cells)
-		 // 			}
-		 // 			
-		 // 			context.id(this.layerIdFor(idx)).classNames(['sc-dataview-row']);
-		 // 			
-		 // 			(columns || [this]).forEach(function(column, col) {
-		 // 				rowCells.push(this.layerIdFor(idx, col))
-		 // 				context2 = SC.RenderContext("div")
-		 // 	      context2.id(this.layerIdFor(idx, col))
-		 // 				context2.classNames(["cell", "column-" + col])
-		 // 	      if(this.useRenderer) {
-		 // 	        var renderer = this.cellRenderer
-		 // 	        if(!renderer)
-		 // 	          renderer = this.cellRenderer = this.get('theme').listItem({contentDelegate: this})
-		 // 	        renderer.render(context2)
-		 // 	      }
-		 // 	
-		 // 				context.push(context2.join(""))
-		 // 			}, this);
-		 // 	
-		 // 			cells.push(rowCells)
-		 // 			row = context.element();
-		 // 			rows.push(row);
-		 // 			(this.get('containerView') || this).get('layer').appendChild(row)
-		 // 		}
-		
+
 		return row
 	},
 	
@@ -168,58 +127,6 @@ SC.DataView = SC.ListView.extend({
 		layer.childNodes[0].innerHTML = (value || "")
   },
 
-  // reloadIfNeeded: function() {
-  //   var invalid = this._invalidIndexes, bench = NO;
-  //   if (!invalid || !this.get('isVisibleInWindow')) return this ; // delay
-  // 
-  // 		var columns = this.get('allColumns'),
-  //  		nowShowing = this.get('nowShowing')
-  // 
-  //   if(nowShowing.get('length') == 0)
-  //     return
-  //     
-  //   this._invalidIndexes = NO ;
-  //   this._invalidColumns = NO ;
-  // 
-  // 		if(!columns.isIndexSet)
-  // 			columns = this.get('nowShowingColumns')
-  // 
-  //   if(!invalid.isIndexSet) {
-  //     invalid = nowShowing.toArray()
-  //   } else {
-  //     if(this._TMP_DIFF1.get('length') > 0)
-  //       invalid = this._TMP_DIFF1.remove(this._TMP_DIFF2).toArray().concat(this._TMP_DIFF2.toArray())
-  //     else
-  //       invalid = invalid.toArray()
-  //   }
-  //   
-  //   if(bench) {
-  //     bench=("%@#reloadIfNeeded (Partial)"+ Math.random(100000) + " : " +  invalid.get('length')).fmt(this)
-  //     SC.Benchmark.start(bench);
-  //   }
-  //   
-  // 
-  // 		invalid.uniq().forEach(function(idx) {
-  // 			if(nowShowing.contains(idx)) {
-  // 				(columns || [0]).forEach(function(column, colIdx) {
-  // 					this.reloadCell(idx, colIdx)
-  // 				}, this)
-  // 			} else {
-  // 				this.releaseRow(idx)
-  // 			}
-  // 		}, this)
-  // 
-  //   if(bench)
-  //     SC.Benchmark.end(bench);
-  //   
-  //   this.adjust(this.computeLayout())
-  //   this.get('containerView').adjust(this.computeLayout())
-  // 
-  //   SC.$(this.get('hiddenRows')).css("left", "-9999px")
-  // 
-  //   return this
-  // },
-
 	addItemViewForRowAndColumn: function(row, column, rebuild) {
 		if(rebuild || !this.reloadCell(row, column))
 			return sc_super()
@@ -232,14 +139,11 @@ SC.DataView = SC.ListView.extend({
   releaseRow: function(row, column) {
 		var view, hiddenRow
 		hiddenRows = this.get('hiddenRows')
-		// view = this.viewForRow(row)
 
 		var itemViews = this._sc_itemViews
 		
 		hiddenRows.push(itemViews[row])
 		delete itemViews[row]
-		// delete this.get('rowsHash')[this.get('rows').indexOf(view)]
-		// delete this.get('rowViewsHash')[row]
   },
   // 
   // reloadSelectionIndexesIfNeeded: function() {
