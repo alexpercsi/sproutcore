@@ -42,9 +42,8 @@ SC.DataView = SC.ListView.extend({
 		return row
 	},
 	
-
 	viewForRow: function(row) {
-		var view = rowViewsHash[row]
+		var view = this._sc_itemViews[row]
 		if(!view) {
 			rowView = this.row()
 			
