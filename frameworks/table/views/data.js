@@ -122,6 +122,16 @@ SC.DataView = SC.ListView.extend({
 		layer.childNodes[0].innerHTML = (value || "")
   },
 
+	reloadIfNeeded: function() {
+		if(!this._invalidIndexes.isIndexSet) {
+			this.get('hiddenRows').forEach(function(row) {
+				row[-1].parentNode.removeChild(row[-1])
+			})
+			this.set('hiddenRows', [])
+		}
+		sc_super()
+	},
+
 	addItemViewForRowAndColumn: function(row, column, rebuild) {
 		if(rebuild || !this.reloadCell(row, column))
 			return sc_super()
