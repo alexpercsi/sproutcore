@@ -123,7 +123,7 @@ SC.DataView = SC.ListView.extend({
   },
 
 	reloadIfNeeded: function() {
-		if(!this._invalidIndexes.isIndexSet) {
+		if(!this._invalidIndexes.isIndexSet && this.get('hiddenRows')) {
 			this.get('hiddenRows').forEach(function(row) {
 				row[-1].parentNode.removeChild(row[-1])
 			})
