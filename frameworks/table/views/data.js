@@ -19,6 +19,10 @@ SC.DataView = SC.ListView.extend({
 	content: function() {
 		return this.get('dataSource')
 	}.property('dataSource').cacheable(),
+	
+  layoutForCell: function(row, column) {
+		return {}
+	},
 
 	row: function() {
 		var rows = this.get('rows'),

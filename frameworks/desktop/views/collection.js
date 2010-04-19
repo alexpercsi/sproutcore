@@ -1112,15 +1112,7 @@ SC.CollectionView = SC.View.extend(
   layoutForCell: function(row, column) {
     var ret = this.layoutForContentIndex(row)
     return ret
-  
-    ret.left = column * 120
-    ret.width = 120
-    delete ret.right
-    
-    return ret
   },
-
-  
 
   _attrsForView: function(view, row, column, parentView, isGroupView) {
     var attrs = view || this._TMP_ATTRS  
@@ -1135,6 +1127,11 @@ SC.CollectionView = SC.View.extend(
       attrs.classNames = this._GROUP_COLLECTION_CLASS_NAMES;
     else
       attrs.classNames = this._COLLECTION_CLASS_NAMES;
+
+		if(column) {
+			attrs.classNames.push('cell')
+			attrs.classNames.push('column-' + column)
+		}
 
     return attrs
   },
