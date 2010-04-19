@@ -1064,22 +1064,24 @@ SC.CollectionView = SC.View.extend(
       del  = this.get('contentDelegate')
 
     itemViews  = this._sc_itemViews;
-    existing = itemViews ? (itemViews[row] ? itemViews[row][column] : null) : null;  
+		if(!itemViews)
+			itemViews = []
+		
+		if(!itemViews[row])
+			itemViews[row] = []
+			
+    existing = itemViews[row][column];
     containerView = this.get('containerView') || this
 
 		if(!SC.none(column)) {
 			rowView = itemViews[row][-1]
 			
-			if(!rowView || !rowView.get) {
-				rowView = itemViews[row][-1] = this.viewForRowAndColumn(row, null, YES)
-				if(!rowView.get('parentNode'))
-					containerView.appendChild(rowView)
+			if(!rowView || !rowView.get)  {
+				rowView = this.addItemViewForRowAndColumn(row, null, rebuild)
 			}
-
+			
 			containerView = rowView
-		} else {
-			column = NO
-		}
+		} 
 
     if(existing && SC.typeOf(existing) == "string")
       existing = itemViews[row][column] = document.getElementById(existing)
@@ -1087,6 +1089,9 @@ SC.CollectionView = SC.View.extend(
     view = this.viewForRowAndColumn(row, column, rebuild)
    	view.set('layout', this.layoutForCell(row, column))
     
+		if(SC.none(column))
+			column = -1
+
     if(existing) {
       if(existing.get) {
         layer = existing.get('layer');
@@ -1104,7 +1109,7 @@ SC.CollectionView = SC.View.extend(
       }
     }
 
-    if(del.collectionViewWillDisplayCellForRowAndColumn)
+    if(del.collectionViewWillDisplayCellForRowAndColumn && column >= 0)
       del.collectionViewWillDisplayCellForRowAndColumn(this, view, row, column)
 
     if(view.isFactory) {
