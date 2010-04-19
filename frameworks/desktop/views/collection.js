@@ -1078,7 +1078,7 @@ SC.CollectionView = SC.View.extend(
 		if(!SC.none(column)) {
 			rowView = itemViews[row][-1]
 			
-			if(!rowView || !rowView.get)
+			if(!rowView || (rebuild && !rowView.get))
 				rowView = this.addItemViewForRowAndColumn(row, null, rebuild)
 
 			containerView = rowView
@@ -1091,7 +1091,10 @@ SC.CollectionView = SC.View.extend(
     
 		if(SC.none(column)) {
 			column = -1
-			view.set('layout', this.layoutForCell(row, column))
+			if(view.set)
+				view.set('layout', this.layoutForCell(row, column))
+			else
+				SC.$(view).css(this.layoutForCell(row, column))
 		} else {
 			view.classNames.push('cell')
 			view.classNames.push('column-' + column)
@@ -1133,7 +1136,6 @@ SC.CollectionView = SC.View.extend(
       view = element
     } else {
       itemViews[row][column] = view
-			// debugger;
     }
     
     containerView.appendChild(view)
