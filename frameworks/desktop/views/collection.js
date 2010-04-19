@@ -56,6 +56,10 @@ SC.CollectionView = SC.View.extend(
   classNames: ['sc-collection-view'],
   
   ACTION_DELAY: 200,
+
+	rowView: SC.View.extend({
+		useFactory: YES
+	}),
   
   // ......................................
   // PROPERTIES
@@ -854,13 +858,14 @@ SC.CollectionView = SC.View.extend(
     if (this.willReload) this.willReload(invalid === YES ? null : invalid);
 
 
-    // if(!invalid.isIndexSet)
-      // invalid = nowShowing
+    if(!invalid.isIndexSet) {
+      invalid = nowShowing
+			rebuild = YES
+		}
 
 
     // if an index set, just update indexes
     if (invalid.isIndexSet) {
-  
 
       if (bench) {
         bench=("%@#reloadIfNeeded (Partial)" + Math.random(100000)).fmt(this)
@@ -869,54 +874,17 @@ SC.CollectionView = SC.View.extend(
 
       invalid.forEach(function(idx) {
         if (nowShowing.contains(idx)) {
-          (columns || [this]).forEach(function(column, colIdx) {
-             this.addItemViewForRowAndColumn(idx, colIdx)
+          (columns || [null]).forEach(function(column, colIdx) {
+             this.addItemViewForRowAndColumn(idx, SC.none(column) ? column : colIdx, rebuild)
           }, this)
-          // if(columns)
-            // this.addItemViewForRowAndColumn(idx, columns.get('length'))
         } else {
           this.removeItemViewForRowAndColumn(idx, 0)
         }
       }, this)
 
       if (bench) SC.Benchmark.end(bench);
-
-    // if set is NOT defined, replace entire content with nowShowing
-    } else {
-      if (bench) {
-        bench=("%@#reloadIfNeeded (Full)").fmt(this)
-        SC.Benchmark.start(bench);
-      }
-
-      containerView.beginPropertyChanges();
-      containerView.destroyLayer().removeAllChildren();
-      
-      var views = [], view, context, html = []
-
-      if(this._sc_itemViews)
-        this._sc_itemViews.forEach(function(v,i) {
-          if(v)
-            this.removeItemViewForRowAndColumn(i)
-        }, this)
-
-      nowShowing.forEach(function(idx) {
-        (columns || [this]).forEach(function(column, colIdx) {
-           view = this.addItemViewForRowAndColumn(idx, colIdx, YES)
-          if(SC.typeOf(view) != "string")
-            views.push(view)
-          else
-            html.push(view)
-        }, this)
-      }, this)
-
-      containerView.set('childViews', views); // quick swap
-      this._additionalContent = html.join("")      
-      containerView.replaceLayer();
-      containerView.endPropertyChanges();
-
-      if (bench) SC.Benchmark.end(bench);
-    }
-
+		}
+		
     // adjust my own layout if computed
     if (layout) { this.adjust(layout); }
     if (this.didReload) this.didReload(invalid === YES ? null : invalid);
@@ -932,25 +900,36 @@ SC.CollectionView = SC.View.extend(
     this._additionalContent = null
   },
 
-  addItemViewForRowAndColumn: function(row, column, fullReload) {
-    var view, itemViews, layer, existing, element,
+
+  addItemViewForRowAndColumn: function(row, column, rebuild) {
+    var view, itemViews, layer, existing, element, rowView
       del  = this.get('contentDelegate')
-      
+
     itemViews  = this._sc_itemViews,
     existing = itemViews ? (itemViews[row] ? itemViews[row][column] : null) : null;  
     containerView = this.get('containerView') || this
-    
-    if(!view) {
-      view = this.viewForRowAndColumn(row, column, fullReload)
-      view.set('layout', this.layoutForCell(row, column))
-    }
-    
-    itemViews  = this._sc_itemViews
+
+		if(!SC.none(column)) {
+			rowView = itemViews[row][-1]
+			
+			if(!rowView || !rowView.get) {
+				rowView = itemViews[row][-1] = this.viewForRowAndColumn(row, null, YES)
+				if(!rowView.get('parentNode'))
+					containerView.appendChild(rowView)
+			}
+
+			containerView = rowView
+		} else {
+			column = NO
+		}
 
     if(existing && SC.typeOf(existing) == "string")
       existing = itemViews[row][column] = document.getElementById(existing)
 
-    if(existing && !fullReload) {
+    view = this.viewForRowAndColumn(row, column, rebuild)
+   	view.set('layout', this.layoutForCell(row, column))
+    
+    if(existing) {
       if(existing.get) {
         layer = existing.get('layer');
         if (layer && layer.parentNode) {
@@ -974,11 +953,6 @@ SC.CollectionView = SC.View.extend(
       context = view.renderContext(view.get('tagName')) ;
       view.prepareContext(context, YES) ;
 
-      if(fullReload) {
-        itemViews[row][column] = view.get('layerId')
-        return context.join("")
-      }
-      
       element = context.element()
       itemViews[row][column] = element
       if(containerView.get) {
@@ -993,9 +967,8 @@ SC.CollectionView = SC.View.extend(
       itemViews[row][column] = view
     }
     
-    if(!fullReload) {
-      containerView.appendChild(view)
-    }
+    containerView.appendChild(view)
+
     return view
   },
 
@@ -1048,55 +1021,70 @@ SC.CollectionView = SC.View.extend(
   _GROUP_VIEW_POOL: null,
   
   /**
-    Returns the item view for the content object at the specified index. Call
-    this method instead of accessing child views directly whenever you need 
-    to get the view associated with a content index.
 
-    Although this method take two parameters, you should almost always call
-    it with just the content index.  The other two parameters are used 
-    internally by the CollectionView.
-    
-    If you need to change the way the collection view manages item views
-    you can override this method as well.  If you just want to change the
-    default options used when creating item views, override createItemView()
-    instead.
-  
-    Note that if you override this method, then be sure to implement this 
-    method so that it uses a cache to return the same item view for a given
-    index unless "force" is YES.  In that case, generate a new item view and
-    replace the old item view in your cache with the new item view.
+		rebuild means we should ensure that the row & column have their own
+		fully qualified view
 
-    @param {Number} idx the content index
-    @param {Boolean} rebuild internal use only
-    @returns {SC.View} instantiated view
   */
 
-  // viewForRowAndColumn: function(idx, rebuild, containerView) {
   viewForRowAndColumn: function(row, column, rebuild) {
-    var factory, E, view, attrs,
+    var factory, E, view, attrs, view,
       del  = this.get('contentDelegate'),
-      containerView = this.get('containerView') || this,
+      containerView = SC.none(column) ? (this.get('containerView') || this) : this.viewForRowAndColumn(row),
       itemViews = this._sc_itemViews, ret
 
     if (!itemViews) itemViews = this._sc_itemViews = [] ;
     if (!itemViews[row]) itemViews[row] = []
 
-    if (rebuild || !(ret = itemViews[row][column]) || !ret.get) {
+		if(!SC.none(column)) {
+			if(column == NO)
+				column = 0
+				
+			var viewCache = this._viewCache
+			if(!viewCache)
+				viewCache = this._viewCache = []
+		
+			var colViewCache = viewCache[column]
+		
+			if(!colViewCache)
+				colViewCache = viewCache[column] = []
+				
+			ret = itemViews[row][column]
+		} else {
+			ret = itemViews[row][-1]
+			
+			if(ret) {
+				if(!rebuild || ret.get)
+					return ret
+			} 
+		}
+		
 
-      if(!E)
-        E = this.viewClassForRowAndColumn(row, column ? column : 0)
+    if (rebuild || !(ret = itemViews[row][column]) || !ret.get) {
+	
+      E = this.viewClassForRowAndColumn(row, column)
       
-      if(E.prototype.useFactory) {
+      if(E.prototype.useFactory && (SC.none(column) || !rebuild)) {
+				// we're scrolling, presumably, so we're going to just use a factory and grab
+				// the layer
         ret = this._factoryForClass(E)
         this._attrsForView(ret, row, column, containerView, E.isGroupView)
-      } else {
+      } else if(rebuild && ret && !ret.get && view = colViewCache.pop()) {
+				// row is a div, so we want to attach it to a cached view
+				view.set('layer', ret)
+       	this._attrsForView(view, row, column, containerView, E.isGroupView)
+				ret = view
+			} else {
+				// we're either not using a factory or we're not scrolling, so create a full view
+				// just for this row
+				
         attrs = this._attrsForView(null, row, column, containerView, E.isGroupView)
         attrs.contentIndex = row
         ret = this.createChildView(E, attrs)
-      }
-      // itemViews[row][column] = ret
-    }
 
+				colViewCache.push(ret)
+      }
+    }
 
     return ret
   },
@@ -1153,6 +1141,9 @@ SC.CollectionView = SC.View.extend(
       groupIndexes = del.contentGroupIndexes(this, content),
       isGroupView = NO,
       key, ret, E, layout, layerId, factory, attrs, context;
+
+		if(SC.none(column))
+			return this.get('rowView')
 
     isGroupView = groupIndexes && groupIndexes.contains(row);
     if (isGroupView) isGroupView = del.contentIndexIsGroup(this, content, row);
