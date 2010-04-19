@@ -907,21 +907,31 @@ SC.CollectionView = SC.View.extend(
 
 
   addItemViewForRowAndColumn: function(row, column, rebuild) {
+	console.log("adding", row, column)
     var view, itemViews, layer, existing, element, rowView
       del  = this.get('contentDelegate')
 
     itemViews  = this._sc_itemViews;
+		
+		// debugger
+
 		if(!itemViews)
-			itemViews = []
+			this._sc_itemViews = itemViews = []
+		
+		// debugger
 		
 		if(!itemViews[row])
 			itemViews[row] = []
-			
+
+		// debugger
+					
     existing = itemViews[row][column];
     containerView = this.get('containerView') || this
 
 		if(!SC.none(column)) {
 			rowView = itemViews[row][-1]
+			
+			// debugger
 			
 			if(!rowView || !rowView.get)  {
 				rowView = this.addItemViewForRowAndColumn(row, null, rebuild)
@@ -975,6 +985,7 @@ SC.CollectionView = SC.View.extend(
       view = element
     } else {
       itemViews[row][column] = view
+			// debugger;
     }
     
     containerView.appendChild(view)
@@ -1134,10 +1145,10 @@ SC.CollectionView = SC.View.extend(
     else
       attrs.classNames = this._COLLECTION_CLASS_NAMES;
 
-		if(column) {
-			attrs.classNames.push('cell')
-			attrs.classNames.push('column-' + column)
-		}
+		// if(column) {
+			// attrs.classNames.push('cell')
+			// attrs.classNames.push('column-' + column)
+		// }
 
     return attrs
   },
