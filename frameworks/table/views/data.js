@@ -73,10 +73,6 @@ SC.DataView = SC.ListView.extend({
     };
   },
 	
-	viewForRowAndColumn: function(row, column) {
-		return this.viewForCell(row, column)
-	},
-	
 	viewForCell: function(row, column) {
 		var rowView = this.viewForRow(row),
 			itemViews = this._sc_itemViews,
