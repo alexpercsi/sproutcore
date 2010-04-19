@@ -9,7 +9,7 @@ sc_require('views/list');
 
 SC.DataView = SC.ListView.extend({
 
-  useRenderer: YES,
+  // useRenderer: YES,
     
   childViews: ["containerView"],
   containerView: SC.View,
@@ -29,8 +29,8 @@ SC.DataView = SC.ListView.extend({
   }.observes('length'),
 
 	row: function() {
-	    var rows = this.get('rows'),
-	      hiddenRows = this.get('hiddenRows'),
+		var rows = this.get('rows'),
+			hiddenRows = this.get('hiddenRows'),
 			row, idx
 	
 		if(!hiddenRows) {
@@ -38,11 +38,6 @@ SC.DataView = SC.ListView.extend({
 			this.set('hiddenRows', hiddenRows)
 		}
 	
-		if(!rows) {
-			rows = []
-			this.set('rows', rows)
-		}
-		
 		row = hiddenRows.pop()
 		
 		if(!row)
@@ -53,19 +48,19 @@ SC.DataView = SC.ListView.extend({
 	
 
 	viewForRow: function(row) {
-		var rowViewsHash = this.get('rowViewsHash'),
-			rowsHash = this.get('rowsHash'),
-			layout
+		// var rowViewsHash = this.get('rowViewsHash'),
+			// rowsHash = this.get('rowsHash'),
+			// layout
 
-		if(!rowViewsHash) {
-			rowViewsHash = {}
-			this.set('rowViewsHash', rowViewsHash)
-		}
-		
-		if(!rowsHash) {
-			rowsHash = {}
-			this.set('rowsHash', rowsHash)
-		}
+		// if(!rowViewsHash) {
+		// 	rowViewsHash = {}
+		// 	this.set('rowViewsHash', rowViewsHash)
+		// }
+		// 
+		// if(!rowsHash) {
+		// 	rowsHash = {}
+		// 	this.set('rowsHash', rowsHash)
+		// }
 
 		var view = rowViewsHash[row]
 		if(!view) {
@@ -75,13 +70,13 @@ SC.DataView = SC.ListView.extend({
 				return NO
 			
 			if(SC.typeOf(rowView) == "array") {
-				view = rowViewsHash[row] = rowView[-1]
+				view = rowView[-1]
 				this._sc_itemViews[row] = rowView
 			} else 
-				view = rowViewsHash[row] = rowView
+				view = rowView
 
 			SC.$(view).css(this.layoutForRow(row))
-			rowsHash[this.get('rows').indexOf(view)] = row
+			// rowsHash[this.get('rows').indexOf(view)] = row
 		}
 		
 		view.className = "sc-dataview-row" + (row % 2 == 0 ? " even" : "") + (this.isSelected(row) ? " sel" : "")
