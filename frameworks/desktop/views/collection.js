@@ -587,9 +587,9 @@ SC.CollectionView = SC.View.extend(
 
 
   columnViews: function() {
-    var containerView = this.get('containerView') || this
+    var containerView = this.get('containerView') || this;
     containerView.createLayer();
-    return [containerView]
+    return [containerView];
   }.property('columns').cacheable(),
 
 
@@ -859,9 +859,14 @@ SC.CollectionView = SC.View.extend(
 
 
     if(!invalid.isIndexSet) {
-      invalid = nowShowing
+      invalid = nowShowing.toArray()
 			rebuild = YES
-		}
+    } else {
+      if(this._TMP_DIFF1.get('length') > 0)
+        invalid = this._TMP_DIFF1.remove(this._TMP_DIFF2).toArray().concat(this._TMP_DIFF2.toArray())
+      else
+        invalid = invalid.toArray()
+    }
 
 
     // if an index set, just update indexes
@@ -905,7 +910,7 @@ SC.CollectionView = SC.View.extend(
     var view, itemViews, layer, existing, element, rowView
       del  = this.get('contentDelegate')
 
-    itemViews  = this._sc_itemViews,
+    itemViews  = this._sc_itemViews;
     existing = itemViews ? (itemViews[row] ? itemViews[row][column] : null) : null;  
     containerView = this.get('containerView') || this
 
@@ -1069,7 +1074,7 @@ SC.CollectionView = SC.View.extend(
 				// the layer
         ret = this._factoryForClass(E)
         this._attrsForView(ret, row, column, containerView, E.isGroupView)
-      } else if(rebuild && ret && !ret.get && view = colViewCache.pop()) {
+      } else if(rebuild && ret && !ret.get && colViewCache && (view = colViewCache.pop())) {
 				// row is a div, so we want to attach it to a cached view
 				view.set('layer', ret)
        	this._attrsForView(view, row, column, containerView, E.isGroupView)
