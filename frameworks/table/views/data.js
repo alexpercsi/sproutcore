@@ -75,10 +75,14 @@ SC.DataView = SC.ListView.extend({
 	
 	viewForCell: function(row, column) {
 		var rowView = this.viewForRow(row),
-			itemViews = this._sc_itemViews,
-			view = itemViews[row][column]
-
-		if(!rowView || !view)
+			itemViews = this._sc_itemViews
+			
+		if(!rowView)
+			return NO
+		
+		var view = itemViews[row][column]
+			
+		if(!view)
 			return NO
 			
 		return view
@@ -92,6 +96,8 @@ SC.DataView = SC.ListView.extend({
 			return NO
 			
 		this._redrawLayer(view, value)
+		
+		return YES
   },
   
   _redrawLayer: function(layer, value) {
@@ -111,7 +117,7 @@ SC.DataView = SC.ListView.extend({
 	},
 
 	addItemViewForRowAndColumn: function(row, column, rebuild) {
-		if(rebuild || !this.reloadCell(row, column)) {
+		if(rebuild || SC.none(column) || !this.reloadCell(row, column)) {
 			console.log("have to build", row, rebuild)
 			return sc_super()
 		}
@@ -122,7 +128,7 @@ SC.DataView = SC.ListView.extend({
 	},
   
   releaseRow: function(row, column) {
-		var view, hiddenRow
+		var view, hiddenRows, view2
 		hiddenRows = this.get('hiddenRows')
 
 		if(!hiddenRows) {
@@ -131,8 +137,17 @@ SC.DataView = SC.ListView.extend({
 		}
 
 		var itemViews = this._sc_itemViews
+		view = itemViews[row]
 		
-		hiddenRows.push(itemViews[row])
+		for(var i = -1; i < view.length; i++) {
+			if(view[i].get) {
+				view2 = view[i].get('layer')
+				view[i].set('layer', null)
+				view[i] = view2
+			}	
+		}
+		
+		hiddenRows.push(view)
 		delete itemViews[row]
   },
   // 
