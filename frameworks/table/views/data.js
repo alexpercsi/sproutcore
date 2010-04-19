@@ -158,6 +158,9 @@ SC.DataView = SC.ListView.extend({
     var view = this.viewForCell(row, column),
 			value = this.get('dataSource').valueForRowAndColumnInTableView(row, column, this)
 			
+		if(!view)
+			return NO
+			
 		this._redrawLayer(view, value)
   },
   
@@ -218,7 +221,7 @@ SC.DataView = SC.ListView.extend({
   // },
 
 	addItemViewForRowAndColumn: function(row, column, rebuild) {
-		if(rebuild || !this.redrawCell(row, column))
+		if(rebuild || !this.reloadCell(row, column))
 			return sc_super()
 	},
 	
