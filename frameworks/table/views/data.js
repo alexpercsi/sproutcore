@@ -123,6 +123,11 @@ SC.DataView = SC.ListView.extend({
 		var view, hiddenRow
 		hiddenRows = this.get('hiddenRows')
 
+		if(!hiddenRows) {
+			hiddenRows = []
+			this.set('hiddenRows', hiddenRows)
+		}
+
 		var itemViews = this._sc_itemViews
 		
 		hiddenRows.push(itemViews[row])
