@@ -111,8 +111,10 @@ SC.DataView = SC.ListView.extend({
 	},
 
 	addItemViewForRowAndColumn: function(row, column, rebuild) {
-		if(rebuild || !this.reloadCell(row, column))
+		if(rebuild || !this.reloadCell(row, column)) {
+			console.log("have to build", row, rebuild)
 			return sc_super()
+		}
 	},
 	
 	removeItemViewForRowAndColumn: function(row, column) {

@@ -849,19 +849,19 @@ SC.CollectionView = SC.View.extend(
         nowShowing = this.get('nowShowing'),
         columns = this.get('columns') || NO,
         containerView = this.get('containerView') || this,
-        views, idx, view, layer, itemViews, existing, context;
+        views, idx, view, layer, itemViews, existing, context, rebuild;
 
 
     // if the set is defined but it contains the entire nowShowing range, just
     // replace
-    if (invalid.isIndexSet && invalid.contains(nowShowing) && !this.useRenderer) invalid = YES ;
+    // if (invalid.isIndexSet && invalid.contains(nowShowing) && !this.useRenderer) invalid = YES ;
     if (this.willReload) this.willReload(invalid === YES ? null : invalid);
-
 
     if(!invalid.isIndexSet) {
       invalid = nowShowing.toArray()
 			rebuild = YES
     } else {
+			rebuild = NO
       if(this._TMP_DIFF1.get('length') > 0)
         invalid = this._TMP_DIFF1.remove(this._TMP_DIFF2).toArray().concat(this._TMP_DIFF2.toArray())
       else
