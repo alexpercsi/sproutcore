@@ -91,7 +91,7 @@ SC.DataView = SC.ListView.extend({
 	},
 	
 
-	viewForRow: function(row) {
+	viewForRow: function(row, rebuild) {
 		var rowViewsHash = this.get('rowViewsHash'),
 			rowsHash = this.get('rowsHash'),
 			layout
@@ -114,7 +114,12 @@ SC.DataView = SC.ListView.extend({
 			rowsHash[this.get('rows').indexOf(view)] = row
 		}
 		
-		view.className = "sc-dataview-row" + (row % 2 == 0 ? " even" : "") + (this.isSelected(row) ? " sel" : "")
+		if(rebuild && !view.get) {
+			// view is a div and we need to attach it to a proper view
+		} else {
+			view.className = "sc-dataview-row" + (row % 2 == 0 ? " even" : "") + (this.isSelected(row) ? " sel" : "")
+		}
+		
 		return view
 	},
 	
@@ -218,6 +223,10 @@ SC.DataView = SC.ListView.extend({
 		hiddenRows = this.get('hiddenRows')
 		view = this.viewForRow(row)
 		hiddenRows.push(view)
+
+		if(view.removeAllChildren)
+			view.removeAllChildren()
+
 		delete this.get('rowsHash')[this.get('rows').indexOf(view)]
 		delete this.get('rowViewsHash')[row]
   },
