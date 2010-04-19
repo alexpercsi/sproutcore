@@ -20,9 +20,9 @@ SC.DataView = SC.ListView.extend({
 		return this.get('dataSource')
 	}.property('dataSource').cacheable(),
 	
-  layoutForCell: function(row, column) {
-		return {}
-	},
+	// collectionViewWillDisplayCellForRowAndColumn: function(collectionView, view, row, column) {
+		// this is where we need to insert the actual content for the cell
+	// },
 
 	row: function() {
 		var rows = this.get('rows'),
