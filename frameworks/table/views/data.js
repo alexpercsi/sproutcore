@@ -106,6 +106,8 @@ SC.DataView = SC.ListView.extend({
 			this.set('hiddenRows', [])
 		}
 		sc_super()
+		if(this.get('hiddenRows'))
+			SC.$(this.get('hiddenRows').map(function(i) { return i[-1] })).css('left', '-9999px')
 	},
 
 	addItemViewForRowAndColumn: function(row, column, rebuild) {
