@@ -93,6 +93,7 @@ SC.DataView = SC.ListView.extend({
 			
 		if(!view)
 			return NO;
+			
 		this._redrawLayer(view, value)
 		
 		return YES

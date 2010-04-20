@@ -2548,7 +2548,7 @@ SC.CollectionView = SC.View.extend(
   
   /** @private */
   mouseMoved: function(ev) {
-
+return 
     var view = this.itemViewForEvent(ev), 
         last = this._lastHoveredItem ;
 
