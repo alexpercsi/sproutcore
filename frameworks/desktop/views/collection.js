@@ -1075,14 +1075,14 @@ SC.CollectionView = SC.View.extend(
     if (!itemViews) itemViews = this._sc_itemViews = [] ;
     if (!itemViews[row]) itemViews[row] = []
 
-		var viewCache = this._viewCache
-		if(!viewCache)
-			viewCache = this._viewCache = []
-	
-		var colViewCache = viewCache[column]
-	
-		if(!colViewCache)
-			colViewCache = viewCache[column] = []
+		// var viewCache = this._viewCache
+		// if(!viewCache)
+		// 	viewCache = this._viewCache = []
+		// 	
+		// var colViewCache = viewCache[column]
+		// 	
+		// if(!colViewCache)
+		// 	colViewCache = viewCache[column] = []
 
 		if(!SC.none(column)) {
 			if(column == NO)
@@ -1121,7 +1121,7 @@ SC.CollectionView = SC.View.extend(
         attrs.contentIndex = row
         ret = this.createChildView(E, attrs)
 
-				colViewCache.push(ret)
+				// colViewCache.push(ret)
       }
     }
 
