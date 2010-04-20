@@ -966,22 +966,24 @@ SC.CollectionView = SC.View.extend(
 
 		// if the view is existing it will be reused so let's not remove it anymore, ok?
 
-    // if(existing) {
-    //   if(existing.get) {
-    //     layer = existing.get('layer');
-    //     if (layer && layer.parentNode) {
-    //       layer.parentNode.removeChild(layer);  
-    //     } 
-    //     layer = null ; // avoid leaks
-    //  
-    //     if(!view.isFactory) {
-    //       containerView.replaceChild(view, existing);
-    //       return this
-    //     }
-    //   } else {
-    //     containerView.get('layer').removeChild(document.getElementById(existing))
-    //   }
-    // }
+    if(existing) {
+      if(existing.get) {
+        layer = existing.get('layer');
+        if (layer && layer.parentNode) {
+          layer.parentNode.removeChild(layer);  
+        } 
+        layer = null ; // avoid leaks
+     
+        if(!view.isFactory) {
+          containerView.replaceChild(view, existing);
+          return this
+        }
+      } else {
+				existing.parentNode.removeChild(existing)
+				existing = null
+        // containerView.get('layer').removeChild(document.getElementById(existing))
+      }
+    }
 
     if(del.collectionViewWillDisplayCellForRowAndColumn && column >= 0)
       del.collectionViewWillDisplayCellForRowAndColumn(this, view, row, column)
@@ -1106,11 +1108,11 @@ SC.CollectionView = SC.View.extend(
 				// the layer
         ret = this._factoryForClass(E)
         this._attrsForView(ret, row, column, containerView, E.isGroupView)
-      } else if(rebuild && ret && !ret.get && colViewCache && (view = colViewCache.pop())) {
+      // } else if(rebuild && ret && !ret.get && colViewCache && (view = colViewCache.pop())) {
 				// row is a div, so we want to attach it to a cached view
-				view.set('layer', ret)
-       	this._attrsForView(view, row, column, containerView, E.isGroupView)
-				ret = view
+				// view.set('layer', ret)
+       	// this._attrsForView(view, row, column, containerView, E.isGroupView)
+				// ret = view
 			} else {
 				// we're either not using a factory or we're not scrolling, so create a full view
 				// just for this row
