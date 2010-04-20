@@ -1120,22 +1120,24 @@ SC.CollectionView = SC.View.extend(
 
 		// if the view is existing it will be reused so let's not remove it anymore, ok?
 
-    // if(existing) {
-    //   if(existing.get) {
-    //     layer = existing.get('layer');
-    //     if (layer && layer.parentNode) {
-    //       layer.parentNode.removeChild(layer);  
-    //     } 
-    //     layer = null ; // avoid leaks
-    //  
-    //     if(!view.isFactory) {
-    //       containerView.replaceChild(view, existing);
-    //       return this
-    //     }
-    //   } else {
-    //     containerView.get('layer').removeChild(document.getElementById(existing))
-    //   }
-    // }
+    if(existing) {
+      if(existing.get) {
+        layer = existing.get('layer');
+        if (layer && layer.parentNode) {
+          layer.parentNode.removeChild(layer);  
+        } 
+        layer = null ; // avoid leaks
+     
+        if(!view.isFactory) {
+          containerView.replaceChild(view, existing);
+          return this
+        }
+      } else {
+				existing.parentNode.removeChild(existing)
+				existing = null
+        // containerView.get('layer').removeChild(document.getElementById(existing))
+      }
+    }
 
     if(del.collectionViewWillDisplayCellForRowAndColumn && column >= 0)
       del.collectionViewWillDisplayCellForRowAndColumn(this, view, row, column)
