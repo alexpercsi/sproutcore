@@ -880,6 +880,7 @@ SC.CollectionView = SC.View.extend(
       invalid.forEach(function(idx) {
         if (nowShowing.contains(idx)) {
           (columns || [null]).forEach(function(column, colIdx) {
+            console.log('column: '+column+' colIdx: '+colIdx);
              this.addItemViewForRowAndColumn(idx, SC.none(column) ? NO : colIdx, rebuild)
           }, this)
         } else {
@@ -942,10 +943,26 @@ SC.CollectionView = SC.View.extend(
 			else
 				SC.$(view).css(this.layoutForCell(row, column))
 		} else {
+		  view.classNames=[];
 			view.classNames.push('cell')
-			view.classNames.push('column-' + column)
+			
+			
+			//clear column css classes
+			var columnClass = 'column-' + column;
+			var classNames = view.get('classNames');
+			for (var i=0;i<classNames.length;i++)
+			{
+			  if (classNames[i].indexOf('column-')>=0)
+			  {
+			    classNames[i]=columnClass;
+			    break;
+			  }
+			}
+			if (classNames.indexOf(columnClass)<0)
+			{
+			  classNames.push(columnClass);
+			}
 		}
-
 
 		// if the view is existing it will be reused so let's not remove it anymore, ok?
 
