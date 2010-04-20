@@ -191,10 +191,13 @@ SC.TableView = SC.View.extend({
 	
 	endColumnDrag: function() {
 		this.$().removeClass('reordering-columns')
-		this.get('layer').removeChild(this._ghost)
+		if (!SC.none(this._ghost))
+		{
+		  this.get('layer').removeChild(this._ghost)
+	  }
 		this._ghost = this._blocker = null
 		this._ghostLeft = null
 		this.resetRules()
-		this.getPath('dataView.contentView').reload(null)
+		this.getPath('dataView.contentView').reload(null);
 	}
 })
