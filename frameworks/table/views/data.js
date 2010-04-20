@@ -54,7 +54,10 @@ SC.DataView = SC.ListView.extend({
 
 			SC.$(view).css(this.layoutForRow(row))
 		}
-		
+		if (SC.none(view))
+		{
+		  return NO;
+		}
 		view.className = "sc-dataview-row" + (row % 2 == 0 ? " even" : "") + (this.isSelected(row) ? " sel" : "")
 		return view
 	},
@@ -89,8 +92,7 @@ SC.DataView = SC.ListView.extend({
 			value = this.get('dataSource').valueForRowAndColumnInTableView(row, column, this)
 			
 		if(!view)
-			return NO
-			
+			return NO;
 		this._redrawLayer(view, value)
 		
 		return YES
@@ -107,7 +109,7 @@ SC.DataView = SC.ListView.extend({
 			})
 			this.set('hiddenRows', [])
 		}
-		sc_super()
+		sc_super();
 		if(this.get('hiddenRows'))
 			SC.$(this.get('hiddenRows').map(function(i) { return i[-1] })).css('left', '-9999px')
 	},
@@ -137,15 +139,18 @@ SC.DataView = SC.ListView.extend({
 		var itemViews = this._sc_itemViews
 		view = itemViews[row]
 		
-		for(var i = -1; i < view.length; i++) {
-			if(view[i].get) {
-				view2 = view[i].get('layer')
-				view[i].set('layer', null)
-				view[i] = view2
-			}	
-		}
+		if (view)
+		{
+		  for(var i = -1; i < view.length; i++) {
+  			if(view[i].get) {
+  				view2 = view[i].get('layer')
+  				view[i].set('layer', null)
+  				view[i] = view2
+  			}	
+  		}
 		
-		hiddenRows.push(view)
+  		hiddenRows.push(view)
+	  }
 		delete itemViews[row]
   },
 
@@ -190,7 +195,22 @@ SC.DataView = SC.ListView.extend({
 			el = document.createElement('div')
 			
 		nowShowing.forEach(function(idx) {
-			el.appendChild(this.viewForCell(idx, column).cloneNode(YES))
+		  var view = this.viewForCell(idx, column);
+		  if (view)
+		  {
+		    if (view.get)
+		    {
+		      var layer=view.get('layer');
+  			  el.appendChild(layer.cloneNode(YES));
+			  }
+			  else
+			  {
+			    if (view.cloneNode)
+			    {
+			      el.appendChild(view.cloneNode(YES));
+			    }
+			  }
+		  }
 		}, this)
 		
 		el.className = "column-" + column + " ghost";

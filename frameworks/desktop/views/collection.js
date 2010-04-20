@@ -1096,8 +1096,25 @@ SC.CollectionView = SC.View.extend(
 			else
 				SC.$(view).css(this.layoutForCell(row, column))
 		} else {
+		  view.classNames=[];
 			view.classNames.push('cell')
-			view.classNames.push('column-' + column)
+			
+			
+			//clear column css classes
+			var columnClass = 'column-' + column;
+			var classNames = view.get('classNames');
+			for (var i=0;i<classNames.length;i++)
+			{
+			  if (classNames[i].indexOf('column-')>=0)
+			  {
+			    classNames[i]=columnClass;
+			    break;
+			  }
+			}
+			if (classNames.indexOf(columnClass)<0)
+			{
+			  classNames.push(columnClass);
+			}
 		}
 
 

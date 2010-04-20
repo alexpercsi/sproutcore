@@ -219,7 +219,10 @@ SC.TableView = SC.ListView.extend(SC.TableDelegate, {
 	
 	endColumnDrag: function() {
 		this.$().removeClass('reordering-columns')
-		this.get('layer').removeChild(this._ghost)
+		if (!SC.none(this._ghost))
+		{
+		  this.get('layer').removeChild(this._ghost)
+	  }
 		this._ghost = this._blocker = null
 		this._ghostLeft = null
 		this.resetRules()
