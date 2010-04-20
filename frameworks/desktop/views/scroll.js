@@ -688,6 +688,8 @@ SC.ScrollView = SC.View.extend(SC.Border, {
       this.set("horizontalScrollOffset", this._scroll_horizontalScrollOffset);
       SC.RunLoop.end();
       
+			// TODO: calback for scrollDidEnd
+
       // now clear the timeout
       clearTimeout(this.touch.timeout);
       this.touch.timeout = null;
@@ -925,6 +927,9 @@ SC.ScrollView = SC.View.extend(SC.Border, {
       this.set("verticalScrollOffset", this._scroll_verticalScrollOffset);
       this.set("horizontalScrollOffset", this._scroll_horizontalScrollOffset);
       SC.RunLoop.end();
+
+			// TODO: calback for scrollDidEnd
+			
       return;
     }
     
