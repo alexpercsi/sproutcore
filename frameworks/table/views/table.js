@@ -43,8 +43,18 @@ SC.TableView = SC.View.extend({
  			tableBinding: '.parentView.parentView.parentView',
 			sortDescriptorBinding: '*table.sortDescriptor',
  			columnsBinding: '*table.columns',
-			dataSourceBinding: '*table.dataSource'
+			dataSourceBinding: '*table.dataSource',
+			frameDidChange: function(){
+			  sc_super();
+  		  var fr = this.get('frame');
+  		  this.invokeLater(function(){if (this.get('frame')===fr){/*this.reload(null);*/}},100);
+			}.observes('frame'),
+			rebuildChildViews: function(){
+
+			}
 		}),
+		
+		
 	  autohidesVerticalScroller: NO,
 		horizontalScrollOffsetBinding: '.parentView.horizontalScrollOffset',
   }),
