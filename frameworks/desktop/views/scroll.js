@@ -1526,6 +1526,9 @@ SC.ScrollView = SC.View.extend(SC.Border, {
       
       // and now we're done, so just end the run loop and return.
       SC.RunLoop.end();
+
+			// TODO: calback for scrollDidEnd
+			
       return;
     }
     

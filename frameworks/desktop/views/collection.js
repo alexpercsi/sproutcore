@@ -1084,8 +1084,8 @@ SC.CollectionView = SC.View.extend(
 			containerView = rowView
 		} 
 
-    if(existing && SC.typeOf(existing) == "string")
-      existing = itemViews[row][column] = document.getElementById(existing)
+    // if(existing && SC.typeOf(existing) == "string")
+      // existing = itemViews[row][column] = document.getElementById(existing)
 
     view = this.viewForRowAndColumn(row, column, rebuild)
     
@@ -1100,22 +1100,25 @@ SC.CollectionView = SC.View.extend(
 			view.classNames.push('column-' + column)
 		}
 
-    if(existing) {
-      if(existing.get) {
-        layer = existing.get('layer');
-        if (layer && layer.parentNode) {
-          layer.parentNode.removeChild(layer);  
-        } 
-        layer = null ; // avoid leaks
-     
-        if(!view.isFactory) {
-          containerView.replaceChild(view, existing);
-          return this
-        }
-      } else {
-        containerView.get('layer').removeChild(document.getElementById(existing))
-      }
-    }
+
+		// if the view is existing it will be reused so let's not remove it anymore, ok?
+
+    // if(existing) {
+    //   if(existing.get) {
+    //     layer = existing.get('layer');
+    //     if (layer && layer.parentNode) {
+    //       layer.parentNode.removeChild(layer);  
+    //     } 
+    //     layer = null ; // avoid leaks
+    //  
+    //     if(!view.isFactory) {
+    //       containerView.replaceChild(view, existing);
+    //       return this
+    //     }
+    //   } else {
+    //     containerView.get('layer').removeChild(document.getElementById(existing))
+    //   }
+    // }
 
     if(del.collectionViewWillDisplayCellForRowAndColumn && column >= 0)
       del.collectionViewWillDisplayCellForRowAndColumn(this, view, row, column)
@@ -1334,7 +1337,7 @@ SC.CollectionView = SC.View.extend(
   },
 
   _attrsForView: function(view, row, column, parentView, isGroupView) {
-    var attrs = view || this._TMP_ATTRS  
+    var attrs = view || this._TMP_ATTRS, classNames
 
     attrs.contentIndex = row;
     attrs.owner        = attrs.displayDelegate = attrs.parentView = parentView;
@@ -1343,14 +1346,14 @@ SC.CollectionView = SC.View.extend(
     attrs.isVisibleInWindow = this.isVisibleInWindow;
 
     if(isGroupView) 
-      attrs.classNames = this._GROUP_COLLECTION_CLASS_NAMES;
+      classNames = this._GROUP_COLLECTION_CLASS_NAMES;
     else
-      attrs.classNames = this._COLLECTION_CLASS_NAMES;
+      classNames = this._COLLECTION_CLASS_NAMES;
 
-		// if(column) {
-			// attrs.classNames.push('cell')
-			// attrs.classNames.push('column-' + column)
-		// }
+		if(attrs.isView)
+			attrs.set('classNames', attrs.get('classNames').concat(classNames))
+		else
+			attrs.classNames = classNames
 
     return attrs
   },
@@ -2528,6 +2531,7 @@ SC.CollectionView = SC.View.extend(
   
   /** @private */
   mouseMoved: function(ev) {
+
     var view = this.itemViewForEvent(ev), 
         last = this._lastHoveredItem ;
 
