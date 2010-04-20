@@ -142,10 +142,12 @@ SC.DataView = SC.ListView.extend({
 		
 		if (view)
 		{
-		  for(var i = -1; i < view.length; i++) {
+		  for(var i = view.length - 1; i >= -1; i--) {
   			if(view[i].get) {
   				view2 = view[i].get('layer')
   				view[i].set('layer', null)
+					// view[i].destroy()
+					// console.log(view2)
   				view[i] = view2
   			}	
   		}
