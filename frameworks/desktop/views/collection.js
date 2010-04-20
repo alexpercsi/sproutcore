@@ -880,7 +880,7 @@ SC.CollectionView = SC.View.extend(
       invalid.forEach(function(idx) {
         if (nowShowing.contains(idx)) {
           (columns || [null]).forEach(function(column, colIdx) {
-            console.log('column: '+column+' colIdx: '+colIdx);
+            // console.log('column: '+column+' colIdx: '+colIdx);
              this.addItemViewForRowAndColumn(idx, SC.none(column) ? NO : colIdx, rebuild)
           }, this)
         } else {
@@ -2295,7 +2295,7 @@ console.log("mousedown", contentIndex)
   
   /** @private */
   mouseMoved: function(ev) {
-
+return 
     var view = this.itemViewForEvent(ev), 
         last = this._lastHoveredItem ;
 
