@@ -934,22 +934,22 @@ SC.CollectionView = SC.View.extend(
     existing = itemViews[row][column];
     containerView = this.get('containerView') || this
 
-		if(!SC.none(column)) {
+		if(!SC.none(column) && column !== NO) {
 			rowView = itemViews[row][-1]
 			
 			if(!rowView || (rebuild && !rowView.get))
 				rowView = this.addItemViewForRowAndColumn(row, null, rebuild)
 
 			containerView = rowView
-		} 
-
+		}
     // if(existing && SC.typeOf(existing) == "string")
       // existing = itemViews[row][column] = document.getElementById(existing)
 
     view = this.viewForRowAndColumn(row, column, rebuild)
     
-		if(SC.none(column)) {
+		if(SC.none(column) && column !== NO) {
 			column = -1
+		} else if(SC.none(column) || column == NO) {
 			if(view.set)
 				view.set('layout', this.layoutForCell(row, column))
 			else
@@ -957,7 +957,6 @@ SC.CollectionView = SC.View.extend(
 		} else {
 		  view.classNames=[];
 			view.classNames.push('cell')
-			
 			
 			//clear column css classes
 			var columnClass = 'column-' + column;
@@ -1283,7 +1282,7 @@ SC.CollectionView = SC.View.extend(
     var ret = this._TMP_LAYERID;
     ret[0] = SC.guidFor(this);
     ret[1] = idx
-    if(!SC.none(column))
+    if(!SC.none(column) && column != NO)
       ret[2] = column
     this._TMP_LAYERID = []
     return ret.join('-');
