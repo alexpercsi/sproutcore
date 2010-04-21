@@ -1080,7 +1080,7 @@ SC.CollectionView = SC.View.extend(
   viewForRowAndColumn: function(row, column, rebuild) {
     var factory, E, view, attrs, view,
       del  = this.get('contentDelegate'),
-      containerView = SC.none(column) ? (this.get('containerView') || this) : this.viewForRowAndColumn(row),
+      containerView = (SC.none(column) || column == NO) ? (this.get('containerView') || this) : this.viewForRowAndColumn(row),
       itemViews = this._sc_itemViews, ret
 
     if (!itemViews) itemViews = this._sc_itemViews = [] ;
@@ -1095,10 +1095,12 @@ SC.CollectionView = SC.View.extend(
 		// if(!colViewCache)
 		// 	colViewCache = viewCache[column] = []
 
+
+
 		if(!SC.none(column)) {
 			if(column == NO)
 				column = 0
-				
+
 			ret = itemViews[row][column]
 		} else {
 			ret = itemViews[row][-1]
