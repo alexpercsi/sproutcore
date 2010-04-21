@@ -1094,15 +1094,12 @@ SC.CollectionView = SC.View.extend(
 				rowView = this.addItemViewForRowAndColumn(row, null, rebuild)
 
 			containerView = rowView
+			
 		}
-    // if(existing && SC.typeOf(existing) == "string")
-      // existing = itemViews[row][column] = document.getElementById(existing)
 
     view = this.viewForRowAndColumn(row, column, rebuild)
-    
-		if(SC.none(column) && column !== NO) {
-			column = -1
-		} else if(SC.none(column) || column == NO) {
+		
+		if(SC.none(column) || column === NO) {
 			if(view.set)
 				view.set('layout', this.layoutForCell(row, column))
 			else
@@ -1128,7 +1125,10 @@ SC.CollectionView = SC.View.extend(
 			}
 		}
 		
-		if(column == NO)
+		if(SC.none(column))
+			column = -1
+		
+		if(column === NO)
 			column = 0
 
 
@@ -1175,7 +1175,6 @@ SC.CollectionView = SC.View.extend(
     }
     
     containerView.appendChild(view)
-
     return view
   },
 
@@ -1373,6 +1372,7 @@ SC.CollectionView = SC.View.extend(
 
     attrs.contentIndex = row;
     attrs.owner        = attrs.displayDelegate = attrs.parentView = parentView;
+		attrs.columnIdx    = column,
     attrs.page         = this.page ;
     attrs.layerId      = this.layerIdFor(row, column);
     attrs.isVisibleInWindow = this.isVisibleInWindow;
@@ -1491,7 +1491,7 @@ SC.CollectionView = SC.View.extend(
     var ret = this._TMP_LAYERID;
     ret[0] = SC.guidFor(this);
     ret[1] = idx
-    if(!SC.none(column) && column != NO)
+    if(!SC.none(column) && column !== NO)
       ret[2] = column
     this._TMP_LAYERID = []
     return ret.join('-');
@@ -1745,8 +1745,6 @@ SC.CollectionView = SC.View.extend(
     @returns {SC.CollectionView} receiver
   */
   select: function(indexes, extend) {
-	// return
-	console.log("select", indexes)
     var content = this.get('content'),
         del     = this.get('selectionDelegate'),
         groupIndexes = this.get('_contentGroupIndexes'),
