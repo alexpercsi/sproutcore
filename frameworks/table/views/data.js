@@ -106,7 +106,7 @@ SC.DataView = SC.ListView.extend({
   },
   
   _redrawLayer: function(layer, value) {
-		layer.childNodes[0].innerHTML = (value || "")
+		layer.childNodes[0].childNodes[0].innerHTML = (value || "")
   },
 
 	reloadIfNeeded: function() {
