@@ -892,7 +892,6 @@ SC.CollectionView = SC.View.extend(
       invalid.forEach(function(idx) {
         if (nowShowing.contains(idx)) {
           (columns || [null]).forEach(function(column, colIdx) {
-            // console.log('column: '+column+' colIdx: '+colIdx);
              this.addItemViewForRowAndColumn(idx, SC.none(column) ? NO : colIdx, rebuild)
           }, this)
         } else {
@@ -941,15 +940,12 @@ SC.CollectionView = SC.View.extend(
 				rowView = this.addItemViewForRowAndColumn(row, null, rebuild)
 
 			containerView = rowView
+			
 		}
-    // if(existing && SC.typeOf(existing) == "string")
-      // existing = itemViews[row][column] = document.getElementById(existing)
 
     view = this.viewForRowAndColumn(row, column, rebuild)
-    
-		if(SC.none(column) && column !== NO) {
-			column = -1
-		} else if(SC.none(column) || column == NO) {
+		
+		if(SC.none(column) || column === NO) {
 			if(view.set)
 				view.set('layout', this.layoutForCell(row, column))
 			else
@@ -975,7 +971,10 @@ SC.CollectionView = SC.View.extend(
 			}
 		}
 		
-		if(column == NO)
+		if(SC.none(column))
+			column = -1
+		
+		if(column === NO)
 			column = 0
 
 		// if the view is existing it will be reused so let's not remove it anymore, ok?
@@ -1021,7 +1020,6 @@ SC.CollectionView = SC.View.extend(
     }
     
     containerView.appendChild(view)
-
     return view
   },
 
@@ -1082,7 +1080,7 @@ SC.CollectionView = SC.View.extend(
   viewForRowAndColumn: function(row, column, rebuild) {
     var factory, E, view, attrs, view,
       del  = this.get('contentDelegate'),
-      containerView = (SC.none(column) || column == NO) ? (this.get('containerView') || this) : this.viewForRowAndColumn(row),
+      containerView = (SC.none(column) || column === NO) ? (this.get('containerView') || this) : this.viewForRowAndColumn(row),
       itemViews = this._sc_itemViews, ret
 
     if (!itemViews) itemViews = this._sc_itemViews = [] ;
@@ -1100,7 +1098,7 @@ SC.CollectionView = SC.View.extend(
 
 
 		if(!SC.none(column)) {
-			if(column == NO)
+			if(column === NO)
 				column = 0
 
 			ret = itemViews[row][column]
@@ -1113,8 +1111,6 @@ SC.CollectionView = SC.View.extend(
 			} 
 		}
 		
-		// debugger
-
     if (rebuild || !(ret = itemViews[row][column]) || !ret.get) {
 	
       E = this.viewClassForRowAndColumn(row, column)
@@ -1169,6 +1165,7 @@ SC.CollectionView = SC.View.extend(
 
     attrs.contentIndex = row;
     attrs.owner        = attrs.displayDelegate = attrs.parentView = parentView;
+		attrs.columnIdx    = column,
     attrs.page         = this.page ;
     attrs.layerId      = this.layerIdFor(row, column);
     attrs.isVisibleInWindow = this.isVisibleInWindow;
@@ -1287,7 +1284,7 @@ SC.CollectionView = SC.View.extend(
     var ret = this._TMP_LAYERID;
     ret[0] = SC.guidFor(this);
     ret[1] = idx
-    if(!SC.none(column) && column != NO)
+    if(!SC.none(column) && column !== NO)
       ret[2] = column
     this._TMP_LAYERID = []
     return ret.join('-');
@@ -1541,8 +1538,6 @@ SC.CollectionView = SC.View.extend(
     @returns {SC.CollectionView} receiver
   */
   select: function(indexes, extend) {
-	// return
-	console.log("select", indexes)
     var content = this.get('content'),
         del     = this.get('selectionDelegate'),
         groupIndexes = this.get('_contentGroupIndexes'),
@@ -2165,8 +2160,6 @@ SC.CollectionView = SC.View.extend(
         contentIndex  = this.selectionIndexForItemView(itemView),
         info, anchor ;
 
-console.log("mousedown", contentIndex)
-
     info = this.mouseDownInfo = {
       event:        ev,  
       itemView:     itemView,
@@ -2261,7 +2254,6 @@ console.log("mousedown", contentIndex)
       // selection and reselect the clicked on item.
       if (info.shouldReselect) {
         
-        //debugger ;
         // - contentValueIsEditable is true
         canEdit = this.get('isEditable') && this.get('canEditContent') ;
         
