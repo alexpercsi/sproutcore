@@ -974,6 +974,9 @@ SC.CollectionView = SC.View.extend(
 			  classNames.push(columnClass);
 			}
 		}
+		
+		if(column == NO)
+			column = 0
 
 		// if the view is existing it will be reused so let's not remove it anymore, ok?
 
@@ -1110,6 +1113,7 @@ SC.CollectionView = SC.View.extend(
 			} 
 		}
 		
+		// debugger
 
     if (rebuild || !(ret = itemViews[row][column]) || !ret.get) {
 	
@@ -1518,7 +1522,7 @@ SC.CollectionView = SC.View.extend(
     // iterate through each item and set the isSelected state.
     invalid.forEach(function(idx) {
       if (!nowShowing.contains(idx)) return; // not showing
-      var view = this.viewForRowAndColumn(idx, 0);
+      var view = this.viewForRowAndColumn(idx, NO);
 
       if (view) view.set('isSelected', sel ? sel.contains(content, idx) : NO);
     },this);
