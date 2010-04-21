@@ -152,6 +152,16 @@ SC.ListItemView = SC.View.extend(
     when the list item is created.
   */
   disclosureState: SC.LEAF_NODE,
+
+	displayValue: function() {
+		var content = this.get('content'),
+        del     = this.displayDelegate,
+				key, value
+				
+		key = this.getDelegateProperty('contentValueKey', del) ;
+    value = (key && content) ? (content.get ? content.get(key) : content[key]) : content ;
+    if (value && SC.typeOf(value) !== SC.T_STRING) value = value.toString();
+	}.property('content').cacheable(),
   
   contentPropertyDidChange: function() {
     //if (this.get('isEditing')) this.discardEditing() ;
@@ -221,9 +231,7 @@ SC.ListItemView = SC.View.extend(
     }
     
     // handle label -- always invoke
-    key = this.getDelegateProperty('contentValueKey', del) ;
-    value = (key && content) ? (content.get ? content.get(key) : content[key]) : content ;
-    if (value && SC.typeOf(value) !== SC.T_STRING) value = value.toString();
+		value = this.get('displayValue')
     if (this.get('escapeHTML')) value = SC.RenderContext.escapeHTML(value);
     this.renderLabel(working, value);
 

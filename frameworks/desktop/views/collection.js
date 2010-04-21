@@ -966,7 +966,7 @@ SC.CollectionView = SC.View.extend(
 
 		// if the view is existing it will be reused so let's not remove it anymore, ok?
 
-    if(existing) {
+    if(existing && existing != view) {
       if(existing.get) {
         layer = existing.get('layer');
         if (layer && layer.parentNode) {

@@ -20,6 +20,12 @@ SC.DataView = SC.ListView.extend({
 		return this.get('dataSource')
 	}.property('dataSource').cacheable(),
 	
+	collectionViewWillDisplayCellForRowAndColumn: function(tableView, view, row, column) {
+		value = this.get('dataSource').valueForRowAndColumnInTableView(row, column, this)
+		view.displayValue = value
+		sc_super()
+	},
+	
 	row: function() {
 		var rows = this.get('rows'),
 			hiddenRows = this.get('hiddenRows'),
@@ -146,8 +152,6 @@ SC.DataView = SC.ListView.extend({
   			if(view[i].get) {
   				view2 = view[i].get('layer')
   				view[i].set('layer', null)
-					// view[i].destroy()
-					// console.log(view2)
   				view[i] = view2
   			}	
   		}
