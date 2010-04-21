@@ -1304,7 +1304,7 @@ SC.CollectionView = SC.View.extend(
     // no match
     if ((id.length <= base.length) || (id.indexOf(base) !== 0)) return null ; 
 
-    var ret = Number(id.split('-').objectAt(-2))
+    var ret = Number(id.split('-').objectAt(1))
     
     // var ret = Number(id.slice(id.lastIndexOf('-')+1));
 
@@ -1537,6 +1537,7 @@ SC.CollectionView = SC.View.extend(
     @returns {SC.CollectionView} receiver
   */
   select: function(indexes, extend) {
+	// return
 	console.log("select", indexes)
     var content = this.get('content'),
         del     = this.get('selectionDelegate'),
