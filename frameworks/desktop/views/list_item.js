@@ -33,9 +33,9 @@ SC.ListItemView = SC.View.extend(
   
   classNames: ['sc-list-item-view'],
   
-	useFactory: YES,
+	// useFactory: YES,
 	
-	displayProperties: ['content'],
+	// displayProperties: ['content'],
 
   // ..........................................................
   // KEY PROPERTIES

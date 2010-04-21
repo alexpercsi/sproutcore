@@ -1032,16 +1032,15 @@ SC.CollectionView = SC.View.extend(
 
     var view = itemViews[row]
 
-    view.forEach(function(v) {
-      if(v.get)
-        v.destroy()
-      else {
-        if(SC.typeOf(v) == "string")
-          v = document.getElementById(v)
-        if(v)
-          v.parentNode.removeChild(v)      
-      }
-    })
+	  for(var i = view.length - 1; i >= -1; i--) {
+			if(view[i]) {
+	      if(view[i].get)
+	        view[i].destroy()
+	      else {
+	         view[i].parentNode.removeChild(view[i])      
+      	}
+			}
+    }
 
     delete itemViews[row]
   },
