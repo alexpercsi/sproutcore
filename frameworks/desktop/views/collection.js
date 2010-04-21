@@ -58,7 +58,19 @@ SC.CollectionView = SC.View.extend(
   ACTION_DELAY: 200,
 
 	rowView: SC.View.extend({
-		useFactory: YES
+		classNames: ['sc-dataview-row'],
+		
+		useFactory: YES,
+		
+		render: function(context, firstTime) {
+	    var content = this.get('content'),
+				classArray = [];
+
+	    // add alternating row classes
+	    classArray.push((this.get('contentIndex') % 2 === 0) ? 'even' : 'odd');
+	    context.addClass(classArray);
+	    context = context.end();
+		}
 	}),
   
   // ......................................
