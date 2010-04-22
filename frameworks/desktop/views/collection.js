@@ -892,9 +892,11 @@ SC.CollectionView = SC.View.extend(
       invalid.forEach(function(idx) {
         if (nowShowing.contains(idx)) {
           (columns || [null]).forEach(function(column, colIdx) {
+							// console.log("add", idx, colIdx)
              this.addItemViewForRowAndColumn(idx, SC.none(column) ? NO : colIdx, rebuild)
           }, this)
         } else {
+					// console.log("remove", idx)
           this.removeItemViewForRowAndColumn(idx, 0)
         }
       }, this)
@@ -919,6 +921,7 @@ SC.CollectionView = SC.View.extend(
 
 
   addItemViewForRowAndColumn: function(row, column, rebuild) {
+	
     var view, itemViews, layer, existing, element, rowView
       del  = this.get('contentDelegate')
 
@@ -977,26 +980,24 @@ SC.CollectionView = SC.View.extend(
 		if(column === NO)
 			column = 0
 
-		// if the view is existing it will be reused so let's not remove it anymore, ok?
-
-    if(existing && existing != view) {
-      if(existing.get) {
-        layer = existing.get('layer');
-        if (layer && layer.parentNode) {
-          layer.parentNode.removeChild(layer);  
-        } 
-        layer = null ; // avoid leaks
-     
-        if(!view.isFactory) {
-          containerView.replaceChild(view, existing);
-          return this
-        }
-      } else {
-				existing.parentNode.removeChild(existing)
+    if(existing) {
+			if(existing != view) {
+		    if(existing.get) {
+					if(existing.parentView != containerView) {
+		        layer = existing.get('layer');
+		        if (layer && layer.parentNode) {
+		          layer.parentNode.removeChild(layer);  
+		        } 
+		        layer = existing = null ; // avoid leaks
+					}
+				} else {
+					existing.parentNode.removeChild(existing)
+					existing = null
+	      }
+			} else {
 				existing = null
-        // containerView.get('layer').removeChild(document.getElementById(existing))
-      }
-    }
+			}
+		}
 
     if(del.collectionViewWillDisplayCellForRowAndColumn && column >= 0)
       del.collectionViewWillDisplayCellForRowAndColumn(this, view, row, column)
@@ -1017,9 +1018,15 @@ SC.CollectionView = SC.View.extend(
       view = element
     } else {
       itemViews[row][column] = view
+
     }
     
-    containerView.appendChild(view)
+
+		if(existing)
+    	containerView.replaceChild(view, existing);
+		else
+    	containerView.appendChild(view)
+
     return view
   },
 

@@ -122,6 +122,7 @@ SC.DataView = SC.ListView.extend({
 	},
 
 	addItemViewForRowAndColumn: function(row, column, rebuild) {
+		// console.log("addItemView", row, column, rebuild)
 		if(rebuild)
 			return sc_super()
 			
@@ -151,6 +152,7 @@ SC.DataView = SC.ListView.extend({
   			if(view[i].get) {
   				view2 = view[i].get('layer')
   				view[i].set('layer', null)
+					// view[1].destroy()
   				view[i] = view2
   			}	
   		}

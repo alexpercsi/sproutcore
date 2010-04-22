@@ -68,6 +68,7 @@
 			.endash-table-header .endash-table-cell.selected  label {
 				background: #4f9fe9 !important;		
 				border-top: 1px solid #3783c6 !important;
+				border-top: 1px solid #418ed4 !important;
 				color: rgba(255, 255, 255, .95);
 		 		z-index: 9999 !important;
 			}
@@ -81,7 +82,7 @@
 				-webkit-border-top-right-radius: 4px !important;
 				-moz-border-radius-topright: 4px !important;
 				-moz-border-radius-topleft: 4px !important;
-				opacity: .85 !important;
+				opacity: .8 !important;
 			}
 			
 			.endash-table-header .endash-table-cell.dragging label {
