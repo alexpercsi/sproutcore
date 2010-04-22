@@ -1073,6 +1073,7 @@ SC.CollectionView = SC.View.extend(
 
 
   addItemViewForRowAndColumn: function(row, column, rebuild) {
+	
     var view, itemViews, layer, existing, element, rowView
       del  = this.get('contentDelegate')
 
@@ -1149,9 +1150,8 @@ SC.CollectionView = SC.View.extend(
       } else {
 				existing.parentNode.removeChild(existing)
 				existing = null
-        // containerView.get('layer').removeChild(document.getElementById(existing))
-      }
-    }
+			}
+		}
 
     if(del.collectionViewWillDisplayCellForRowAndColumn && column >= 0)
       del.collectionViewWillDisplayCellForRowAndColumn(this, view, row, column)
@@ -1172,9 +1172,15 @@ SC.CollectionView = SC.View.extend(
       view = element
     } else {
       itemViews[row][column] = view
+
     }
     
-    containerView.appendChild(view)
+
+		if(existing)
+    	containerView.replaceChild(view, existing);
+		else
+    	containerView.appendChild(view)
+
     return view
   },
 
