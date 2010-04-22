@@ -184,12 +184,12 @@ SC.ListItemView = SC.View.extend(
 	displayValue: function() {
 		var content = this.get('content'),
         del     = this.displayDelegate,
-				key, value
+				key, value;
 				
 		key = this.getDelegateProperty('contentValueKey', del) ;
     value = (key && content) ? (content.get ? content.get(key) : content[key]) : content ;
     if (value && SC.typeOf(value) !== SC.T_STRING) value = value.toString();
-		return value
+		return value;
 	}.property('content').cacheable(),
   
   contentPropertyDidChange: function() {
