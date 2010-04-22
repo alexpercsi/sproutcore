@@ -158,12 +158,12 @@ SC.ListItemView = SC.View.extend(
 	displayValue: function() {
 		var content = this.get('content'),
         del     = this.displayDelegate,
-				key, value
+				key, value;
 				
 		key = this.getDelegateProperty('contentValueKey', del) ;
     value = (key && content) ? (content.get ? content.get(key) : content[key]) : content ;
     if (value && SC.typeOf(value) !== SC.T_STRING) value = value.toString();
-		return value
+		return value;
 	}.property('content').cacheable(),
   
   contentPropertyDidChange: function() {
@@ -235,7 +235,7 @@ SC.ListItemView = SC.View.extend(
     }
     
     // handle label -- always invoke
-		value = this.get('displayValue')
+		value = this.get('displayValue');
     if (this.get('escapeHTML')) value = SC.RenderContext.escapeHTML(value);
     this.renderLabel(working, value);
 
