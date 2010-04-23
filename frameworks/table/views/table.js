@@ -66,6 +66,8 @@ SC.TableView = SC.ListView.extend(SC.TableDelegate, {
     },
     borderStyle: SC.BORDER_NONE,
     contentView: SC.DataView.design({
+			isEditable: YES,
+			canEditContent: YES,
 			rowHeight: 22,
 			classNames: ['endash-table-data-view'],
  			tableBinding: '.parentView.parentView.parentView',
@@ -91,7 +93,8 @@ SC.TableView = SC.ListView.extend(SC.TableDelegate, {
     isVisible: YES,
     layout: {
       left:   0,
-      right:  16,
+      // right:  16,
+			right: 0,
       bottom: 0,
       top:    0,
  			height: 39
@@ -144,7 +147,7 @@ SC.TableView = SC.ListView.extend(SC.TableDelegate, {
 		columns.forEach(function(column, i) {
 			offsets[i] = left
 			stylesheet.styleSheet.insertRule(this.ruleForColumn(i), i)
-			left += widths[i]
+			left += widths[i] + 1
 		}, this)
 		
     this.getPath('dataView.contentView').set('calculatedWidth', left);
@@ -153,8 +156,8 @@ SC.TableView = SC.ListView.extend(SC.TableDelegate, {
 	ruleForColumn: function(column) {
 		var columns = this.get('columns'),
 			col = columns.objectAt(column),
-			width = col.get('width')
-		this._widths[column] = width
+			width = col.get('width') - 1
+		this._widths[column] = width 
 		return ['div.column-' + column + ' {',
 				'width: ' + width + 'px !important;',
 				'left: ' + this._offsets[column] + 'px !important;',
@@ -171,18 +174,19 @@ SC.TableView = SC.ListView.extend(SC.TableDelegate, {
 		if(indexes !== 0)
 			indexes = indexes.firstObject()
 		
-		var diff = columns.objectAt(indexes).get('width') - this._widths[indexes]
+		var diff = columns.objectAt(indexes).get('width') - this._widths[indexes] - 1
 		var css = this._stylesheet.styleSheet
-		
-		for(var i = indexes; i < len; i++) {
-			css.deleteRule(i)
-			if(i > indexes)
-				this._offsets[i] += diff
-			css.insertRule(this.ruleForColumn(i), i)
-		}
+		if(Math.abs(diff) > 0) {
+			for(var i = indexes; i < len; i++) {
+				css.deleteRule(i)
+				if(i > indexes)
+					this._offsets[i] += diff
+				css.insertRule(this.ruleForColumn(i), i)
+			}
 			
-		this.getPath('dataView.contentView').calculatedWidth += diff
-		this.getPath('dataView.contentView').adjust(this.getPath('dataView.contentView').computeLayout())
+			this.getPath('dataView.contentView').calculatedWidth += diff
+			this.getPath('dataView.contentView').adjust(this.getPath('dataView.contentView').computeLayout())
+		}
 	},
 	
 	sortByColumn: function(column, sortState) {

@@ -21,8 +21,10 @@ SC.DataView = SC.ListView.extend({
 	}.property('dataSource').cacheable(),
 	
 	collectionViewWillDisplayCellForRowAndColumn: function(tableView, view, row, column) {
-		value = this.get('dataSource').valueForRowAndColumnInTableView(row, column, this)
-		view.displayValue = value
+		if(column >= 0) {
+			value = this.get('dataSource').valueForRowAndColumnInTableView(row, column, this)
+			view.displayValue = value
+		}
 		sc_super()
 	},
 	
@@ -60,10 +62,10 @@ SC.DataView = SC.ListView.extend({
 
 			SC.$(view).css(this.layoutForRow(row))
 		}
+
 		if (SC.none(view))
-		{
 		  return NO;
-		}
+
 		view.className = "sc-dataview-row" + (row % 2 == 0 ? " even" : "") + (this.isSelected(row) ? " sel" : "")
 		return view
 	},
@@ -135,6 +137,7 @@ SC.DataView = SC.ListView.extend({
 	},
   
   releaseRow: function(row, column) {
+		// console.log("release", row)
 		var view, hiddenRows, view2
 		hiddenRows = this.get('hiddenRows')
 
@@ -146,6 +149,17 @@ SC.DataView = SC.ListView.extend({
 		var itemViews = this._sc_itemViews
 		view = itemViews[row]
 		
+		var viewCache = this._viewCache
+		if(!viewCache)
+			viewCache = this._viewCache = []
+			
+		// var colViewCache = viewCache[column]
+			
+		// if(!colViewCache)
+			// colViewCache = viewCache[column] = []
+		
+		// console.log(viewCache)
+		
 		if (view)
 		{
 		  for(var i = view.length - 1; i >= -1; i--) {
@@ -153,7 +167,13 @@ SC.DataView = SC.ListView.extend({
   				view2 = view[i].get('layer')
   				view[i].set('layer', null)
 					// view[1].destroy()
+					
+					if(!viewCache[i])
+						viewCache[i] = []
+					
+					viewCache[i].push(view[i])
   				view[i] = view2
+
   			}	
   		}
 		
@@ -224,6 +244,12 @@ SC.DataView = SC.ListView.extend({
 		el.className = "column-" + column + " ghost";
 		
 		return el
+	},
+	
+	mouseMoved: function(ev) {
+		if(this._isDirty)
+			this.reload(null)
+	  sc_super();
 	}
   
 });
