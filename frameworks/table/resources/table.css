@@ -97,7 +97,7 @@
 	position: absolute !important;
 	top: 12px !important;
 	left: none !important;
-	right: 0px !important;
+	right: 1px !important;
 	width: 10px !important;
 	bottom: 7px !important;
 	background-color: transparent !important !important;
@@ -133,20 +133,25 @@
 	min-height: 1px;
 	white-space: nowrap;
 	line-height: 22px;
+	
 }
 
 
 div.sc-dataview-row {
-	background-color: white;
 }
 
 	div.sc-dataview-row.even {
 		background-color: #f3f7fb;
 	}
+	
+	div.sc-dataview-row.odd {
+		background-color: white;
+	}
 
-	div.sc-dataview-row.sel {
+	.endash-table-data-view div.sc-dataview-row.sel {
 		background-color: #278eea;
-		background-color: #579ad7;
+		background-color: #579ad7 !important;
+		background-color: #4f9fe9 !important;
 	}
 	
 	div.sc-dataview-row.sel .cell label {
@@ -157,6 +162,10 @@ div.sc-dataview-row {
 		color: white !important;		
 	}
 	
+	div.sc-dataview-row div.cell {
+		border-right: 1px solid rgba(0, 0, 0, .08) !important;
+	}
+	
 	div.sc-dataview-row label, div.ghost label {
 		display: block;
 		padding: 0px 8px;
@@ -164,7 +173,6 @@ div.sc-dataview-row {
 		right: 0px;
 		top: 0px;
 		bottom: 0px;
-		border-right: 1px solid rgba(0, 0, 0, .08);
 		overflow: hidden;
 		white-space: nowrap;
 		text-overflow: ellipsis;

@@ -676,15 +676,16 @@ SC.ListItemView = SC.View.extend(
   */
   contentHitTest: function(evt) {
    // if not content value is returned, not much to do.
-   var del = this.displayDelegate ;
-   var labelKey = this.getDelegateProperty('contentValueKey', del) ;
-   if (!labelKey) return NO ;
+   // var del = this.displayDelegate ;
+   // var labelKey = this.getDelegateProperty('contentValueKey', del) ;
+   // if (!labelKey) return NO ;
    
    // get the element to check for.
    var el = this.$label()[0] ;
    if (!el) return NO ; // no label to check for.
-   
+
    var cur = evt.target, layer = this.get('layer') ;
+
    while(cur && (cur !== layer) && (cur !== window)) {
      if (cur === el) return YES ;
      cur = cur.parentNode ;

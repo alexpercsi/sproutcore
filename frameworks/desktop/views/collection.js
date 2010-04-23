@@ -57,7 +57,7 @@ SC.CollectionView = SC.View.extend(
   
   ACTION_DELAY: 200,
 
-	rowView: SC.View.extend({
+	rowView: SC.View.extend(SC.Control, {
 		classNames: ['sc-dataview-row'],
 		
 		useFactory: YES,
@@ -65,11 +65,11 @@ SC.CollectionView = SC.View.extend(
 		render: function(context, firstTime) {
 	    var content = this.get('content'),
 				classArray = [];
-
+		
 	    // add alternating row classes
 	    classArray.push((this.get('contentIndex') % 2 === 0) ? 'even' : 'odd');
 	    context.addClass(classArray);
-	    context = context.end();
+			sc_super()
 		}
 	}),
   
@@ -870,9 +870,11 @@ SC.CollectionView = SC.View.extend(
     if (this.willReload) this.willReload(invalid === YES ? null : invalid);
 
     if(!invalid.isIndexSet) {
-      invalid = nowShowing.toArray()
+      // invalid = nowShowing.toArray()
+			this._isDirty = NO
 			rebuild = YES
     } else {
+			this._isDirty = YES
 			rebuild = NO
       if(this._TMP_DIFF1.get('length') > 0)
         invalid = this._TMP_DIFF1.remove(this._TMP_DIFF2).toArray().concat(this._TMP_DIFF2.toArray())
@@ -882,7 +884,7 @@ SC.CollectionView = SC.View.extend(
 
 
     // if an index set, just update indexes
-    // if (invalid.isIndexSet) {
+    if (SC.typeOf(invalid) == "array") {
 
       if (bench) {
         bench=("%@#reloadIfNeeded (Partial)" + Math.random(100000)).fmt(this)
@@ -902,7 +904,43 @@ SC.CollectionView = SC.View.extend(
       }, this)
 
       if (bench) SC.Benchmark.end(bench);
-		// }
+		} else {
+			
+			itemViews = this._sc_itemViews
+			if(itemViews)
+				itemViews.length = 0
+			views = []
+			
+      if (bench) {
+        bench=("%@#reloadIfNeeded (FULL)" + Math.random(100000)).fmt(this)
+        SC.Benchmark.start(bench);
+      }
+
+			containerView.beginPropertyChanges();
+			containerView.destroyLayer().removeAllChildren();
+
+			nowShowing.forEach(function(idx) {
+				if(columns) {
+					// console.log("add", idx)
+          view = this.addItemViewForRowAndColumn(idx, null, YES, YES)
+					views.push(view)
+
+	        columns.forEach(function(column, colIdx) {
+	           this.addItemViewForRowAndColumn(idx, colIdx, YES, NO)
+	        }, this)
+				} else {
+          this.addItemViewForRowAndColumn(idx, NO, YES, NO)					
+				}
+      }, this)
+      
+// debugger
+
+			containerView.set('childViews', views); // quick swap
+      containerView.replaceLayer();
+      containerView.endPropertyChanges();
+
+      if (bench) SC.Benchmark.end(bench);
+		}
 		
     // adjust my own layout if computed
     if (layout) { this.adjust(layout); }
@@ -911,16 +949,7 @@ SC.CollectionView = SC.View.extend(
     return this ;
   },
 
-  renderContent: function(context) {
-    sc_super()
-    if(!this._additionalContent)
-      return
-    context.push(this._additionalContent)
-    this._additionalContent = null
-  },
-
-
-  addItemViewForRowAndColumn: function(row, column, rebuild) {
+  addItemViewForRowAndColumn: function(row, column, rebuild, fullReload) {
 	
     var view, itemViews, layer, existing, element, rowView
       del  = this.get('contentDelegate')
@@ -980,6 +1009,9 @@ SC.CollectionView = SC.View.extend(
 		if(column === NO)
 			column = 0
 
+    if(del.collectionViewWillDisplayCellForRowAndColumn)
+      del.collectionViewWillDisplayCellForRowAndColumn(this, view, row, column)
+
     if(existing) {
 			if(existing != view) {
 		    if(existing.get) {
@@ -991,16 +1023,14 @@ SC.CollectionView = SC.View.extend(
 		        layer = existing = null ; // avoid leaks
 					}
 				} else {
-					existing.parentNode.removeChild(existing)
+					if(existing.parentNode)
+						existing.parentNode.removeChild(existing)
 					existing = null
 	      }
 			} else {
 				existing = null
 			}
 		}
-
-    if(del.collectionViewWillDisplayCellForRowAndColumn && column >= 0)
-      del.collectionViewWillDisplayCellForRowAndColumn(this, view, row, column)
 
     if(view.isFactory) {
       context = view.renderContext(view.get('tagName')) ;
@@ -1021,12 +1051,13 @@ SC.CollectionView = SC.View.extend(
 
     }
     
-
-		if(existing)
-    	containerView.replaceChild(view, existing);
-		else
-    	containerView.appendChild(view)
-
+		if(!fullReload) {
+			if(existing)
+	    	containerView.replaceChild(view, existing);
+			else
+	    	containerView.appendChild(view)
+		}
+		
     return view
   },
 
@@ -1085,6 +1116,8 @@ SC.CollectionView = SC.View.extend(
   */
 
   viewForRowAndColumn: function(row, column, rebuild) {
+	// if(column === undefined)
+		// debugger
     var factory, E, view, attrs, view,
       del  = this.get('contentDelegate'),
       containerView = (SC.none(column) || column === NO) ? (this.get('containerView') || this) : this.viewForRowAndColumn(row),
@@ -1093,17 +1126,12 @@ SC.CollectionView = SC.View.extend(
     if (!itemViews) itemViews = this._sc_itemViews = [] ;
     if (!itemViews[row]) itemViews[row] = []
 
-		// var viewCache = this._viewCache
-		// if(!viewCache)
-		// 	viewCache = this._viewCache = []
-		// 	
-		// var colViewCache = viewCache[column]
-		// 	
-		// if(!colViewCache)
-		// 	colViewCache = viewCache[column] = []
-
-
-
+		var viewCache = this._viewCache
+		if(!viewCache)
+			viewCache = this._viewCache = []
+			
+		var colViewCache = viewCache[column]
+		
 		if(!SC.none(column)) {
 			if(column === NO)
 				column = 0
@@ -1122,25 +1150,16 @@ SC.CollectionView = SC.View.extend(
 	
       E = this.viewClassForRowAndColumn(row, column)
       
-      if(E.prototype.useFactory && (!rebuild)) {
-				// we're scrolling, presumably, so we're going to just use a factory and grab
-				// the layer
-        ret = this._factoryForClass(E)
+      if((E.prototype.useFactory && (!rebuild) && (ret = this._factoryForClass(E))) || 
+				(rebuild && colViewCache && (ret = colViewCache.pop())))
+			{
+				// console.log("wtf?", ret)
         this._attrsForView(ret, row, column, containerView, E.isGroupView)
-      // } else if(rebuild && ret && !ret.get && colViewCache && (view = colViewCache.pop())) {
-				// row is a div, so we want to attach it to a cached view
-				// view.set('layer', ret)
-       	// this._attrsForView(view, row, column, containerView, E.isGroupView)
-				// ret = view
 			} else {
-				// we're either not using a factory or we're not scrolling, so create a full view
-				// just for this row
 				
         attrs = this._attrsForView(null, row, column, containerView, E.isGroupView)
         attrs.contentIndex = row
         ret = this.createChildView(E, attrs)
-
-				// colViewCache.push(ret)
       }
     }
 
@@ -1171,11 +1190,12 @@ SC.CollectionView = SC.View.extend(
     var attrs = view || this._TMP_ATTRS, classNames
 
     attrs.contentIndex = row;
-    attrs.owner        = attrs.displayDelegate = attrs.parentView = parentView;
+    attrs.owner        = attrs.parentView = parentView;
 		attrs.columnIdx    = column,
     attrs.page         = this.page ;
     attrs.layerId      = this.layerIdFor(row, column);
     attrs.isVisibleInWindow = this.isVisibleInWindow;
+		attrs.displayDelegate   = (column >= 0) ? this.get('columns').objectAt(column) : parentView;
 
     if(isGroupView) 
       classNames = this._GROUP_COLLECTION_CLASS_NAMES;
@@ -1318,6 +1338,22 @@ SC.CollectionView = SC.View.extend(
 
     return isNaN(ret) ? null : ret ;
   },
+
+  columnIndexForLayerId: function(id) {
+    if (!id || !(id = id.toString())) return null ; // nothing to do
+    
+    var base = this._baseLayerId;
+    if (!base) base = this._baseLayerId = SC.guidFor(this)+"-";
+    
+    // no match
+    if ((id.length <= base.length) || (id.indexOf(base) !== 0)) return null ; 
+
+    var ret = Number(id.split('-').objectAt(2))
+    
+    // var ret = Number(id.slice(id.lastIndexOf('-')+1));
+
+    return isNaN(ret) ? null : ret ;
+  },
   
 
   /** 
@@ -1367,7 +1403,7 @@ SC.CollectionView = SC.View.extend(
     }
 
     // return this.viewForRowAndColumn(contentIndex, NO, this.containerViewForLayerId(id));
-    return this.viewForRowAndColumn(contentIndex, 0);
+    return this.viewForRowAndColumn(contentIndex, this.columnIndexForLayerId(id));
   },
   
   // ..........................................................
@@ -1510,6 +1546,8 @@ SC.CollectionView = SC.View.extend(
     var nowShowing = this.get('nowShowing'),
         reload     = this._invalidIndexes,
         content    = this.get('content'),
+				columns		 = this.get('columns') || no,
+				column     = columns ? null : NO,
         sel        = this.get('selection');
     
     this._invalidSelection = NO; // reset invalid
@@ -1526,7 +1564,8 @@ SC.CollectionView = SC.View.extend(
     // iterate through each item and set the isSelected state.
     invalid.forEach(function(idx) {
       if (!nowShowing.contains(idx)) return; // not showing
-      var view = this.viewForRowAndColumn(idx, NO);
+
+      var view = this.viewForRowAndColumn(idx, column);
 
       if (view) view.set('isSelected', sel ? sel.contains(content, idx) : NO);
     },this);
@@ -2231,7 +2270,7 @@ SC.CollectionView = SC.View.extend(
     var view   = this.itemViewForEvent(ev),
         info   = this.mouseDownInfo,
         contentIndex, sel, isSelected, canEdit, itemView, content, idx;
-        
+
     if (this.get('useToggleSelection')) {
       if (!view) return ; // do nothing when clicked outside of elements
       
@@ -2260,7 +2299,7 @@ SC.CollectionView = SC.View.extend(
       // on the content.  If that is not allowed, then simply clear the 
       // selection and reselect the clicked on item.
       if (info.shouldReselect) {
-        
+
         // - contentValueIsEditable is true
         canEdit = this.get('isEditable') && this.get('canEditContent') ;
         
@@ -2275,9 +2314,13 @@ SC.CollectionView = SC.View.extend(
         
         // - the item view responds to contentHitTest() and returns YES.
         // - the item view responds to beginEditing and returns YES.
-        if (canEdit) {
-          itemView = this.itemViewForContentIndex(idx) ;
+        if (canEdit && view) {
+					console.log(view.get('layerId'))
+
+          // itemView = this.viewForRowAndColumn(idx) ;
+					itemView = view
           canEdit = itemView && (!itemView.contentHitTest || itemView.contentHitTest(ev)) ;
+console.log("canEdit", itemView.contentHitTest(ev))
           canEdit = (canEdit && itemView.beginEditing) ? itemView.beginEditing() : NO ;
         }
         
@@ -2313,7 +2356,6 @@ SC.CollectionView = SC.View.extend(
   
   /** @private */
   mouseMoved: function(ev) {
-return 
     var view = this.itemViewForEvent(ev), 
         last = this._lastHoveredItem ;
 
