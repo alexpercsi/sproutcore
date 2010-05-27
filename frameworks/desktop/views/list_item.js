@@ -188,7 +188,6 @@ SC.ListItemView = SC.View.extend(
 				
 		key = this.getDelegateProperty('contentValueKey', del) ;
     value = (key && content) ? (content.get ? content.get(key) : content[key]) : content ;
-		console.log("displayValue", del, key, value)
     if (value && SC.typeOf(value) !== SC.T_STRING) value = value.toString();
 		return value
 	}.property('content').cacheable(),
@@ -372,7 +371,6 @@ SC.ListItemView = SC.View.extend(
   button.
   */
   mouseDown: function(evt) {
-    
     // if content is not editable, then always let collection view handle the
     // event.
     if (!this.get('contentIsEditable')) return NO ; 

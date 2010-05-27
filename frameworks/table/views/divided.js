@@ -14,7 +14,7 @@
 // 		return 0
 // 	}.property('dividerThickness', 'dividerSpacing').cacheable(),
 // 	
-// 	dividerView: Endash.ThumbView.extend({
+// 	dividerView: SC.ThumbView.extend({
 // 	}),
 // 	
 // 	boundDividerView: function() {

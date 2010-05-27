@@ -1,4 +1,4 @@
-.endash-table-header {
+.sc-table-header {
 	background-image: static_url('tableheader.png') !important;
 	background-image: static_url('tableheader4.png') !important;
 	background-position: top left !important;
@@ -8,7 +8,7 @@
 	border-bottom: 1px solid #d6d6d6 !important;
 }
 
-	.endash-table-header .endash-table-cell {
+	.sc-table-header .sc-table-cell {
 		height: 38px !important;
 		overflow: visible !important;
 /*		bottom: -1px !important;*/
@@ -20,7 +20,7 @@
 	}
 
 
-	.endash-table-header .endash-table-cell:hover, .endash-table-header .endash-table-cell.selected, .endash-table-header .endash-table-cell.dragging {
+	.sc-table-header .sc-table-cell:hover, .sc-table-header .sc-table-cell.selected, .sc-table-header .sc-table-cell.dragging {
 		background-image: static_url('tableheader4.png') !important;
 		background-position: bottom left !important;
 		background-repeat: repeat-x !important;
@@ -28,11 +28,11 @@
 		z-index: 3000 !important;
 	}
 
-		.endash-table-header .endash-table-cell.selected {
+		.sc-table-header .sc-table-cell.selected {
 			z-index: 9999 !important;
 		}
 	
-		.endash-table-header .endash-table-cell label {
+		.sc-table-header .sc-table-cell label {
 			font-family: Helvetica;
 			background: transparent !important;
 			position: absolute !important;
@@ -46,11 +46,11 @@
 			font-weight: bold !important;
 		}
 	
-			.endash-table-header .endash-table-cell:hover label, .endash-table-header .endash-table-cell.dragging label {
+			.sc-table-header .sc-table-cell:hover label, .sc-table-header .sc-table-cell.dragging label {
 				background: rgba(0, 0, 0, .06) !important;
 			}
 
-			.endash-table-header .endash-table-cell:hover label, .endash-table-header .endash-table-cell.dragging label, .endash-table-header .endash-table-cell.selected label {
+			.sc-table-header .sc-table-cell:hover label, .sc-table-header .sc-table-cell.dragging label, .sc-table-header .sc-table-cell.selected label {
 				border: 1px solid rgba(0, 0, 0, .03);
 				border-top: 1px solid rgba(0, 0, 0, .08);
 				border-bottom: 0px !important;
@@ -65,7 +65,7 @@
 				right: 0px !important;
 				}
 
-			.endash-table-header .endash-table-cell.selected  label {
+			.sc-table-header .sc-table-cell.selected  label {
 				background: #4f9fe9 !important;		
 				border-top: 1px solid #3783c6 !important;
 				border-top: 1px solid #418ed4 !important;
@@ -74,7 +74,7 @@
 			}
 			
 			
-			.endash-table-header .endash-table-cell.dragging {
+			.sc-table-header .sc-table-cell.dragging {
 				z-index: 10999 !important;
 				bottom: -1px !important;
 				top: 5px !important;
@@ -85,15 +85,15 @@
 				opacity: .8 !important;
 			}
 			
-			.endash-table-header .endash-table-cell.dragging label {
+			.sc-table-header .sc-table-cell.dragging label {
 				top: 0px !important;
 			}
 			
-			.endash-table-header .endash-table-cell.dragging div.sc-thumb-view {
+			.sc-table-header .sc-table-cell.dragging div.sc-thumb-view {
 				top: 3px !important;
 			}
 	
-.endash-table-header .endash-table-cell div.sc-thumb-view {
+.sc-table-header .sc-table-cell div.sc-thumb-view {
 	position: absolute !important;
 	top: 12px !important;
 	left: none !important;
@@ -104,7 +104,7 @@
 	z-index: 15000 !important;
 }
 
-	.endash-table-header .endash-table-cell.selected div.sc-thumb-view, .endash-table-header .endash-table-cell:hover div.sc-thumb-view, .endash-table-header .endash-table-cell.dragging div.sc-thumb-view   {
+	.sc-table-header .sc-table-cell.selected div.sc-thumb-view, .sc-table-header .sc-table-cell:hover div.sc-thumb-view, .sc-table-header .sc-table-cell.dragging div.sc-thumb-view   {
 		background-image: static_url('grippy.png') !important;
 		background-repeat: no-repeat !important;
 		background-position: 0% 50% !important;
@@ -112,15 +112,15 @@
 		z-index: 15000 !important;
 	}
 
-	.endash-table-header .endash-table-cell:hover div.sc-thumb-view, .endash-table-header .endash-table-cell.dragging div.sc-thumb-view {
+	.sc-table-header .sc-table-cell:hover div.sc-thumb-view, .sc-table-header .sc-table-cell.dragging div.sc-thumb-view {
 		background-image: static_url('grippy2.png') !important;	
 	}
 
-	.endash-table-header .endash-table-cell.selected:hover div.sc-thumb-view, .endash-table-header .endash-table-cell.selected.dragging div.sc-thumb-view {
+	.sc-table-header .sc-table-cell.selected:hover div.sc-thumb-view, .sc-table-header .sc-table-cell.selected.dragging div.sc-thumb-view {
 		background-image: static_url('grippy.png') !important;	
 	}
 
-.endash-table-data-view div.cell {
+.sc-table-data-view div.cell {
 	font-family: Helvetica;
 	font-size: 12px;
 	color: rgba(0, 0, 0, .85);
@@ -148,7 +148,7 @@ div.sc-dataview-row {
 		background-color: white;
 	}
 
-	.endash-table-data-view div.sc-dataview-row.sel {
+	.sc-table-data-view div.sc-dataview-row.sel {
 		background-color: #278eea;
 		background-color: #579ad7 !important;
 		background-color: #4f9fe9 !important;
