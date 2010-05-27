@@ -162,7 +162,6 @@ SC.ListItemView = SC.View.extend(
 				
 		key = this.getDelegateProperty('contentValueKey', del) ;
     value = (key && content) ? (content.get ? content.get(key) : content[key]) : content ;
-		console.log("displayValue", del, key, value)
     if (value && SC.typeOf(value) !== SC.T_STRING) value = value.toString();
 		return value
 	}.property('content').cacheable(),
@@ -195,6 +194,7 @@ SC.ListItemView = SC.View.extend(
     @returns {void}
   */
   render: function(context, firstTime) {
+    //console.log('listitemview rendered'+this.get('contentIndex')+this.get('classNames').join('+'));
     var content = this.get('content'),
         del     = this.displayDelegate,
         level   = this.get('outlineLevel'),
@@ -521,7 +521,6 @@ SC.ListItemView = SC.View.extend(
   button.
   */
   mouseDown: function(evt) {
-    
     // if content is not editable, then always let collection view handle the
     // event.
     if (!this.get('contentIsEditable')) return NO ; 

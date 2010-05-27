@@ -22,10 +22,22 @@ SC.DataView = SC.ListView.extend({
 	
 	collectionViewWillDisplayCellForRowAndColumn: function(tableView, view, row, column) {
 		if(column >= 0) {
-			value = this.get('dataSource').valueForRowAndColumnInTableView(row, column, this)
+			value = this.valueForRowAndColumnInTableView(row, column, this)
 			view.displayValue = value
 		}
 		sc_super()
+	},
+	
+	valueForRowAndColumnInTableView: function(row, column, tableView) {
+	  var ds = this.get('dataSource');
+	  if (ds){
+	    var item = ds.objectAt(row),
+  			columns = tableView.get('columns'),
+  			column = columns.objectAt(column),
+  			key = column.get('key')
+
+  		return item.get(key);
+	  }
 	},
 	
 	row: function() {
@@ -97,7 +109,7 @@ SC.DataView = SC.ListView.extend({
 
   reloadCell: function(row, column, attrs) {
     var view = this.viewForCell(row, column),
-			value = this.get('dataSource').valueForRowAndColumnInTableView(row, column, this)
+			value = this.valueForRowAndColumnInTableView(row, column, this)
 			
 		if(!view)
 			return NO;
@@ -108,7 +120,10 @@ SC.DataView = SC.ListView.extend({
   },
   
   _redrawLayer: function(layer, value) {
-		layer.childNodes[0].childNodes[0].innerHTML = (value || "")
+    if (layer && layer.childNodes && layer.childNodes.length>0)
+    {
+		  layer.childNodes[0].childNodes[0].innerHTML = (value || "");
+	  }
   },
 
 	reloadIfNeeded: function() {
@@ -126,7 +141,7 @@ SC.DataView = SC.ListView.extend({
 	addItemViewForRowAndColumn: function(row, column, rebuild) {
 		// console.log("addItemView", row, column, rebuild)
 		if(rebuild)
-			return sc_super()
+			return sc_super();
 			
 		if(SC.none(column) || !this.reloadCell(row, column))
 			this.addItemViewForRowAndColumn(row, column, YES)

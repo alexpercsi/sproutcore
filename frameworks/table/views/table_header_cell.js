@@ -1,6 +1,6 @@
-require('views/thumb')
+sc_require('views/thumb');
 SC.TableHeaderCellView = SC.View.extend(SC.Button,{
-  classNames: ['endash-table-cell'],
+  classNames: ['sc-table-cell'],
 
 	titleBinding: '.column.label',
 	
@@ -16,7 +16,7 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
 		valueBinding: '.parentView*column.label'
 	}),
 	
-	thumbView: Endash.ThumbView.extend({
+	thumbView: SC.ThumbView.extend({
 		delegateBinding: '.parentView',
 		layout: {
 			top: 0, bottom: 0, right: 0, width: 16
@@ -24,14 +24,18 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
 	}),
 	
 	sortState: function() {
-		var key = this.get('sortDescriptor')
+		var key = this.get('sortDescriptor');
 		if(!key || this.spacer)
-			return
+		{
+			return;
+		}
 		
-		var descending = NO
+		var descending = NO;
 
 		if(SC.typeOf(key) == "array")
-			key = key[0]
+		{
+			key = key[0];
+		}
 			
 	  if (key.indexOf('ASC') > -1) {
 	     	key = key.split('ASC ')[1];
@@ -40,9 +44,11 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
 	       descending = YES;
 	     }
 		if(key == this.get('column').get('key'))
-			return descending ? "DESC" : "ASC"
+		{
+			return descending ? "DESC" : "ASC";
+		}
 		
-		return "none"
+		return "none";
 	}.property('sortDescriptor').cacheable(),
 	
   displayProperties: ['dragging', 'sortState'],
@@ -51,18 +57,18 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
 	
 	render: function(context, firstTime) {
     var href, toolTip, classes, theme;
-		var sortState = this.get('sortState')
+		var sortState = this.get('sortState');
 
     classes = this._TEMPORARY_CLASS_HASH || {};
-		classes.asc = (sortState  == "ASC")
-		classes.desc = (sortState == "DESC")
-		classes.selected = !SC.none(sortState) && sortState !== "none"
-		classes.draggging = this.get('dragging')
+		classes.asc = (sortState  == "ASC");
+		classes.desc = (sortState == "DESC");
+		classes.selected = !SC.none(sortState) && sortState !== "none";
+		classes.draggging = this.get('dragging');
 	  classes.def = this.get('isDefault');
 	  classes.cancel = this.get('isCancel');
 		
     classes.icon = !!this.get('icon');
-		classes.dragging = this.get('dragging')
+		classes.dragging = this.get('dragging');
 	  
 	  context.attr('role', 'button').setClass(classes);
 	  theme = this.get('theme');
@@ -72,58 +78,65 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
   },
 	
   mouseDown: function(evt) {
-		this._initialX = evt.pageX
-		return sc_super()
+		this._initialX = evt.pageX;
+		return sc_super();
 	},
 		
 	mouseDragged: function(evt) {
-		var x = evt.pageX
-
+		var x = evt.pageX;
+    debugger;
 		if(!this._dragging)
+		{
 		 	if(Math.abs(this._initialX - x) < 6)
-				return
-			else {
-				this._dragging = YES
-				this.set('dragging', YES)
-				this.invokeDelegateMethod(this.delegate, 'headerDidBeginDrag', this, evt)
-				return YES
+		 	{
+				return;
 			}
-			
-			var lastX = this._lastX
+			else {
+				this._dragging = YES;
+				this.set('dragging', YES);
+				this.invokeDelegateMethod(this.delegate, 'headerDidBeginDrag', this, evt);
+				return YES;
+			}
+		}
+			var lastX = this._lastX;
 			if(SC.none(lastX))
-				lastX = this._lastX = x
+			{
+				lastX = this._lastX = x;
+			}
 
-		var offset = x - lastX
-		this._lastX = x
+		var offset = x - lastX;
+		this._lastX = x;
 		
-		this.invokeDelegateMethod(this.delegate, 'headerWasDragged', this, offset, evt)
-		return YES
+		this.invokeDelegateMethod(this.delegate, 'headerWasDragged', this, offset, evt);
+		return YES;
   },
 
 	mouseUp: function(evt) {
 		if(this._dragging) {
-			this.set('dragging', NO)
-			this.invokeDelegateMethod(this.delegate, 'headerDidEndDrag', this, evt)
-			this._dragging = false
+			this.set('dragging', NO);
+			this.invokeDelegateMethod(this.delegate, 'headerDidEndDrag', this, evt);
+			this._dragging = false;
 		} else {
-			this.get('parentView').get('table').sortByColumn(this.get('column'), this.get('sortState'))
+			this.get('parentView').get('table').sortByColumn(this.get('column'), this.get('sortState'));
 		}
-		this._lastX = null
-		return sc_super()
+		this._lastX = null;
+		return sc_super();
 	},
 	
 	thumbViewWasDragged: function(view, offset, evt) {
 		var column = this.get('column'),
-			width = column.get('width'),
+			width = column.get('width') || 100,
 			minWidth = column.get('minWidth') || 20,
 			maxWidth = column.get('maxWidth'),
-			newWidth
+			newWidth;
 			
-		newWidth = Math.max(minWidth, width + offset.x)
+		newWidth = Math.max(minWidth, width + offset.x);
 		if(maxWidth)
-			newWidth = Math.min(maxWidth, newWidth)
+		{
+			newWidth = Math.min(maxWidth, newWidth);
+		}
 
-		column.set('width', newWidth)
+		column.set('width', newWidth);
 	}
 
-})
+});
