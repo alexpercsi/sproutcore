@@ -10,11 +10,105 @@ SC.TableView = SC.View.extend({
 	content: null,
 	dataSource: null,
 	
+	rowHeight:22,
+	
+	selection:null,
+	
+	target:null,
+	action:null,
+	
+	useHeaders: YES,
+	
+	exampleView: SC.ListItemView,
+	exampleScrollView: SC.ScrollView,
+	
+	isEditable: YES,
+	canEditContent: YES,
+	
 	sortDescriptor: null,
 	sortDescriptorBinding: '*dataSource.orderBy',
 	
 	init: function() {
+		debugger;
+		if (this.get('isFoldered'))
+		{
+		  this.set('dataView',this.get('exampleScrollView').extend({
+        autohidesVerticalScroller: NO,
+        layout: { left: 0, right: 0, top: top, bottom: 0 },
+        contentView: Orion.FolderedListView.extend({
+          exampleView: this.get('exampleView'),
+          columns: this.get('columns'),
+          rowHeight: this.get('rowHeight'),
+          contentBinding: '.dataSource',
+          selectionBinding: '.selection',
+          target: this.get('target'),
+          action: this.get('action'),
+          contentValueKey: 'name',
+          hasContentIcon: this.get('hasContentIcon'),
+          contentIconKey: 'icon',
+          newTarget: this.get('delegate'),
+          newAction: this.get('newAction'),
+          canReorderContent: this.get('canReorderContent'),
+          canEditContent: this.get('canEditContent'),
+          canDeleteContent: this.get('canDeleteContent'),
+          allowDeselectAll: this.get('allowDeselectAll'),
+          delegate: this.get('delegate'),
+          beginEditingSelectionBinding: this.get('beginEditingSelectionPath') || SC.binding('.beginEditingSelection',this.get('delegate')),
+          folderedListViewDelegate: this.get('delegate'),
+          isDropTarget: this.get('isDropTarget'),
+          allowActionOnFolder: this.get('allowActionOnFolder'),
+          needsContextMenu: this.get('needsContextMenu')
+        })
+      }));
+		}
+		
+		else
+		{
+		  this.set('dataView', this.get('exampleScrollView').design({
+        isVisible: YES,
+        layout: {
+          left:   0,
+          right:  0,
+          bottom: 0,
+          top:    40
+        },
+
+        borderStyle: SC.BORDER_NONE,
+        contentView: SC.DataView.design({
+
+    			classNames: ['sc-table-data-view'],
+
+     			tableBinding: '.parentView.parentView.parentView',
+
+     			rowHeightBinding: '*table.rowHeight',
+
+     			isEditable: '*table.isEditable',
+    			canEditContentBinding: '*table.canEditContent',
+
+    			targetBinding: '*table.target',
+    			actionBinding: '*table.action',
+
+     			selectionBinding: '*table.selection',
+
+    			sortDescriptorBinding: '*table.sortDescriptor',
+     			columnsBinding: '*table.columns',
+    			dataSourceBinding: '*table.dataSource',
+
+    			exampleViewBinding: '*table.exampleView',
+
+    			rebuildChildViews: function(){
+
+    			}
+    		}),
+
+
+    	  autohidesVerticalScroller: NO,
+    		horizontalScrollOffsetBinding: '.parentView.horizontalScrollOffset'
+      }));
+		}
+		
 		sc_super();
+		
 		if(!this.columnsBinding)
 		{
 			this.notifyPropertyChange('columns');
@@ -30,37 +124,10 @@ SC.TableView = SC.View.extend({
 		this.getPath('dataView.contentView').reload(null);
 	}.observes('*content.[]'),
 	
-  dataView: SC.ScrollView.design({
-    isVisible: YES,
-    layout: {
-      left:   0,
-      right:  0,
-      bottom: 0,
-      top:    40
-    },
-    
-    borderStyle: SC.BORDER_NONE,
-    contentView: SC.DataView.design({
-			isEditable: YES,
-			canEditContent: YES,
-			rowHeight: 22,
-			classNames: ['sc-table-data-view'],
- 			tableBinding: '.parentView.parentView.parentView',
-			sortDescriptorBinding: '*table.sortDescriptor',
- 			columnsBinding: '*table.columns',
-			dataSourceBinding: '*table.dataSource',
-			rebuildChildViews: function(){
-       
-			}
-		}),
-		
-		
-	  autohidesVerticalScroller: NO,
-		horizontalScrollOffsetBinding: '.parentView.horizontalScrollOffset'
-  }),
+  dataView: null,
 
   tableHeaderView: SC.ScrollView.design({
-    isVisible: YES,
+    isVisibleBinding: '.parentView.useHeaders',
     layout: {
       left:   0,
       // right:  16,

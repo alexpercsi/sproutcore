@@ -97,6 +97,7 @@ SC.CSSStyleSheet = SC.Object.extend(
     You can also insert and remove rules on the rules property array.
   */
   insertRule: function(rule,i) {
+    console.log(rule);
     var rules = this.get('rules') ;
 		rules.pushObject(rule);
 		if (!SC.none(i))

@@ -158,6 +158,10 @@ SC.TableHeaderView = SC.View.extend(SC.SimpleLayout, {
 		SC.$(view).removeClass('dragging');
 	},
 	
+	thumbWasDragged: function(view, offset, evt){
+	  this._sl_layoutChildViews();
+	},
+	
 	adjustDrag: function(view, offset) {
 		var direction = this.get('layoutDirection');
 		var frame = view.get('frame');

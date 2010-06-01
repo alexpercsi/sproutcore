@@ -84,7 +84,6 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
 		
 	mouseDragged: function(evt) {
 		var x = evt.pageX;
-    debugger;
 		if(!this._dragging)
 		{
 		 	if(Math.abs(this._initialX - x) < 6)
@@ -137,6 +136,16 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
 		}
 
 		column.set('width', newWidth);
+		this.invokeDelegateMethod(this.delegate, 'thumbWasDragged', this, offset, evt);
+	},
+	
+	thumbViewDidBeginDrag: function(view, offset, evt) {
+	  this.set('dragging',YES);
+	},
+	
+	thumbViewDidEndDrag: function(view, offset, evt){
+	  this.set('dragging',NO);
+	  this.invokeDelegateMethod(this.delegate, 'headerDidEndDrag', this, evt);
 	}
 
 });
