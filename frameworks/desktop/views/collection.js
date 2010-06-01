@@ -819,7 +819,7 @@ SC.CollectionView = SC.View.extend(
 			// if(rows != null)
 				// console.log(rows.toArray())
 	    var invalid = this._invalidIndexes ;
-	    if (rows && invalid !== YES) {
+	   /* if (rows && invalid !== YES) {
 	      if (invalid) 
 	      {
 	        invalid.add(rows);
@@ -829,7 +829,8 @@ SC.CollectionView = SC.View.extend(
         }
 	    } else {
 	      this._invalidIndexes = YES ; // force a total reload
-	    }
+	    }*/
+	    this._invalidIndexes = YES ; // force a total reload
 		// }
 		// 
 		// if(columns !== undefined) {
@@ -1077,9 +1078,8 @@ SC.CollectionView = SC.View.extend(
   addItemViewForRowAndColumn: function(row, column, rebuild, fullReload) {
     var containerView, view, itemViews, layer, existing, element, rowView,
       del  = this.get('contentDelegate');
-
+    
     itemViews  = this._sc_itemViews;
-		
 		if(!itemViews)
 		{
 			this._sc_itemViews = itemViews = [];
@@ -1117,8 +1117,13 @@ SC.CollectionView = SC.View.extend(
 				SC.$(view).css(this.layoutForCell(row, column));
 			}
 		} else {
-		  view.classNames=[];
-			view.classNames.push('cell');
+		  /*
+		  cell column-0 even sc-regular-size
+		  sc-view sc-list-item-view sc-collection-item cell column-0 sc-collection-item cell even sc-regular-size
+		  */
+		  if (view.classNames.indexOf('cell')<0){
+			  view.classNames.push('cell');
+		  }
 			
 			//clear column css classes
 			var columnClass = 'column-' + column;
@@ -1225,7 +1230,7 @@ SC.CollectionView = SC.View.extend(
       	}
 			}
     }
-
+    itemViews[row]=null;
     delete itemViews[row];
   },
   
@@ -1678,7 +1683,7 @@ SC.CollectionView = SC.View.extend(
     observing the selection for changes.
     
   */
-  _cv_selectionDidChange: function() {  
+  _cv_selectionDidChange: function() {
     var sel  = this.get('selection'),
         last = this._cv_selection,
         func = this._cv_selectionContentDidChange;
