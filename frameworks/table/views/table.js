@@ -29,18 +29,21 @@ SC.TableView = SC.View.extend({
 	sortDescriptorBinding: '*dataSource.orderBy',
 	
 	init: function() {
-		debugger;
 		if (this.get('isFoldered'))
 		{
 		  this.set('dataView',this.get('exampleScrollView').extend({
         autohidesVerticalScroller: NO,
-        layout: { left: 0, right: 0, top: top, bottom: 0 },
+        layout: { left: 0, right: 0, top: 0, bottom: 0 },
+        verticalScrollOffset:0,
         contentView: Orion.FolderedListView.extend({
+          
+          
           exampleView: this.get('exampleView'),
           columns: this.get('columns'),
           rowHeight: this.get('rowHeight'),
-          contentBinding: '.dataSource',
-          selectionBinding: '.selection',
+          tableBinding: '.parentView.parentView.parentView',
+          contentBinding: '*table.dataSource',
+          selectionBinding: '*table.selection',
           target: this.get('target'),
           action: this.get('action'),
           contentValueKey: 'name',

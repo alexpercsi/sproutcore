@@ -424,6 +424,8 @@ SC.CollectionView = SC.View.extend(
   */
   calculatedWidth: 0,
   
+  //Specifies whether CollectionView is part of a DataView or not.
+  _isDataView:NO,
   
   // ..........................................................
   // SUBCLASS METHODS
@@ -1250,14 +1252,50 @@ SC.CollectionView = SC.View.extend(
 
   _attrsForView: function(view, row, column, parentView, isGroupView) {
     var attrs = view || this._TMP_ATTRS, classNames;
-
+    var content = this.get('content'),
+        del = this.get('contentDelegate');
+    var
+      isEnabled         = del.contentIndexIsEnabled(this, content, row),
+      isSelected        = del.contentIndexIsSelected(this, content, row),
+      outlineLevel      = del.contentIndexOutlineLevel(this, content, row),
+      disclosureState   = del.contentIndexDisclosureState(this, content, row),
+      isVisibleInWindow = this.isVisibleInWindow,
+      layout;
+      
+    
     attrs.contentIndex = row;
+    
+    if (!this._isDataView){
+      layout = this.layoutForContentIndex(row);
+      if (content){
+        attrs.content = content.objectAt(row);
+      } 
+    }
+    
+    
+    
+    
     attrs.owner        = attrs.parentView = parentView;
 		attrs.columnIdx    = column;
     attrs.page         = this.page ;
     attrs.layerId      = this.layerIdFor(row, column);
     attrs.isVisibleInWindow = this.isVisibleInWindow;
 		attrs.displayDelegate   = (column >= 0) && this.get('columns') ? this.get('columns').objectAt(column) : parentView;
+
+    attrs.outlineLevel      = outlineLevel;
+    attrs.disclosureState   = disclosureState;
+    attrs.isGroupView       = isGroupView;
+    attrs.isVisibleInWindow = isVisibleInWindow;
+    
+    if (isGroupView) attrs.classNames = this._GROUP_COLLECTION_CLASS_NAMES;
+    else attrs.classNames = this._COLLECTION_CLASS_NAMES;
+  
+    if (layout) {
+      attrs.layout = layout;
+    } else {
+      delete attrs.layout ;
+    }
+
 
     if(isGroupView)
     { 
