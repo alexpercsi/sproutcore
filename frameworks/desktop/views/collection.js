@@ -429,6 +429,8 @@ SC.CollectionView = SC.View.extend(
   */
   calculatedWidth: 0,
   
+  //Specifies whether CollectionView is part of a DataView or not.
+  _isDataView:NO,
   
   // ..........................................................
   // SUBCLASS METHODS
