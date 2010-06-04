@@ -41,15 +41,16 @@ SC.TableView = SC.View.extend({
 	init: function() {
 		if (this.get('isFoldered'))
 		{
+		  
 		  this.set('dataView',this.get('exampleScrollView').extend({
         autohidesVerticalScroller: NO,
-        layout: { left: 0, right: 0, top: 0, bottom: 0 },
+        layout: { left: 6, right: 0, top: this.get('headerHeight') || 20, bottom: 0 },
         verticalScrollOffset:0,
-        contentView: Orion.FolderedListView.extend({
-          
+        contentView: SC.FolderedListView.extend({
           
           exampleView: this.get('exampleView'),
-          columns: this.get('columns'),
+          keys: [],
+          columnWidths: [],
           rowHeight: this.get('rowHeight'),
           tableBinding: '.parentView.parentView.parentView',
           contentBinding: '*table.dataSource',
@@ -83,7 +84,7 @@ SC.TableView = SC.View.extend({
           left:   0,
           right:  0,
           bottom: 0,
-          top:    40
+          top:    this.get('useHeaders')?(this.get('headerHeight') || 20):0
         },
 
         borderStyle: SC.BORDER_NONE,
@@ -116,11 +117,15 @@ SC.TableView = SC.View.extend({
 
 
     	  autohidesVerticalScroller: NO,
-    		horizontalScrollOffsetBinding: '.parentView.horizontalScrollOffset'
+    		horizontalScrollOffsetBinding: '*parentView.horizontalScrollOffset'
       }));
 		}
 		
 		sc_super();
+		
+		if (this.get('isFoldered')){
+		  this._updateFolderedListViewProperties();
+		}
 		
 		if(!this.columnsBinding)
 		{
@@ -140,7 +145,16 @@ SC.TableView = SC.View.extend({
   dataView: null,
 
   tableHeaderView: SC.ScrollView.design({
-    isVisibleBinding: '.parentView.useHeaders',
+    isVisibleBinding: '*parentView.useHeaders',
+    
+    headerHeightDidChange: function(){
+      if (this.get('headerHeight')){
+        this.get('layout').height=this.get('headerHeight');
+      }
+    }.observes('headerHeight'),
+    
+    headerHeightBinding: '*parentView.headerHeight',
+    
     layout: {
       left:   0,
       // right:  16,
@@ -153,9 +167,10 @@ SC.TableView = SC.View.extend({
  	  canScrollHorizontal: function() {
  			return YES;
  		}.property().cacheable(),
- 		horizontalScrollOffsetBinding: '.parentView.horizontalScrollOffset',
+ 		horizontalScrollOffsetBinding: '*parentView.horizontalScrollOffset',
     borderStyle: SC.BORDER_NONE,
     contentView: SC.TableHeaderView.extend({
+      layout:{top:0,left:0,right:0,bottom:0},
  			tableBinding: '.parentView.parentView.parentView',
  			columnsBinding: '*table.columns',
 			sortDescriptorBinding: '*table.sortDescriptor'
@@ -183,6 +198,11 @@ SC.TableView = SC.View.extend({
 		this.resetRules();
 		
 		this._columns = columns;
+		
+		if (this.get('isFoldered')){
+		  this._updateFolderedListViewProperties();
+		}
+		
 	}.observes('columns'),
 	
 	resetRules: function() {
@@ -240,6 +260,11 @@ SC.TableView = SC.View.extend({
 		
 		var diff = columns.objectAt(indexes).get('width') - this._widths[indexes] - 1;
 		var css = this._stylesheet;
+		
+		if (this.get('isFoldered')){
+		  this._updateFolderedListViewProperties();
+		}
+		
 		if(Math.abs(diff) > 0) {
 			for(var i = indexes; i < len; i++) {
 				css.deleteRule(i);
@@ -297,10 +322,13 @@ SC.TableView = SC.View.extend({
 		{
 		  this.get('layer').removeChild(this._ghost);
 	  }
-		this._ghost = this._blocker = null
-		this._ghostLeft = null
-		this.resetRules()
-		this.getPath('dataView.contentView').reload(null)
+		this._ghost = this._blocker = null;
+		this._ghostLeft = null;
+		this.resetRules();
+		if (this.get('isFoldered')){
+		  this._updateFolderedListViewProperties();
+		}
+		this.getPath('dataView.contentView').reload(null);
 	},
 	
 	swapColumns: function(col1, col2) {
@@ -312,5 +340,21 @@ SC.TableView = SC.View.extend({
 		else
 			sortState = "DESC"
 		this.set('sortDescriptor', sortState + " " + column.get('key'))
+	_updateFolderedListViewProperties: function () {
+	 var dataView = this.getPath('dataView.contentView');
+	 if (dataView && dataView.set){
+	   var columns = this.get('columns'),
+	       columnKeys = [], columnWidths = [];
+	       
+	   for (var i=0;i<columns.length;i++){
+	     columnKeys.push(columns[i].get('key'));
+	     columnWidths.push(columns[i].get('width'));
+	   }
+	   dataView.set('keys',columnKeys);
+	   dataView.set('columnWidths',columnWidths);
+	 }
+	 
+	 
 	}
+	
 });

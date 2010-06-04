@@ -9,7 +9,6 @@
 }
 
 	.sc-table-header .sc-table-cell {
-		height: 38px !important;
 		overflow: visible !important;
 /*		bottom: -1px !important;*/
 		background-image: static_url('tableheader_divider2.png');
@@ -34,16 +33,14 @@
 	
 		.sc-table-header .sc-table-cell label {
 			font-family: Helvetica;
-			background: transparent !important;
-			position: absolute !important;
-			text-align: left !important;
-			font-size: 12px !important;
-			left: 0px right: 0px !important;
-			top: 6px !important;
-			padding: 0px 8px !important;
-			padding-right: 20px !important;
-			line-height: 32px !important;
-			font-weight: bold !important;
+			background: transparent;
+			position: absolute;
+			text-align: left;
+			font-size: 12px;
+			left: 0px right: 0px;
+			padding: 0px 8px;
+			padding-right: 20px;
+			font-weight: bold;
 		}
 	
 			.sc-table-header .sc-table-cell:hover label, .sc-table-header .sc-table-cell.dragging label {
@@ -89,17 +86,14 @@
 				top: 0px !important;
 			}
 			
-			.sc-table-header .sc-table-cell.dragging div.sc-thumb-view {
-				top: 3px !important;
-			}
 	
 .sc-table-header .sc-table-cell div.sc-thumb-view {
 	position: absolute !important;
-	top: 12px !important;
+	top: 6px !important;
 	left: none !important;
 	right: 1px !important;
 	width: 10px !important;
-	bottom: 7px !important;
+	bottom: 4px !important;
 	background-color: transparent !important !important;
 	z-index: 15000 !important;
 }
