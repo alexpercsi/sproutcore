@@ -1251,6 +1251,7 @@ SC.CollectionView = SC.View.extend(
   },
 
   _attrsForView: function(view, row, column, parentView, isGroupView) {
+    
     var attrs = view || this._TMP_ATTRS, classNames;
     var content = this.get('content'),
         del = this.get('contentDelegate');

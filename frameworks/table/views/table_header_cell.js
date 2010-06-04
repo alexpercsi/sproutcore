@@ -1,5 +1,8 @@
 sc_require('views/thumb');
 SC.TableHeaderCellView = SC.View.extend(SC.Button,{
+  
+  layout:{top:0,bottom:0},
+  
   classNames: ['sc-table-cell'],
 
 	titleBinding: '.column.label',
