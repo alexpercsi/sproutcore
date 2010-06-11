@@ -32,12 +32,12 @@ SC.TableView = SC.View.extend({
 		if (this.get('isFoldered'))
 		{
 		  
-		  this.set('dataView',this.get('exampleScrollView').extend({
+		  this.set('dataView',this.get('exampleScrollView').design({
         autohidesVerticalScroller: NO,
         layout: { left: 6, right: 0, top: this.get('headerHeight') || 20, bottom: 0 },
         verticalScrollOffset:0,
-        contentView: SC.FolderedListView.extend({
-          
+        contentView: SC.FolderedListView.design({
+          layout:{top:0,left:0,right:0,bottom:0},
           exampleView: this.get('exampleView'),
           keys: [],
           columnWidths: [],
@@ -52,16 +52,19 @@ SC.TableView = SC.View.extend({
           contentIconKey: 'icon',
           newTarget: this.get('delegate'),
           newAction: this.get('newAction'),
-          canReorderContent: this.get('canReorderContent'),
+          canReorderContent: YES,
           canEditContent: this.get('canEditContent'),
           canDeleteContent: this.get('canDeleteContent'),
           allowDeselectAll: this.get('allowDeselectAll'),
           delegate: this.get('delegate'),
           beginEditingSelectionBinding: this.get('beginEditingSelectionPath') || SC.binding('.beginEditingSelection',this.get('delegate')),
           folderedListViewDelegate: this.get('delegate'),
-          isDropTarget: this.get('isDropTarget'),
+          isDropTarget: YES,
           allowActionOnFolder: this.get('allowActionOnFolder'),
-          needsContextMenu: this.get('needsContextMenu')
+          needsContextMenu: this.get('needsContextMenu'),
+          vvv: function(){
+            console.log('ivi'+this.get('isVisibleInWindow'));
+          }.observes('isVisibleInWindow')
         })
       }));
 		}
@@ -91,6 +94,8 @@ SC.TableView = SC.View.extend({
 
     			targetBinding: '*table.target',
     			actionBinding: '*table.action',
+    			
+    			canReorderContentBinding: '*table.canReorderContent',
 
      			selectionBinding: '*table.selection',
 
@@ -98,11 +103,7 @@ SC.TableView = SC.View.extend({
      			columnsBinding: '*table.columns',
     			dataSourceBinding: '*table.dataSource',
 
-    			exampleViewBinding: '*table.exampleView',
-
-    			rebuildChildViews: function(){
-
-    			}
+    			exampleViewBinding: '*table.exampleView'
     		}),
 
 
