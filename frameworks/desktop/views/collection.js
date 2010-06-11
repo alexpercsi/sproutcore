@@ -1387,81 +1387,26 @@ SC.CollectionView = SC.View.extend(
     this method instead of accessing child views directly whenever you need 
     to get the view associated with a content index.
 
-		rebuild means we should ensure that the row & column have their own
-		fully qualified view
-
-  */
-
-  viewForRowAndColumn: function(row, column, rebuild) {
-	// if(column === undefined)
-		// debugger
-    var factory, E, view, attrs, view,
-      del  = this.get('contentDelegate'),
-      containerView = (SC.none(column) || column === NO) ? (this.get('containerView') || this) : this.viewForRowAndColumn(row),
-      itemViews = this._sc_itemViews, ret
-
-    if (!itemViews) itemViews = this._sc_itemViews = [] ;
-    if (!itemViews[row]) itemViews[row] = []
-
-		var viewCache = this._viewCache
-		if(!viewCache)
-			viewCache = this._viewCache = []
-			
-		var colViewCache = viewCache[column]
-		
-		if(!SC.none(column)) {
-			if(column === NO)
-				column = 0
-
-			ret = itemViews[row][column]
-		} else {
-			ret = itemViews[row][-1]
-			
-			if(ret) {
-				if(!rebuild || ret.get)
-					return ret
-			} 
-		}
-		
-    if (rebuild || !(ret = itemViews[row][column]) || !ret.get) {
-	
-      E = this.viewClassForRowAndColumn(row, column)
-      
-      if((E.prototype.useFactory && (!rebuild) && (ret = this._factoryForClass(E))) || 
-				(rebuild && colViewCache && (ret = colViewCache.pop())))
-			{
-				// console.log("wtf?", ret)
-        this._attrsForView(ret, row, column, containerView, E.isGroupView)
-			} else {
-				
-        attrs = this._attrsForView(null, row, column, containerView, E.isGroupView)
-        attrs.contentIndex = row
-        ret = this.createChildView(E, attrs)
-      }
-    }
-
-    return ret
-  },
-
-  _factoryForClass: function(E) {
-    var factories = this.get('factories')
-    if(SC.none(factories)) factories = this.factories = []
+    Although this method take two parameters, you should almost always call
+    it with just the content index.  The other two parameters are used 
+    internally by the CollectionView.
     
-    factory = factories[SC.guidFor(E)]        
-    if(!factory)
-      factory = factories[SC.guidFor(E)] = this.createChildView(E)
-
-    factory.isFactory = YES
-    factory.set('layer', null)
-    
-    return factory
-  },
+    If you need to change the way the collection view manages item views
+    you can override this method as well.  If you just want to change the
+    default options used when creating item views, override createItemView()
+    instead.
   
+    Note that if you override this method, then be sure to implement this 
+    method so that it uses a cache to return the same item view for a given
+    index unless "force" is YES.  In that case, generate a new item view and
+    replace the old item view in your cache with the new item view.
 
-  layoutForCell: function(row, column) {
-    var ret = this.layoutForContentIndex(row)
-    return ret
-  },
+    @param {Number} idx the content index
+    @param {Boolean} rebuild internal use only
+    @returns {SC.View} instantiated view
+  */
+  itemViewForContentIndex: function(idx, rebuild) {
+    var ret;
 
     // Use the cached view for this index, if we have it.  We'll do this up-
     // front to avoid 
@@ -1476,85 +1421,125 @@ SC.CollectionView = SC.View.extend(
       return ret ; 
     }
 
-    attrs.contentIndex = row;
-    attrs.owner        = attrs.parentView = parentView;
-		attrs.columnIdx    = column,
-    attrs.page         = this.page ;
-    attrs.layerId      = this.layerIdFor(row, column);
-    attrs.isVisibleInWindow = this.isVisibleInWindow;
-		attrs.displayDelegate   = (column >= 0) ? this.get('columns').objectAt(column) : parentView;
+    // return from cache if possible
+    var content   = this.get('content'),
+        item = content.objectAt(idx),
+        del  = this.get('contentDelegate'),
+        groupIndexes = this.get('_contentGroupIndexes'),
+        isGroupView = NO,
+        key, E, layout, layerId,
+        viewPoolKey, viewPool, reuseFunc, parentView, isEnabled, isSelected,
+        outlineLevel, disclosureState, isVisibleInWindow;
 
-    if(isGroupView) 
-      classNames = this._GROUP_COLLECTION_CLASS_NAMES;
-    else
-      classNames = this._COLLECTION_CLASS_NAMES;
-
-		if(attrs.isView)
-			attrs.set('classNames', attrs.get('classNames').concat(classNames))
-		else
-			attrs.classNames = classNames
-
-    return attrs
-  },
-
-  viewClassForRowAndColumn: function(row, column) {
-    var content   = this.get('content'),    
-      item = content.objectAt(row),
-      del  = this.get('contentDelegate'),
-      groupIndexes = del.contentGroupIndexes(this, content),
-      isGroupView = NO,
-      key, ret, E, layout, layerId, factory, attrs, context;
-
-		if(SC.none(column))
-			return this.get('rowView')
-
-    isGroupView = groupIndexes && groupIndexes.contains(row);
-    if (isGroupView) isGroupView = del.contentIndexIsGroup(this, content, row);
+    // otherwise generate...
+    
+    // first, determine the class to use
+    isGroupView = groupIndexes && groupIndexes.contains(idx);
+    if (isGroupView) isGroupView = del.contentIndexIsGroup(this, content,idx);
     if (isGroupView) {
       key  = this.get('contentGroupExampleViewKey');
       if (key && item) E = item.get(key);
       if (!E) E = this.get('groupExampleView') || this.get('exampleView');
-      E.isGroupView = YES
-      return E
+      viewPoolKey = '_GROUP_VIEW_POOL';
     } else {
       key  = this.get('contentExampleViewKey');
       if (key && item) E = item.get(key);
+      if (!E) E = this.get('exampleView');
+      viewPoolKey = '_VIEW_POOL';
     }
+    
+    
+    // Collect other state that we'll need whether we're re-using a previous
+    // view or creating a new view.
+    parentView        = this.get('containerView') || this;
+    layerId           = this.layerIdFor(idx);
+    isEnabled         = del.contentIndexIsEnabled(this, content, idx);
+    isSelected        = del.contentIndexIsSelected(this, content, idx);
+    outlineLevel      = del.contentIndexOutlineLevel(this, content, idx);
+    disclosureState   = del.contentIndexDisclosureState(this, content, idx);
+    isVisibleInWindow = this.isVisibleInWindow;
+    layout            = this.layoutForContentIndex(idx);    
+    
+    
+    // If the view is reusable and there is an appropriate view inside the
+    // pool, simply reuse it to avoid having to create a new view.
+    if (E  &&  E.isReusableInCollections) {
+      // Lazily create the view pool.
+      viewPool = this[viewPoolKey];
+      if (!viewPool) viewPool = this[viewPoolKey] = [];
+      
+      // Is there a view we can re-use?
+      if (viewPool.length > 0) {
+        ret = viewPool.pop();
 
-    if(!E)
-      E = this.get('exampleView')
-   
-    E.isGroupView = NO 
-    return E
+        // Tell the view it's about to be re-used.
+        reuseFunc = ret.prepareForReuse;
+        if (reuseFunc) reuseFunc.call(ret);
+        
+        // Set the new state.  We'll set content last, because it's the most
+        // likely to have observers.
+        ret.beginPropertyChanges();
+        ret.set('contentIndex', idx);
+        ret.set('layerId', layerId);
+        ret.set('isEnabled', isEnabled);
+        ret.set('isSelected', isSelected);
+        ret.set('outlineLevel', outlineLevel);
+        ret.set('disclosureState', disclosureState);
+        ret.set('isVisibleInWindow', isVisibleInWindow);
+        
+        // TODO:  In theory this shouldn't be needed, but without it, we
+        //        sometimes get errors when doing a full reload, because
+        //        'childViews' contains the view but the parent is not set.
+        //        This implies a timing issue with the general flow of
+        //        collection view.
+        ret.set('parentView', parentView);
+        
+        // Since we re-use layerIds, we need to reset SproutCore's internal
+        // mapping table.
+        SC.View.views[layerId] = ret;
+        
+        if (layout) {
+          ret.set('layout', layout);
+        }
+        else {
+          ret.set('layout', E.prototype.layout);
+        }
+        ret.set('content', item);
+        ret.endPropertyChanges();
+      }
+    }
+    
+    // If we weren't able to re-use a view, then create a new one.
+    if (!ret) {
+      // collect some other state
+      var attrs = this._TMP_ATTRS;
+      attrs.contentIndex      = idx;
+      attrs.content           = item;
+      attrs.owner             = attrs.displayDelegate = this;
+      attrs.parentView        = parentView;   // Same here; shouldn't be needed
+      attrs.page              = this.page;
+      attrs.layerId           = layerId;
+      attrs.isEnabled         = isEnabled;
+      attrs.isSelected        = isSelected;
+      attrs.outlineLevel      = outlineLevel;
+      attrs.disclosureState   = disclosureState;
+      attrs.isGroupView       = isGroupView;
+      attrs.isVisibleInWindow = isVisibleInWindow;
+      if (isGroupView) attrs.classNames = this._GROUP_COLLECTION_CLASS_NAMES;
+      else attrs.classNames = this._COLLECTION_CLASS_NAMES;
+    
+      if (layout) {
+        attrs.layout = layout;
+      } else {
+        delete attrs.layout ;
+      }
+    
+      ret = this.createItemView(E, idx, attrs);
+    }
+    
+    itemViews[idx] = ret ;
+    return ret ;
   },
-
-  // viewClassForRowAndColumn: function(row, column) {
-  //   var content   = this.get('content'),
-  //       columns = this.get('columns');
-  //   
-  //   if(columns && column >= columns.get('length'))
-  //     return this.get('exampleView')
-  //   
-  //       var del  = this.get('contentDelegate'),
-  //       key, ret, E, layout, layerId, factory, attrs, context;
-  // 
-  //   if(del.viewClassForRowAndColumnAndCollectionView)
-  //     E = del.viewClassForRowAndColumnAndCollectionView(row, column, this)
-  //   
-  //   // if(!E) {
-  //   //   var columnViews = this.get('columnViews') || [this]
-  //   // 
-  //   //       E = columnViews.objectAt(column).get('exampleView')
-  //   // 
-  //   //       if(!E)
-  //   //         E = this.get('exampleView');
-  //   // }
-  //   
-  //   if(!E)
-  //           E = this.get('exampleView');
-  //   
-  //   return E
-  // },
   
   /**
     Helper method for getting the item view of a specific content object
@@ -3054,7 +3039,6 @@ console.log("canEdit", itemView.contentHitTest(ev));
     Returns three params: [drop index, drop operation, allowed drag ops]
   */
   _computeDropOperationState: function(drag, evt, dragOp) {
-    
     // get the insertion index for this location.  This can be computed
     // by a subclass using whatever method.  This method is not expected to
     // do any data valdidation, just to map the location to an insertion 
@@ -3166,7 +3150,6 @@ console.log("canEdit", itemView.contentHitTest(ev));
     content on its own.
   */
   dragUpdated: function(drag, evt) {
-    
     var op     = drag.get('allowedDragOperations'),
         state  = this._computeDropOperationState(drag, evt, op),
         idx    = state[0], dropOp = state[1], dragOp = state[2];
