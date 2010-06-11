@@ -130,6 +130,10 @@ SC.FolderedListView = SC.ListView.extend(SC.FolderedListViewDelegate,
     if (allowActionOnFolder || (!allowActionOnFolder && disclosureState === SC.LEAF_NODE)) {
       sc_super();
     }
+  },
+  render: function(context,firstTime){
+    console.log('mdea'+this.toString());
+    sc_super();
   }
 });
 
