@@ -92,7 +92,7 @@ SC.TableView = SC.View.extend({
           columnWidths: [],
           rowHeight: this.get('rowHeight'),
           tableBinding: '.parentView.parentView.parentView',
-          contentBinding: '*table.dataSource',
+          contentBinding: '*table.dataSource.arrangedObjects',
           selectionBinding: '*table.selection',
           target: this.get('target'),
           action: this.get('action'),
@@ -385,51 +385,4 @@ SC.TableView = SC.View.extend({
 
   }
 
-<<<<<<< HEAD
-	draggingColumn: function(column) {
-		this.$().addClass('reordering-columns');
-		this.ghostForColumn(column);
-		this._dragging = column;
-	},
-	
-	columnDragged: function(offset) {
-		this._ghostLeft += offset;
-		SC.$(this._ghost).css('left', this._ghostLeft + "px !important");
-	},
-	
-	endColumnDrag: function() {
-		this.$().removeClass('reordering-columns');
-		if (!SC.none(this._ghost))
-		{
-		  this.get('layer').removeChild(this._ghost);
-	  }
-		this._ghost = this._blocker = null;
-		this._ghostLeft = null;
-		this.resetRules();
-		if (this.get('isFoldered')){
-		  this._updateFolderedListViewProperties();
-		}
-		this.getPath('dataView.contentView').reload(null);
-	},
-	
-	_updateFolderedListViewProperties: function () {
-	 var dataView = this.getPath('dataView.contentView');
-	 if (dataView && dataView.set){
-	   var columns = this.get('columns'),
-	       columnKeys = [], columnWidths = [];
-	       
-	   for (var i=0;i<columns.length;i++){
-	     columnKeys.push(columns[i].get('key'));
-	     columnWidths.push(columns[i].get('width'));
-	   }
-	   dataView.set('keys',columnKeys);
-	   dataView.set('columnWidths',columnWidths);
-	 }
-	 
-	 
-	}
-	
 });
-=======
-});
->>>>>>> Code cleanup, started documenting code
