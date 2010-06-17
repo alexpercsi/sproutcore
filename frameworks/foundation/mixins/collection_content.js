@@ -180,14 +180,14 @@ SC.CollectionContent = {
 	collectionViewWillDisplayCellForRowAndColumn: function(collectionView, view, row, column) {
 		var content = collectionView.get('content'),
 			item = content.objectAt(row),
-			del = collectionView.get('contentDelegate')
+			del = collectionView.get('contentDelegate');
 			
-		view.set('content', item)
+		view.set('content', item);
     view.set('isEnabled', del.contentIndexIsEnabled(this, content, row));
     view.set('isSelected', del.contentIndexIsSelected(this, content, row));
     view.set('outlineLevel', del.contentIndexOutlineLevel(this, content, row));
     view.set('disclosureState', del.contentIndexDisclosureState(this, content, row));
-	},
+	}
 
     
 };

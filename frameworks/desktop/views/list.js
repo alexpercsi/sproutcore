@@ -435,8 +435,7 @@ SC.ListView = SC.CollectionView.extend(
   showInsertionPoint: function(itemView, dropOperation) {
     var view = this._insertionPointView;
     if (!view) {
-      view = this._insertionPointView 
-           = this.get('insertionPointView').create();
+      view = this._insertionPointView = this.get('insertionPointView').create();
     }
     
     var index  = this.contentIndexForItemView(itemView),

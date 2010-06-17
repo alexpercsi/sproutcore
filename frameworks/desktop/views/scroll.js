@@ -880,10 +880,7 @@ SC.ScrollView = SC.View.extend(SC.Border, {
   */
   _touchScrollDidChange: function() {
     if (this.get("contentView").touchScrollDidChange) {
-      this.get("contentView").touchScrollDidChange(
-        this._scroll_horizontalScrollOffset,
-        this._scroll_verticalScrollOffset
-      );
+      this.get("contentView").touchScrollDidChange(this._scroll_horizontalScrollOffset,this._scroll_verticalScrollOffset);
     }
     
     // tell scrollers
@@ -1527,7 +1524,7 @@ SC.ScrollView = SC.View.extend(SC.Border, {
       // and now we're done, so just end the run loop and return.
       SC.RunLoop.end();
 
-			this.set('isScrolling', NO)
+			this.set('isScrolling', NO);
 			
       return;
     }

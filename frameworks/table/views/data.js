@@ -22,12 +22,12 @@ SC.DataView = SC.ListView.extend({
 		return this.get('dataSource');
 	}.property('dataSource').cacheable(),
 	
-	collectionViewWillDisplayCellForRowAndColumn: function(tableView, view, row, column) {
+	collectionViewWillDisplayCellForRowAndColumn: function(view, row, column) {
+	  var table = this.get('table');
 		if(column >= 0) {
 			var value = this.valueForRowAndColumnInTableView(row, column, this);
 			view.displayValue = value;
 		}
-		sc_super();
 	},
 	
 	valueForRowAndColumnInTableView: function(row, column, tableView) {
@@ -101,6 +101,18 @@ SC.DataView = SC.ListView.extend({
 			right:  0
     };
   },
+  
+  layoutForContentIndex: function(contentIndex,i) {
+     if (SC.none(i)){
+       return sc_super();
+     }
+     var columns = this.get('columns');
+     return {
+       top:0,
+       bottom:0,
+       width:columns.objectAt(i).get('width')
+     };
+   },
 	
 	viewForCell: function(row, column) {
 		var rowView = this.viewForRow(row),
@@ -134,25 +146,12 @@ SC.DataView = SC.ListView.extend({
   },
   
   _redrawLayer: function(layer, value) {
+    //console.log('redraw layer '+layer+'   '+value);
     if (layer && layer.childNodes && layer.childNodes.length>0)
     {
 		  layer.childNodes[0].childNodes[0].innerHTML = (value || "");
 	  }
   },
-
-	reloadIfNeeded: function() {
-		if(!this._invalidIndexes.isIndexSet && this.get('hiddenRows')) {
-			this.get('hiddenRows').forEach(function(row) {
-				row[-1].parentNode.removeChild(row[-1]);
-			});
-			this.set('hiddenRows', []);
-		}
-		sc_super();
-		if(this.get('hiddenRows'))
-		{
-			SC.$(this.get('hiddenRows').map(function(i) { return i[-1]; })).css('left', '-9999px');
-		}
-	},
 
 	addItemViewForRowAndColumn: function(row, column, rebuild) {
 		// console.log("addItemView", row, column, rebuild)
@@ -203,19 +202,18 @@ SC.DataView = SC.ListView.extend({
   			if(view[i].get) {
   				view2 = view[i].get('layer');
   				view[i].set('layer', null);
-					// view[1].destroy()
+					view[i].destroy();
 					
-					if(!viewCache[i]){
+					/*if(!viewCache[i]){
 						viewCache[i] = [];
 					}
 					
 					viewCache[i].push(view[i]);
-  				view[i] = view2;
-
+  				view[i] = view2;*/
   			}	
   		}
 		
-  		hiddenRows.push(view);
+  		//hiddenRows.push(view);
 	  }
 		delete itemViews[row];
   },
@@ -292,6 +290,11 @@ SC.DataView = SC.ListView.extend({
 			this.reload(null);
 		}
 	  sc_super();
-	}
+	},
+	
+	_cv_columnsDidChange: function() {
+	  console.log(this.get('columns'));
+    this.reload();
+  }.observes('columns')
   
 });

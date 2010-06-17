@@ -190,7 +190,7 @@ SC.GridView = SC.ListView.extend(
     // convert to index
     var ret= (row*itemsPerRow) + col ;
     return [ret, retOp] ;
-  },
+  }
 
   /** @private
     If the size of the clipping frame changes, all of the item views

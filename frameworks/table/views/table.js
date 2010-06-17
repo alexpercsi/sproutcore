@@ -7,14 +7,10 @@
 sc_require('views/table_header');
 sc_require('views/table_cell');
 
-sc_require('mixins/table_delegate');
-sc_require('views/table_head');
 
 SC.TableView = SC.View.extend({
 	classNames: ['sc-table-view'],
   childViews: "tableHeaderView dataView".w(),
-  
-	columns: null,
 	horizontalScrollOffset: 0,
 	numColumns: null,
 	content: null,
@@ -39,6 +35,7 @@ SC.TableView = SC.View.extend({
 	sortDescriptorBinding: '*dataSource.orderBy',
 	
 	init: function() {
+	  
 		if (this.get('isFoldered'))
 		{
 		  
@@ -71,10 +68,7 @@ SC.TableView = SC.View.extend({
           folderedListViewDelegate: this.get('delegate'),
           isDropTarget: YES,
           allowActionOnFolder: this.get('allowActionOnFolder'),
-          needsContextMenu: this.get('needsContextMenu'),
-          vvv: function(){
-            console.log('ivi'+this.get('isVisibleInWindow'));
-          }.observes('isVisibleInWindow')
+          needsContextMenu: this.get('needsContextMenu')
         })
       }));
 		}
@@ -95,7 +89,7 @@ SC.TableView = SC.View.extend({
 
     			classNames: ['sc-table-data-view'],
 
-     			tableBinding: '.parentView.parentView.parentView',
+     			tableBinding: '*parentView.parentView.parentView',
 
      			rowHeightBinding: '*table.rowHeight',
 
@@ -113,7 +107,8 @@ SC.TableView = SC.View.extend({
      			columnsBinding: '*table.columns',
     			dataSourceBinding: '*table.dataSource',
 
-    			exampleViewBinding: '*table.exampleView'
+    			exampleView: this.get('exampleView'),
+    			useViewPooling: this.get('useViewPooling')
     		}),
 
 
@@ -332,15 +327,6 @@ SC.TableView = SC.View.extend({
 		this.getPath('dataView.contentView').reload(null);
 	},
 	
-	swapColumns: function(col1, col2) {
-	},
-	
-	sortByColumn: function(column, sortState) {
-		if(sortState != "ASC")
-			sortState = "ASC"
-		else
-			sortState = "DESC"
-		this.set('sortDescriptor', sortState + " " + column.get('key'))
 	_updateFolderedListViewProperties: function () {
 	 var dataView = this.getPath('dataView.contentView');
 	 if (dataView && dataView.set){
