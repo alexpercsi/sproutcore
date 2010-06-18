@@ -12,11 +12,30 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
 	sortDescriptor: null,
 	sortDescriptorBinding: '.parentView*sortDescriptor',
 	
-	childViews: 'labelView thumbView'.w(),
+	childViews: 'sortStateView labelView thumbView'.w(),
 	
 	labelView: SC.LabelView.extend({
 		tagName: 'label',
 		valueBinding: '.parentView*column.label'
+	}),
+	
+	sortStateView: SC.View.extend({
+	  layout:{centerY:0,height:8,right:15,width:9},
+	  sortStateBinding: '.parentView.sortState',
+	  sortStateDidChange: function(){
+	    switch (this.get('sortState')){
+	      case "ASC":
+	        this.set('classNames',['sc-sort-state-asc']);
+	      break;
+	      case "DESC":
+	        this.set('classNames',['sc-sort-state-desc']);
+	      break;
+	      default:
+	      this.set('classNames',[]);
+	      break;
+	    }
+	    this.displayDidChange();
+	  }.observes('sortState')
 	}),
 	
 	thumbView: SC.ThumbView.extend({
