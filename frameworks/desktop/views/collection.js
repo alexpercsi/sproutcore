@@ -1319,6 +1319,38 @@ SC.CollectionView = SC.View.extend(
   },
   
 
+  /**
+     Extracts the content index from the passed itemView. 
+
+     @param {String} id the layer id
+   */
+   contentIndexForItemView: function(itemView) {
+    var content = itemView.get('content');
+    return !SC.none(content)?this.get('content').indexOf(content):NO;
+   },
+   
+   /**
+    Extracts the column index from passed layer id
+    
+    @param {String} id the layer id
+   */
+   columnForLayerId: function(id){
+     if (!id || !(id = id.toString())) return null ; // nothing to do
+
+     var base = this._baseLayerId;
+     if (!base) base = this._baseLayerId = SC.guidFor(this)+"-";
+
+     // no match
+     if ((id.length <= base.length) || (id.indexOf(base) !== 0)) return null ; 
+     var ret = id.split('-');
+     if (!SC.typeOf(ret)===SC.T_ARRAY || !ret.length>0){
+       return null;
+     }
+     ret = ret[ret.length-1];
+     return isNaN(ret) ? null : ret ;
+   },
+
+
   /** 
     Find the first content item view for the passed event.
     
@@ -1333,7 +1365,8 @@ SC.CollectionView = SC.View.extend(
     @returns {SC.View} the item view or null
   */
   itemViewForEvent: function(evt) {
-    var responder = this.getPath('pane.rootResponder') ;
+    var column=null,
+        responder = this.getPath('pane.rootResponder') ;
     if (!responder) return null ; // fast path
     
     var base    = SC.guidFor(this) + '-',
@@ -1359,13 +1392,31 @@ SC.CollectionView = SC.View.extend(
       return null;    
     }
     
+    if (SC.kindOf(this,SC.DataView)){
+      column = this.columnForLayerId(id);
+    }
     // okay, found the DOM node for the view, go ahead and create it
     // first, find the contentIndex
     if (contentIndex >= this.get('length')) {
       throw "layout for item view %@ was found when item view does not exist (%@)".fmt(id, this);
     }
     
-    return this.itemViewForContentIndex(contentIndex);
+    return column?this._itemViewForRowAndColumn(contentIndex,column):this.itemViewForContentIndex(contentIndex);
+  },
+  
+  _itemViewForRowAndColumn: function(row,column){
+     var itemViews = this._sc_itemViews;
+     if (!itemViews || !itemViews.length || itemViews.length<row){
+       return null;
+     }
+     else
+     {
+       var rowView = itemViews[row];
+       if (rowView && rowView.childViews && rowView.childViews.length>column){
+         return rowView.childViews[column];
+       }
+       return null;
+     }
   },
   
   // ..........................................................
@@ -2266,7 +2317,6 @@ SC.CollectionView = SC.View.extend(
   
   /** @private */
   mouseUp: function(ev) {
-    
     var view   = this.itemViewForEvent(ev),
         info   = this.mouseDownInfo,
         content       = this.get('content'),
@@ -2323,7 +2373,7 @@ SC.CollectionView = SC.View.extend(
         // - the item view responds to contentHitTest() and returns YES.
         // - the item view responds to beginEditing and returns YES.
         if (canEdit) {
-          itemView = this.itemViewForContentIndex(idx) ;
+          itemView = this.itemViewForEvent(ev) ;
           canEdit = itemView && (!itemView.contentHitTest || itemView.contentHitTest(ev)) ;
           canEdit = (canEdit && itemView.beginEditing) ? itemView.beginEditing() : NO ;
         }
