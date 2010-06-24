@@ -808,6 +808,7 @@ SC.TreeItemObserver = SC.Object.extend(SC.Array, SC.CollectionContent, {
 			}
 		}
 		
+		//HACK [CB/AP]: We should use .set but we currently can't because .treeItemChildren is a computed property.
 		content.treeItemChildren = sortedFolders;
 		
 		folders.forEach(function(folder){

@@ -65,6 +65,14 @@ SC.TableView = SC.View.extend({
   */
   exampleScrollView: SC.ScrollView,
   
+  /**
+    An example ScrollView that will be used to paint the scrollpane of the tableView. 
+    This is useful if your app has custom scrollbars.
+    
+    @property {SC.ListView}
+  */
+  exampleFolderedListView: SC.FolderedListView,
+  
   isEditable: YES,
   canEditContent: YES,
   
@@ -85,7 +93,7 @@ SC.TableView = SC.View.extend({
         autohidesVerticalScroller: NO,
         layout: { left: 6, right: 0, top: this.get('headerHeight') || 20, bottom: 0 },
         verticalScrollOffset:0,
-        contentView: SC.FolderedListView.design({
+        contentView: this.get('exampleFolderedListView').design({
           layout:{top:0,left:0,right:0,bottom:0},
           exampleView: this.get('exampleView'),
           keys: [],
