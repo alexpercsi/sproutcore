@@ -131,9 +131,42 @@ SC.FolderedListView = SC.ListView.extend(SC.FolderedListViewDelegate,
       sc_super();
     }
   },
-  render: function(context,firstTime){
-    console.log('mdea'+this.toString());
-    sc_super();
-  }
+    
+  ghostForColumn: function(column) {
+		var nowShowing = this.get('nowShowing'),
+			el = document.createElement('div');
+			
+		nowShowing.forEach(function(idx) {
+		  var view = this.viewForCell(idx, column);
+		  if (view)
+		  {
+		    if (view.get)
+		    {
+		      var layer=view.get('layer');
+  			  el.appendChild(layer.cloneNode(YES));
+			  }
+			  else
+			  {
+			    if (view.cloneNode)
+			    {
+			      el.appendChild(view.cloneNode(YES));
+			    }
+			  }
+		  }
+		}, this);
+		
+		el.className = "column-" + column + " ghost";
+		
+		return el;
+	},
+	
+	viewForCell: function(idx,column){
+	  var row = this.itemViewForContentIndex(idx);
+	  if (row && row.childViews && row.childViews.length>column)
+	  {
+	    return row.childViews[column];
+	  }
+	}
+	
 });
 

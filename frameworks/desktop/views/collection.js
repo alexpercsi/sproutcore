@@ -1103,6 +1103,8 @@ SC.CollectionView = SC.View.extend(
         key, E, layout, layerId,
         viewPoolKey, viewPool, reuseFunc, parentView, isEnabled, isSelected,
         outlineLevel, disclosureState, isVisibleInWindow;
+        
+
 
     // otherwise generate...
     
@@ -1132,7 +1134,6 @@ SC.CollectionView = SC.View.extend(
     disclosureState   = del.contentIndexDisclosureState(this, content, idx);
     isVisibleInWindow = this.isVisibleInWindow;
     layout            = this.layoutForContentIndex(idx); 
-    
     for (var i=0;i<columns.length;i++)
     {
       //TODO [AP]: rowViews should be cached too. Also consider cell selection
@@ -1202,6 +1203,7 @@ SC.CollectionView = SC.View.extend(
           }
           ret.set('content', item);
           ret.endPropertyChanges();
+          console.log('view pooling reused view'+ret);
         }
       }
 
@@ -1223,10 +1225,15 @@ SC.CollectionView = SC.View.extend(
         attrs.isVisibleInWindow = isVisibleInWindow;
         if (isGroupView) attrs.classNames = this._GROUP_COLLECTION_CLASS_NAMES.copy();
         else attrs.classNames = this._COLLECTION_CLASS_NAMES.copy();
-        
         if(rowViewInstance){
           attrs.classNames.push('column-'+i);
           attrs.isSelectedBinding='*parentView.isSelected';
+        }
+        else
+        {
+                  if (SC.debug && attrs.isSelected){
+                    SC.debug2=true;
+                  }
         }
 
         if (layout) {
