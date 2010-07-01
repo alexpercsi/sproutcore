@@ -1411,6 +1411,12 @@ SC.CollectionView = SC.View.extend(
     return column?this._itemViewForRowAndColumn(contentIndex,column):this.itemViewForContentIndex(contentIndex);
   },
   
+  
+  /** 
+     Finds the cell view for the given row and column
+     
+     @private
+   */
   _itemViewForRowAndColumn: function(row,column){
      var itemViews = this._sc_itemViews;
      if (!itemViews || !itemViews.length || itemViews.length<row){

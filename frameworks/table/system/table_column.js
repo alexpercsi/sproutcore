@@ -122,9 +122,9 @@ SC.TableColumn = SC.Object.extend({
   */
   tableContent: null,
 
-	toggleSortState: function() {
-		var sortState = this.get('sortState')
-		this.set('sortState', (sortState != "ASC" ? "ASC" : "DESC"))
-	}
+  toggleSortState: function() {
+    var sortState = this.get('sortState')
+    this.set('sortState', (sortState != "ASC" ? "ASC" : "DESC"))
+  }
   
 });

@@ -12,8 +12,6 @@ SC.TableView = SC.View.extend({
   
   classNames: ['sc-table-view'],
   
-  childViews: 'tableHeaderView dataView'.w(),
-  
   horizontalScrollOffset: 0,
 
   /**
@@ -21,7 +19,7 @@ SC.TableView = SC.View.extend({
     
     @type SC.Array
   */
-  dataSource: null,
+  content: null,
   
   /**
     The height of each row in the TableView
@@ -66,8 +64,8 @@ SC.TableView = SC.View.extend({
   exampleScrollView: SC.ScrollView,
   
   /**
-    An example ScrollView that will be used to paint the scrollpane of the tableView. 
-    This is useful if your app has custom scrollbars.
+    An example ListView that will be used to paint the foldered list view of the tableView.
+    This is useful to add customization to your listview.
     
     @property {SC.ListView}
   */
@@ -77,21 +75,61 @@ SC.TableView = SC.View.extend({
   canEditContent: YES,
   
   /**
-     Equivalent of the orderBy property of an SC.ArrayController. It is actually bound to the datasource orderBy property
+     Equivalent of the orderBy property of an SC.ArrayController. It is actually bound to the content orderBy property
 
-     @property {SC.ScrollView}
+     @private
    */
   sortDescriptor: null,
-  sortDescriptorBinding: '*dataSource.orderBy',
+  sortDescriptorBinding: '*content.orderBy',
   
-  init: function() {
+  createChildViews: function() {
+    
+    var childViews = [], childView=null;
+    
+    childView = this.createChildView(SC.ScrollView.design({
+      
+      isVisibleBinding: '.parentView.useHeaders',
+      
+      headerHeightBinding: '.parentView.headerHeight',
+      headerHeightDidChange: function(){
+        if (this.get('headerHeight')){
+          this.get('layout').height=this.get('headerHeight');
+        }
+      }.observes('headerHeight'),
+
+      layout: {
+        left: 0,
+        right: 0,
+        bottom: 0,
+        top: 0,
+        height: 39
+      },
+      
+      hasHorizontalScroller: NO,
+      canScrollHorizontal: function() {
+        return YES;
+      }.property().cacheable(),
+      horizontalScrollOffsetBinding: '.table.horizontalScrollOffset',
+      
+      borderStyle: SC.BORDER_NONE,
+      contentView: SC.TableHeaderView.extend({
+        layout:{top:0,left:0,right:0,bottom:0},
+        table: this,
+        columnsBinding: '.table.columns',
+        sortDescriptorBinding: '.table.sortDescriptor'
+       })
+    }));
+    
+    childViews.push(childView);
+    
+    this._tableHeaderView=childView;
     
     if (this.get('isFoldered'))
     {
       
-      this.set('dataView',this.get('exampleScrollView').design({
+      childView = this.createChildView(this.get('exampleScrollView').design({
         autohidesVerticalScroller: NO,
-        layout: { left: 6, right: 0, top: this.get('headerHeight') || 20, bottom: 0 },
+        layout: { left: 6, right: 0, top: this.get('headerHeight')+3 || 38, bottom: 0 },
         verticalScrollOffset:0,
         contentView: this.get('exampleFolderedListView').design({
           layout:{top:0,left:0,right:0,bottom:0},
@@ -99,11 +137,11 @@ SC.TableView = SC.View.extend({
           keys: [],
           columnWidths: [],
           rowHeight: this.get('rowHeight'),
-          tableBinding: '.parentView.parentView.parentView',
-          contentBinding: '*table.dataSource.arrangedObjects',
-          selectionBinding: '*table.selection',
-          target: this.get('target'),
-          action: this.get('action'),
+          table: this,
+          contentBinding: '.table.content.arrangedObjects',
+          selectionBinding: '.table.selection',
+          targetBinding: '.table.target',
+          actionBinding: '.table.action',
           contentValueKey: 'name',
           hasContentIcon: this.get('hasContentIcon'),
           contentIconKey: 'icon',
@@ -125,13 +163,13 @@ SC.TableView = SC.View.extend({
     
     else
     {
-      this.set('dataView', this.get('exampleScrollView').design({
+      childView = this.createChildView(this.get('exampleScrollView').design({
         isVisible: YES,
         layout: {
           left:   0,
           right:  0,
           bottom: 0,
-          top:    this.get('useHeaders')?(this.get('headerHeight') || 20):0
+          top:    this.get('useHeaders')?(this.get('headerHeight')+3 || 38):0
         },
 
         borderStyle: SC.BORDER_NONE,
@@ -139,23 +177,23 @@ SC.TableView = SC.View.extend({
 
           classNames: ['sc-table-data-view'],
 
-          tableBinding: '*parentView.parentView.parentView',
+          table: this,
 
-          rowHeightBinding: '*table.rowHeight',
+          rowHeight: this.get('rowHeight'),
 
-          isEditable: '*table.isEditable',
-          canEditContentBinding: '*table.canEditContent',
+          isEditableBinding: '.table.isEditable',
+          canEditContentBinding: '.table.canEditContent',
 
-          targetBinding: '*table.target',
-          actionBinding: '*table.action',
+          targetBinding: '.table.target',
+          actionBinding: '.table.action',
           
-          canReorderContentBinding: '*table.canReorderContent',
+          canReorderContentBinding: '.table.canReorderContent',
 
-           selectionBinding: '*table.selection',
+          selectionBinding: '.table.selection',
 
-          sortDescriptorBinding: '*table.sortDescriptor',
-           columnsBinding: '*table.columns',
-          dataSourceBinding: '*table.dataSource',
+          sortDescriptorBinding: '.table.sortDescriptor',
+          columnsBinding: '.table.columns',
+          contentBinding: '.table.content',
 
           exampleView: this.get('exampleView'),
           useViewPooling: this.get('useViewPooling')
@@ -163,11 +201,15 @@ SC.TableView = SC.View.extend({
 
 
         autohidesVerticalScroller: NO,
-        horizontalScrollOffsetBinding: '*parentView.horizontalScrollOffset'
+        horizontalScrollOffsetBinding: '.parentView.horizontalScrollOffset'
       }));
     }
     
-    sc_super();
+    childViews.push(childView);
+    
+    this._dataView=childView;
+    
+    this.set('childViews',childViews);
     
     if (this.get('isFoldered')){
       this._updateFolderedListViewProperties();
@@ -179,53 +221,15 @@ SC.TableView = SC.View.extend({
     }
   },
 
-  content: function() {
-    return this.get('dataSource');
-  }.property('dataSource').cacheable(),
-
+  /** @private */
   contentDidChange: function() {
-    this.notifyPropertyChange('dataSource');
-    this.getPath('dataView.contentView').reload(null);
+    this._dataView.get('contentView').reload(null);
   }.observes('*content.[]'),
   
-  dataView: null,
-
-  tableHeaderView: SC.ScrollView.design({
-    isVisibleBinding: '*parentView.useHeaders',
-    
-    headerHeightDidChange: function(){
-      if (this.get('headerHeight')){
-        this.get('layout').height=this.get('headerHeight');
-      }
-    }.observes('headerHeight'),
-    
-    headerHeightBinding: '*parentView.headerHeight',
-    
-    layout: {
-      left:   0,
-      // right:  16,
-      right: 0,
-      bottom: 0,
-      top:    0,
-       height: 39
-    },
-     hasHorizontalScroller: NO,
-     canScrollHorizontal: function() {
-       return YES;
-     }.property().cacheable(),
-     horizontalScrollOffsetBinding: '*parentView.horizontalScrollOffset',
-    borderStyle: SC.BORDER_NONE,
-    contentView: SC.TableHeaderView.extend({
-      layout:{top:0,left:0,right:0,bottom:0},
-       tableBinding: '.parentView.parentView.parentView',
-       columnsBinding: '*table.columns',
-      sortDescriptorBinding: '*table.sortDescriptor'
-     })
-  }),
-  
+  /** @private */
   _sctv_columnsDidChange: function() {
     var columns = this.get('columns');
-    if(SC.none(columns) || columns.get('length') < 1 || columns == this._columns)
+    if(SC.none(columns) || columns.get('length') < 1 || columns === this._columns)
     {
       return this;
     }
@@ -238,7 +242,7 @@ SC.TableView = SC.View.extend({
       this._columns.removeRangeObserver(observer);
     }
 
-    observer = columns.addRangeObserver(null, this, func, null);      
+    observer = columns.addRangeObserver(SC.IndexSet.create(0,columns.length), this, func, null);      
     this._sctv_columnsRangeObserver = observer ;
 
     this.resetRules();
@@ -251,6 +255,11 @@ SC.TableView = SC.View.extend({
     
   }.observes('columns'),
   
+  /**
+     Called when order or size of columns changes
+
+     @private
+   */
   resetRules: function() {
     this._offsets = [];
     this._widths = [];
@@ -275,9 +284,14 @@ SC.TableView = SC.View.extend({
       left += widths[i] + 1;
     }, this);
     
-    this.getPath('dataView.contentView').set('calculatedWidth', left);
+    this._dataView.get('contentView').set('calculatedWidth', left);
   },
   
+  /**
+     Generates a CSS class for the given column
+
+     @private
+   */
   ruleForColumn: function(column) {
     var columns = this.get('columns'),
       col = columns.objectAt(column),
@@ -289,6 +303,7 @@ SC.TableView = SC.View.extend({
       '}'].join("");
   },
   
+  /** @private */
   columnsRangeDidChange: function(columns, object, key, indexes) {
     if(this._ghost)
     {
@@ -321,13 +336,19 @@ SC.TableView = SC.View.extend({
         css.insertRule(this.ruleForColumn(i), i);
       }
       
-      this.getPath('dataView.contentView').calculatedWidth += diff;
-      this.getPath('dataView.contentView').adjust(this.getPath('dataView.contentView').computeLayout());
+      this._dataView.get('contentView').calculatedWidth += diff;
+      this._dataView.get('contentView').adjust(this._dataView.get('contentView').computeLayout());
     }
+    
   },
   
+  /**
+    Changes the sort descriptor based on the column that is passed and the current sort state
+  
+    @private 
+  */
   sortByColumn: function(column, sortState) {
-    if(sortState != "ASC")
+    if(sortState !== "ASC")
     {
       sortState = "ASC";
     }
@@ -340,28 +361,34 @@ SC.TableView = SC.View.extend({
   
   // reordering
   
+  /**
+    Returns a ghost view for a given column 
+  */
   ghostForColumn: function(column) {
     var columns = this.get('columns'),
       idx = columns.indexOf(column),
-      el = this.getPath('dataView.contentView').ghostForColumn(idx);
+      el = this._dataView.get('contentView').ghostForColumn(idx);
       
-    this._ghostLeft = this.getPath('tableHeaderView.contentView').offsetForView(idx) + 1;
+    this._ghostLeft = this._tableHeaderView.get('contentView').offsetForView(idx) + 1;
     this._ghost = el;
     SC.$(el).css({left: this._ghostLeft, top: 40});
     this.get('layer').appendChild(el);
   },
 
+  /** @private */
   draggingColumn: function(column) {
     this.$().addClass('reordering-columns');
     this.ghostForColumn(column);
     this._dragging = column;
   },
   
+  /** @private */
   columnDragged: function(offset) {
     this._ghostLeft += offset;
     SC.$(this._ghost).css('left', this._ghostLeft + "px !important");
   },
   
+  /** @private */
   endColumnDrag: function() {
     this.$().removeClass('reordering-columns');
     if (!SC.none(this._ghost))
@@ -374,11 +401,12 @@ SC.TableView = SC.View.extend({
     if (this.get('isFoldered')){
       this._updateFolderedListViewProperties();
     }
-    this.getPath('dataView.contentView').reload(null);
+    this._dataView.get('contentView').reload(null);
   },
   
+  /** @private */
   _updateFolderedListViewProperties: function () {
-   var dataView = this.getPath('dataView.contentView');
+   var dataView = this._dataView.get('contentView');
    if (dataView && dataView.set){
      var columns = this.get('columns'),
          columnKeys = [], columnWidths = [];
