@@ -5,8 +5,6 @@
 // License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 
-sc_require('css/css_rule') ;
-
 /**
   @class SC.CSSStyleSheet
 
@@ -35,8 +33,7 @@ SC.CSSStyleSheet = SC.Object.extend(
 
     // cache this object for later
     var ssObjects = this.constructor.styleSheets ;
-    if (!ssObjects) ssObjects = this.constructor.styleSheets = {} ;
-    ssObjects[SC.guidFor(ss)] ;
+    if (!ssObjects) ssObjects = this.constructor.styleSheets = {};
     
     // create rules array
     var rules = ss.cssRules || SC.EMPTY_ARRAY ;
@@ -204,7 +201,7 @@ SC.mixin(SC.CSSStyleSheet,
     
     if (!nameOrUrl) return null ; // no name or url? fail!
     
-    if (!isUrl && nameOrUrl.indexOf('.css') == -1) {
+    if (!isUrl && nameOrUrl.indexOf('.css') === -1) {
       nameOrUrl = nameOrUrl + '.css' ;
     }
     
@@ -231,7 +228,7 @@ SC.mixin(SC.CSSStyleSheet,
         if (ssName = ss.href) {
           ssName = ssName.split('/') ; // break up URL
           ssName = ssName[ssName.length-1] ; // get last component
-          if (ssName == nameOrUrl) {
+          if (ssName === nameOrUrl) {
             guid = SC.guidFor(ss) ;
             ssObject = ssObjects[guid] ;
             if (!ssObject) {

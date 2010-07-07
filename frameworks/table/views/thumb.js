@@ -19,7 +19,7 @@
   its thumbViews array.
 
   @extends SC.View
-	@author Christopher Swasey
+  @author Christopher Swasey
 */
 SC.ThumbView = SC.View.extend(
 /** @scope SC.ThumbView.prototype */ {
@@ -29,26 +29,25 @@ SC.ThumbView = SC.View.extend(
   isEnabled: YES,
   isEnabledBindingDefault: SC.Binding.bool(),
   
-	delegate: null,	
-	
-	
-	render: function(context, firstTime) {
-		if(firstTime)
-		{
-			context.begin('div').classNames(["dragger"]).end();
-		}
-	},
+  delegate: null,  
+  
+  
+  render: function(context, firstTime) {
+    if(firstTime)
+    {
+      context.begin('div').classNames(["dragger"]).end();
+    }
+  },
   
   mouseDown: function(evt) {
-    //debugger;
     if (!this.get('isEnabled')) return NO ;
 
-		var responder = this.getPath('pane.rootResponder') ;
+    var responder = this.getPath('pane.rootResponder') ;
     if (!responder) return NO ;
     
-		this._offset = {x: 0, y: 0};
-		
-  	this.invokeDelegateMethod(this.delegate, 'thumbViewDidBeginDrag', this.parentView, evt);
+    this._offset = {x: 0, y: 0};
+    
+    this.invokeDelegateMethod(this.delegate, 'thumbViewDidBeginDrag', this.parentView, evt);
     responder.dragDidStart(this) ;
     
     this._mouseDownX = this._lastX = evt.pageX ;
@@ -57,22 +56,22 @@ SC.ThumbView = SC.View.extend(
     return YES ;
   },
 
-	mouseDragged: function(evt) {
-		var offset = this._offset;
+  mouseDragged: function(evt) {
+    var offset = this._offset;
     
-		offset.x = evt.pageX - this._lastX;
-		offset.y = evt.pageY - this._lastY;
-		
-		this._lastX = evt.pageX;
-		this._lastY = evt.pageY;
-		
-		this.invokeDelegateMethod(this.delegate, 'thumbViewWasDragged', this.parentView, offset, evt);
+    offset.x = evt.pageX - this._lastX;
+    offset.y = evt.pageY - this._lastY;
+    
+    this._lastX = evt.pageX;
+    this._lastY = evt.pageY;
+    
+    this.invokeDelegateMethod(this.delegate, 'thumbViewWasDragged', this.parentView, offset, evt);
     return YES;
   },
 
-	mouseUp: function(evt) {
-		this._lastX = this._lastY = this._offset = this._mouseDownX = this.mouseDownY = null;
-  	this.invokeDelegateMethod(this.delegate, 'thumbViewDidEndDrag', this.parentView, evt);
-	}
+  mouseUp: function(evt) {
+    this._lastX = this._lastY = this._offset = this._mouseDownX = this.mouseDownY = null;
+    this.invokeDelegateMethod(this.delegate, 'thumbViewDidEndDrag', this.parentView, evt);
+  }
 
 });

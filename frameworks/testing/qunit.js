@@ -407,6 +407,8 @@ function test(name, callback) {
 		try {
 			callback();
 		} catch(e) {
+			
+			throw e;
 			if( typeof console != "undefined" && console.error && console.warn ) {
 				console.error("Test " + name + " died, exception and test follows");
 				console.error(e);

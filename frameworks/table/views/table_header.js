@@ -18,7 +18,7 @@ SC.TableHeaderView = SC.View.extend(SC.SimpleLayout, {
   columnsDidChange: function() {
     var columns = this.get('columns');
     if (SC.none(columns) || columns === this._columns) return this; // nothing to do
-
+    this.set('childViews',[]);
     this.set('thicknesses', columns);
     var childViews = columns.map(function(column, idx) {
       return this.createChildView(SC.TableHeaderCellView.extend({
@@ -32,6 +32,7 @@ SC.TableHeaderView = SC.View.extend(SC.SimpleLayout, {
     this.destroyLayer().removeAllChildren();
     this.set('childViews', childViews); // quick swap
     this.replaceLayer();
+    this.updateLayout();
     this.endPropertyChanges();
   }.observes('columns'),
   

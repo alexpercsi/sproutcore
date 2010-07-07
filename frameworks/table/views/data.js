@@ -5,8 +5,6 @@
 // License:   Licened under MIT license (see license.js)
 // ==========================================================================
 
-sc_require('views/list');
-
 SC.DataView = SC.ListView.extend({
   
   _isDataView:YES,
@@ -18,7 +16,7 @@ SC.DataView = SC.ListView.extend({
   collectionViewWillDisplayCellForRowAndColumn: function(view, row, column) {
     var table = this.get('table');
     if(column >= 0) {
-      var value = this.valueForRowAndColumnInTableView(row, column, this);
+      var value = this.valueForRowAndColumnInTableView(row, column, this.get('table'));
       view.displayValue = value;
     }
   },
@@ -35,7 +33,6 @@ SC.DataView = SC.ListView.extend({
         columns = tableView.get('columns');
         column = columns.objectAt(column);
       var  key = column.get('key');
-
       return item.get(key);
     }
   },
@@ -137,8 +134,7 @@ SC.DataView = SC.ListView.extend({
   
   /** @private */
   _cv_columnsDidChange: function() {
-    console.log(this.get('columns'));
-    this.reload();
+    this.reload(null);
   }.observes('columns')
   
 });

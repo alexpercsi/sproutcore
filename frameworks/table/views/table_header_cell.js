@@ -5,18 +5,25 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
   
   classNames: ['sc-table-cell'],
 
-  titleBinding: '.column.label',
+  titleBinding: '*column.label',
   
   tagName: 'div',
   
+  displayProperties:['column','title'],
+  
   sortDescriptor: null,
-  sortDescriptorBinding: '.parentView*sortDescriptor',
+  sortDescriptorBinding: '.parentView.sortDescriptor',
   
   childViews: 'sortStateView labelView thumbView'.w(),
   
-  labelView: SC.LabelView.extend({
+  labelView: SC.View.extend({
     tagName: 'label',
-    valueBinding: '.parentView*column.label'
+    valueBinding: '.parentView.title',
+    
+    displayProperties: ['value'],
+    render: function(context,firstTime){
+      context.push(this.get('value'));
+    }
   }),
   
   /** 
@@ -101,8 +108,8 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
     context.attr('role', 'button').setClass(classes);
     theme = this.get('theme');
     if (theme) context.addClass(theme);
-
-    if (firstTime) this.renderChildViews(context, firstTime) ;
+    if (firstTime)
+    this.renderChildViews(context, firstTime) ;
   },
   
   /** @private */

@@ -5,8 +5,6 @@
 // License:   Licensed under MIT license (see license.js)
 // ==========================================================================
 
-sc_require('css/css_style') ;
-
 /**
   @class SC.CSSRule
 

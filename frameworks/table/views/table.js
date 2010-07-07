@@ -71,6 +71,27 @@ SC.TableView = SC.View.extend({
   */
   exampleFolderedListView: SC.FolderedListView,
   
+  /**
+    Use this method to swap out a column on the columns collection.
+    
+    @property {SC.TableColumn} column The column object that should be added to the collection.
+    @property {Number} idx The index of the column to be replaced.
+  */
+  replaceColumn: function(column, idx){
+    SC.RunLoop.begin();
+    var columns=this.get('columns'),
+        newColumns = columns.copy();
+        
+    if (idx>=columns.length){
+      return;
+    }
+    
+    newColumns[idx]=column;
+    this.set('columns',null);
+    this.set('columns',newColumns);
+    columns=null;
+  },
+  
   isEditable: YES,
   canEditContent: YES,
   
@@ -115,7 +136,7 @@ SC.TableView = SC.View.extend({
       contentView: SC.TableHeaderView.extend({
         layout:{top:0,left:0,right:0,bottom:0},
         table: this,
-        columnsBinding: '.table.columns',
+        columnsBinding: SC.Binding.from('.columns',this).oneWay(),
         sortDescriptorBinding: '.table.sortDescriptor'
        })
     }));
@@ -192,7 +213,7 @@ SC.TableView = SC.View.extend({
           selectionBinding: '.table.selection',
 
           sortDescriptorBinding: '.table.sortDescriptor',
-          columnsBinding: '.table.columns',
+          columnsBinding: SC.Binding.from('.columns',this).oneWay(),
           contentBinding: '.table.content',
 
           exampleView: this.get('exampleView'),
@@ -246,8 +267,9 @@ SC.TableView = SC.View.extend({
     this._sctv_columnsRangeObserver = observer ;
 
     this.resetRules();
-    
     this._columns = columns;
+    
+    this._dataView.get('contentView').computeLayout();
     
     if (this.get('isFoldered')){
       this._updateFolderedListViewProperties();

@@ -61,9 +61,6 @@ SC.CollectionContent = {
   contentIndexIsSelected: function(view, content, idx) {
     var sel = view.get('selection');
     var ret =  sel ? sel.contains(content, idx) : NO ;
-     if (SC.debug2){
-        console.log('rrrr '+ret+'    '+idx);
-      }
     return ret;
   },
   

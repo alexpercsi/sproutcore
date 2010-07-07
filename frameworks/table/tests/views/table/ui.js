@@ -1586,7 +1586,7 @@ test("Sorting within TableView", function(){
   }
 });
 
-test("Reorder columns within datasource", function(){
+test("Change columns within datasource", function(){
   var view = pane.view('basicHeaders');
   var tableHeaders = view._tableHeaderView.get('contentView');
   
@@ -1594,12 +1594,9 @@ test("Reorder columns within datasource", function(){
   equals(tableHeaders.childViews[1].$('label').html(),'Rating', "Precond - Second column should be rating");
   
   SC.RunLoop.begin();
-  SC.debug=true;
-  //swap out two columns
-  var aux = columns[1];
-  columns[1]=columns[0];
-  columns[0]=aux;
+  //swap out a column
+  var col2 = SC.TableColumn.create({label:'Rating2',key:'rating',width:'160'});
+  view.replaceColumn(col2,0);
   SC.RunLoop.end();
-  equals(tableHeaders.childViews[0].$('label').html(),'Rating', "First column should be rating");
-  equals(tableHeaders.childViews[1].$('label').html(),'Title', "Second column should be title");
+  equals(tableHeaders.childViews[0].$('label').html(),col2.get('label'), "First column should be Rating2");
 });
