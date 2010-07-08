@@ -1561,7 +1561,7 @@ test("Initialization of SC.TableView with headers", function() {
   equals(tableHeaders.get('isVisibleInWindow'), YES, "Headers should be visible in window for basicHeaders");
   equals(tableHeaders.get('childViews').length, columns.length, "# of childViews in tableHeader should equal # of items in columns definition");
   equals(dataView.get('isVisibleInWindow'), YES, "Data View should be visible in window");
-  equals(dataView.get('layout').top,view.get('headerHeight')+3, "DataView should be laid out 3px lower than headerHeight (to account for padding)");
+  equals(dataView.get('layout').top,view.get('headerHeight'), "DataView should be laid out at top:headerHeight");
   ok(SC.kindOf(dataView.get('contentView'),SC.DataView), "_dataView.contentView should be of type SC.DataView");
   equals(firstColumn.get('layout').width,columns[0].get('width')+tableHeaders.get('widthDelta'), "Column should have width of column definition + widthDelta");
   equals(firstColumn.get('column'),columns[0],'First columns should have columns[0] as datasource');

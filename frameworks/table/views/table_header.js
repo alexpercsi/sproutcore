@@ -7,11 +7,19 @@
 sc_require('views/table_header_cell');
 SC.TableHeaderView = SC.View.extend(SC.SimpleLayout, {
   
+  /** @private */
   classNames: ['sc-table-header'],
   
+  /** @private */
   thicknessPath: 'column.width',
+  
+  /** @private */
   startOffset: 6,
+  
+  /** @private */
   offsetDelta: -1,
+  
+  /** @private */
   widthDelta: 1,
   
   /** @private */

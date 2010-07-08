@@ -49,6 +49,13 @@ SC.TableView = SC.View.extend({
   useHeaders: YES,
   
   /**
+    The height of the header row
+    
+    @property {Number}
+  */
+  headerHeight:38,
+  
+  /**
     An example view that will be used to render cells in the table
     
     @property {SC.View}
@@ -123,7 +130,7 @@ SC.TableView = SC.View.extend({
         right: 0,
         bottom: 0,
         top: 0,
-        height: 39
+        height: this.get('headerHeight')
       },
       
       hasHorizontalScroller: NO,
@@ -150,7 +157,7 @@ SC.TableView = SC.View.extend({
       
       childView = this.createChildView(this.get('exampleScrollView').design({
         autohidesVerticalScroller: NO,
-        layout: { left: 6, right: 0, top: this.get('headerHeight')+3 || 38, bottom: 0 },
+        layout: { left: 6, right: 0, top: this.get('headerHeight'), bottom: 0 },
         verticalScrollOffset:0,
         contentView: this.get('exampleFolderedListView').design({
           layout:{top:0,left:0,right:0,bottom:0},
@@ -166,8 +173,8 @@ SC.TableView = SC.View.extend({
           contentValueKey: 'name',
           hasContentIcon: this.get('hasContentIcon'),
           contentIconKey: 'icon',
-          newTarget: this.get('delegate'),
-          newAction: this.get('newAction'),
+          newTargetBinding: '.table.delegate',
+          newActionBinding: '.table.newAction',
           canReorderContent: YES,
           canEditContent: this.get('canEditContent'),
           canDeleteContent: this.get('canDeleteContent'),
@@ -190,7 +197,7 @@ SC.TableView = SC.View.extend({
           left:   0,
           right:  0,
           bottom: 0,
-          top:    this.get('useHeaders')?(this.get('headerHeight')+3 || 38):0
+          top:    this.get('useHeaders')?this.get('headerHeight'):0
         },
 
         borderStyle: SC.BORDER_NONE,

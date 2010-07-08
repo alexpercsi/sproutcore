@@ -6,12 +6,13 @@
 // ==========================================================================
 
 SC.DataView = SC.ListView.extend({
-  
-  _isDataView:YES,
 
   /**
      Delegate method for when a cell needs to know what the content will be
 
+     @property {SC.View} view The cell view that needs a value
+     @property {Number} row the index of the row
+     @property {Number} column the index of the column
   */
   collectionViewWillDisplayCellForRowAndColumn: function(view, row, column) {
     var table = this.get('table');
