@@ -227,7 +227,7 @@ SC.TableView = SC.View.extend({
     this.set('childViews',childViews);
     
     if (this.get('exampleFolderedListView')){
-      this._updateFolderedListViewProperties();
+      this._sctv_updateFolderedListViewProperties();
     }
     
     if(!this.columnsBinding)
@@ -266,7 +266,7 @@ SC.TableView = SC.View.extend({
     this._dataView.get('contentView').computeLayout();
     
     if (this.get('exampleFolderedListView')){
-      this._updateFolderedListViewProperties();
+      this._sctv_updateFolderedListViewProperties();
     }
     
   }.observes('columns'),
@@ -339,7 +339,7 @@ SC.TableView = SC.View.extend({
     var css = this._stylesheet;
     
     if (this.get('exampleFolderedListView')){
-      this._updateFolderedListViewProperties();
+      this._sctv_updateFolderedListViewProperties();
     }
     
     if(Math.abs(diff) > 0) {
@@ -394,20 +394,30 @@ SC.TableView = SC.View.extend({
     this.get('layer').appendChild(el);
   },
 
-  /** @private */
+  /**
+    Called by the TableHeaderView when a column is being dragged
+    
+    @param {SC.TableColumn} column the column being dragged
+  */
   draggingColumn: function(column) {
     this.$().addClass('reordering-columns');
     this.ghostForColumn(column);
     this._dragging = column;
   },
   
-  /** @private */
+  /** 
+    Called by the TableHeaderView when a column is being dragged. Adjusts the offset of the ghost
+    
+    @param {Number} offset The offset by which the column has been dragged
+  */
   columnDragged: function(offset) {
     this._ghostLeft += offset;
     SC.$(this._ghost).css('left', this._ghostLeft + "px !important");
   },
   
-  /** @private */
+  /** 
+    Called by the TableHeaderView when a column has stopped dragging.
+   */
   endColumnDrag: function() {
     this.$().removeClass('reordering-columns');
     if (!SC.none(this._ghost))
@@ -418,13 +428,13 @@ SC.TableView = SC.View.extend({
     this._ghostLeft = null;
     this._sctv_resetRules();
     if (this.get('exampleFolderedListView')){
-      this._updateFolderedListViewProperties();
+      this._sctv_updateFolderedListViewProperties();
     }
     this._dataView.get('contentView').reload(null);
   },
   
   /** @private */
-  _updateFolderedListViewProperties: function () {
+  _sctv_updateFolderedListViewProperties: function () {
    var dataView = this._dataView.get('contentView');
    if (dataView && dataView.set){
      var columns = this.get('columns'),
