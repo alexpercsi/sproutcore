@@ -1526,16 +1526,14 @@ var pane = SC.ControlTestPane.design()
     layout: { width: 300, height: 200 },
     columns:columns,
     content:content,
-    useHeaders:NO,
-    isFoldered:NO
+    useHeaders:NO
   })
   .add("basicHeaders", SC.TableView, {
     layout: { width: 300, height: 200 },
     columns:columns,
     content:content,
     useHeaders:YES,
-    headerHeight:36,
-    isFoldered:NO
+    headerHeight:36
   });
   
 pane.show();

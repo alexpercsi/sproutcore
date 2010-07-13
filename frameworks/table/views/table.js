@@ -28,13 +28,6 @@ SC.TableView = SC.View.extend({
   */
   rowHeight:22,
   
-  /**
-    IF YES, a Foldered list view will be used to render the dataview. Useful for displaying tree structures.
-    
-    @property {Boolean}
-  */
-  isFoldered: NO,
-  
   selection:null,
   
   target:null,
@@ -76,7 +69,7 @@ SC.TableView = SC.View.extend({
     
     @property {SC.ListView}
   */
-  exampleFolderedListView: SC.FolderedListView,
+  exampleFolderedListView: null,
   
   /**
     Use this method to swap out a column on the columns collection.
@@ -85,17 +78,14 @@ SC.TableView = SC.View.extend({
     @property {Number} idx The index of the column to be replaced.
   */
   replaceColumn: function(column, idx){
-    SC.RunLoop.begin();
-    var columns=this.get('columns'),
-        newColumns = columns.copy();
+    var columns=this.get('columns').copy();
         
     if (idx>=columns.length){
       return;
     }
     
-    newColumns[idx]=column;
-    this.set('columns',null);
-    this.set('columns',newColumns);
+    columns[idx]=column;
+    this.set('columns',columns);
     columns=null;
   },
   
@@ -114,14 +104,16 @@ SC.TableView = SC.View.extend({
     
     var childViews = [], childView=null;
     
-    childView = this.createChildView(SC.ScrollView.design({
+     this._tableHeaderView = childView = this.createChildView(SC.ScrollView.design({
       
-      isVisibleBinding: '.parentView.useHeaders',
+      isVisibleBinding: SC.Binding.from('.useHeaders', this),
       
-      headerHeightBinding: '.parentView.headerHeight',
+      headerHeightBinding: SC.Binding.from('.headerHeight',this),
       headerHeightDidChange: function(){
-        if (this.get('headerHeight')){
-          this.get('layout').height=this.get('headerHeight');
+        var height = this.get('headerHeight'),
+            layout = this.get('layout');
+        if (height && height!==layout.height){
+          layout.height=height;
         }
       }.observes('headerHeight'),
 
@@ -137,25 +129,23 @@ SC.TableView = SC.View.extend({
       canScrollHorizontal: function() {
         return YES;
       }.property().cacheable(),
-      horizontalScrollOffsetBinding: '.table.horizontalScrollOffset',
+      horizontalScrollOffsetBinding: SC.Binding.from('.horizontalScrollOffset',this),
       
       borderStyle: SC.BORDER_NONE,
       contentView: SC.TableHeaderView.extend({
         layout:{top:0,left:0,right:0,bottom:0},
         table: this,
         columnsBinding: SC.Binding.from('.columns',this).oneWay(),
-        sortDescriptorBinding: '.table.sortDescriptor'
+        sortDescriptorBinding: SC.Binding.from('.sortDescriptor',this)
        })
     }));
     
     childViews.push(childView);
     
-    this._tableHeaderView=childView;
-    
-    if (this.get('isFoldered'))
+    if (this.get('exampleFolderedListView'))
     {
       
-      childView = this.createChildView(this.get('exampleScrollView').design({
+      this._dataView = childView = this.createChildView(this.get('exampleScrollView').design({
         autohidesVerticalScroller: NO,
         layout: { left: 6, right: 0, top: this.get('headerHeight'), bottom: 0 },
         verticalScrollOffset:0,
@@ -166,15 +156,15 @@ SC.TableView = SC.View.extend({
           columnWidths: [],
           rowHeight: this.get('rowHeight'),
           table: this,
-          contentBinding: '.table.content.arrangedObjects',
-          selectionBinding: '.table.selection',
-          targetBinding: '.table.target',
-          actionBinding: '.table.action',
+          contentBinding: SC.Binding.from('.content.arrangedObjects',this),
+          selectionBinding: SC.Binding.from('.selection',this),
+          targetBinding: SC.Binding.from('.target',this),
+          actionBinding: SC.Binding.from('.action',this),
           contentValueKey: 'name',
           hasContentIcon: this.get('hasContentIcon'),
           contentIconKey: 'icon',
-          newTargetBinding: '.table.delegate',
-          newActionBinding: '.table.newAction',
+          newTargetBinding: SC.Binding.from('.delegate',this),
+          newActionBinding: SC.Binding.from('.newAction',this),
           canReorderContent: YES,
           canEditContent: this.get('canEditContent'),
           canDeleteContent: this.get('canDeleteContent'),
@@ -191,7 +181,7 @@ SC.TableView = SC.View.extend({
     
     else
     {
-      childView = this.createChildView(this.get('exampleScrollView').design({
+      this._dataView = childView = this.createChildView(this.get('exampleScrollView').design({
         isVisible: YES,
         layout: {
           left:   0,
@@ -209,37 +199,34 @@ SC.TableView = SC.View.extend({
 
           rowHeight: this.get('rowHeight'),
 
-          isEditableBinding: '.table.isEditable',
-          canEditContentBinding: '.table.canEditContent',
+          isEditableBinding: SC.Binding.from('.isEditable',this),
+          canEditContentBinding: SC.Binding.from('.canEditContent',this),
 
-          targetBinding: '.table.target',
-          actionBinding: '.table.action',
+          targetBinding: SC.Binding.from('.target',this),
+          actionBinding: SC.Binding.from('.action',this),
           
-          canReorderContentBinding: '.table.canReorderContent',
+          canReorderContentBinding: SC.Binding.from('.canReorderContent',this),
 
-          selectionBinding: '.table.selection',
+          selectionBinding: SC.Binding.from('.selection',this),
 
-          sortDescriptorBinding: '.table.sortDescriptor',
+          sortDescriptorBinding: SC.Binding.from('.sortDescriptor',this),
           columnsBinding: SC.Binding.from('.columns',this).oneWay(),
-          contentBinding: '.table.content',
+          contentBinding: SC.Binding.from('.content',this),
 
-          exampleView: this.get('exampleView'),
-          useViewPooling: this.get('useViewPooling')
+          exampleView: this.get('exampleView')
         }),
 
 
         autohidesVerticalScroller: NO,
-        horizontalScrollOffsetBinding: '.parentView.horizontalScrollOffset'
+        horizontalScrollOffsetBinding: SC.Binding.from('.horizontalScrollOffset',this)
       }));
     }
     
     childViews.push(childView);
     
-    this._dataView=childView;
-    
     this.set('childViews',childViews);
     
-    if (this.get('isFoldered')){
+    if (this.get('exampleFolderedListView')){
       this._updateFolderedListViewProperties();
     }
     
@@ -250,7 +237,7 @@ SC.TableView = SC.View.extend({
   },
 
   /** @private */
-  contentDidChange: function() {
+  _sctv_contentDidChange: function() {
     this._dataView.get('contentView').reload(null);
   }.observes('*content.[]'),
   
@@ -263,7 +250,7 @@ SC.TableView = SC.View.extend({
     }
       
     var observer = this._sctv_columnsRangeObserver;
-    var func = this.columnsRangeDidChange;
+    var func = this._sctv_columnsRangeDidChange;
       
     if(this._columns)
     {
@@ -273,12 +260,12 @@ SC.TableView = SC.View.extend({
     observer = columns.addRangeObserver(SC.IndexSet.create(0,columns.length), this, func, null);      
     this._sctv_columnsRangeObserver = observer ;
 
-    this.resetRules();
+    this._sctv_resetRules();
     this._columns = columns;
     
     this._dataView.get('contentView').computeLayout();
     
-    if (this.get('isFoldered')){
+    if (this.get('exampleFolderedListView')){
       this._updateFolderedListViewProperties();
     }
     
@@ -289,7 +276,7 @@ SC.TableView = SC.View.extend({
 
      @private
    */
-  resetRules: function() {
+  _sctv_resetRules: function() {
     this._offsets = [];
     this._widths = [];
     
@@ -309,7 +296,7 @@ SC.TableView = SC.View.extend({
 
     columns.forEach(function(column, i) {
       offsets[i] = left;
-      stylesheet.insertRule(this.ruleForColumn(i), i);
+      stylesheet.insertRule(this._sctv_ruleForColumn(i), i);
       left += widths[i] + 1;
     }, this);
     
@@ -321,7 +308,7 @@ SC.TableView = SC.View.extend({
 
      @private
    */
-  ruleForColumn: function(column) {
+  _sctv_ruleForColumn: function(column) {
     var columns = this.get('columns'),
       col = columns.objectAt(column),
       width = col.get('width') - 1;
@@ -333,7 +320,7 @@ SC.TableView = SC.View.extend({
   },
   
   /** @private */
-  columnsRangeDidChange: function(columns, object, key, indexes) {
+  _sctv_columnsRangeDidChange: function(columns, object, key, indexes) {
     if(this._ghost)
     {
       return;
@@ -351,7 +338,7 @@ SC.TableView = SC.View.extend({
     var diff = columns.objectAt(indexes).get('width') - this._widths[indexes] - 1;
     var css = this._stylesheet;
     
-    if (this.get('isFoldered')){
+    if (this.get('exampleFolderedListView')){
       this._updateFolderedListViewProperties();
     }
     
@@ -362,7 +349,7 @@ SC.TableView = SC.View.extend({
         {
           this._offsets[i] += diff;
         }
-        css.insertRule(this.ruleForColumn(i), i);
+        css.insertRule(this._sctv_ruleForColumn(i), i);
       }
       
       this._dataView.get('contentView').calculatedWidth += diff;
@@ -374,7 +361,8 @@ SC.TableView = SC.View.extend({
   /**
     Changes the sort descriptor based on the column that is passed and the current sort state
   
-    @private 
+    @param {SC.TableColumn} column The column to sort by
+    @param {String} sortState The desired sort state (ASC|DESC)
   */
   sortByColumn: function(column, sortState) {
     if(sortState !== "ASC")
@@ -392,6 +380,8 @@ SC.TableView = SC.View.extend({
   
   /**
     Returns a ghost view for a given column 
+    
+    @param {SC.TableColumn} column The column to return the ghost view for.
   */
   ghostForColumn: function(column) {
     var columns = this.get('columns'),
@@ -426,8 +416,8 @@ SC.TableView = SC.View.extend({
     }
     this._ghost = this._blocker = null;
     this._ghostLeft = null;
-    this.resetRules();
-    if (this.get('isFoldered')){
+    this._sctv_resetRules();
+    if (this.get('exampleFolderedListView')){
       this._updateFolderedListViewProperties();
     }
     this._dataView.get('contentView').reload(null);
