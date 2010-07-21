@@ -174,7 +174,7 @@ SC.TableView = SC.View.extend({
           folderedListViewDelegate: this.get('delegate'),
           isDropTarget: YES,
           allowActionOnFolder: this.get('allowActionOnFolder'),
-          needsContextMenu: this.get('needsContextMenu')
+          needsContextMenuBinding: SC.Binding.from('.needsContextMenu',this)
         })
       }));
     }
@@ -313,7 +313,7 @@ SC.TableView = SC.View.extend({
       col = columns.objectAt(column),
       width = col.get('width') - 1;
     this._widths[column] = width ;
-    return ['div.column-' + column + ' {',
+    return ['#'+this.get('layerId')+' div.column-' + column + ' {',
         'width: ' + width + 'px !important;',
         'left: ' + this._offsets[column] + 'px !important;',
       '}'].join("");

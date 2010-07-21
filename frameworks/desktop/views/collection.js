@@ -1180,6 +1180,7 @@ SC.CollectionView = SC.View.extend(
           var classNames = ret.get('classNames') || [];
           if (rowViewInstance){
             classNames.push('column-'+i);
+            ret.set('column',columns[i]);
             ret.set('isSelected', SC.Binding.from('*parentView.isSelected',ret));
           }
           ret.set('classNames',classNames);
@@ -1226,13 +1227,8 @@ SC.CollectionView = SC.View.extend(
         else attrs.classNames = this._COLLECTION_CLASS_NAMES.copy();
         if(rowViewInstance){
           attrs.classNames.push('column-'+i);
+          attrs.column=columns[i];
           attrs.isSelectedBinding='*parentView.isSelected';
-        }
-        else
-        {
-                  if (SC.debug && attrs.isSelected){
-                    SC.debug2=true;
-                  }
         }
 
         if (layout) {
@@ -3205,11 +3201,11 @@ SC.CollectionView = SC.View.extend(
       
     // if the target view has its own internal action handler,
     // trigger that.
-    } else if (SC.typeOf(view._action) == SC.T_FUNCTION) {
+    } else if (SC.typeOf(view._action) === SC.T_FUNCTION) {
       return view._action(evt) ;
       
     // otherwise call the action method to support older styles.
-    } else if (SC.typeOf(view.action) == SC.T_FUNCTION) {
+    } else if (SC.typeOf(view.action) === SC.T_FUNCTION) {
       return view.action(evt) ;
     }
   }
