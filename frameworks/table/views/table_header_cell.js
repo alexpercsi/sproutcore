@@ -109,7 +109,9 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
     theme = this.get('theme');
     if (theme) context.addClass(theme);
     if (firstTime)
-    this.renderChildViews(context, firstTime) ;
+    {
+      this.renderChildViews(context, firstTime);
+    }
   },
   
   /** @private */
@@ -159,6 +161,31 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
     this._lastX = null;
     return sc_super();
   },
+  
+  
+  // ..........................................................
+  // touch support
+  // 
+  touchStart: function(evt){
+    return this.mouseDown(evt);
+  },
+  
+  touchEnd: function(evt){
+    return this.mouseUp(evt);
+  },
+  
+  touchesDragged: function(evt, touches) {
+    return this.mouseDragged(evt);
+  },
+  
+  touchEntered: function(evt){
+    return this.mouseEntered(evt);
+  },
+
+  touchExited: function(evt){
+    return this.mouseExited(evt);
+  },
+  
   
   /** @private */
   thumbViewWasDragged: function(view, offset, evt) {

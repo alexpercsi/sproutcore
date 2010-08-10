@@ -72,6 +72,29 @@ SC.ThumbView = SC.View.extend(
   mouseUp: function(evt) {
     this._lastX = this._lastY = this._offset = this._mouseDownX = this.mouseDownY = null;
     this.invokeDelegateMethod(this.delegate, 'thumbViewDidEndDrag', this.parentView, evt);
+  },
+  
+  // ..........................................................
+  // touch support
+  // 
+  touchStart: function(evt){
+    return this.mouseDown(evt);
+  },
+  
+  touchEnd: function(evt){
+    return this.mouseUp(evt);
+  },
+  
+  touchesDragged: function(evt, touches) {
+     return this.mouseDragged(evt);
+  },
+   
+  touchEntered: function(evt){
+    return this.mouseEntered(evt);
+  },
+
+  touchExited: function(evt){
+    return this.mouseExited(evt);
   }
 
 });
