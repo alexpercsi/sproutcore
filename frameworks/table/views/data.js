@@ -8,19 +8,15 @@
 SC.DataView = SC.ListView.extend({
 
   /**
-     Delegate method for when a cell needs to know what the content will be
+    Setting this to 'undefined' lets the 'contentValueKey' property
+    be determined by SC.ListItemView instead of SC.ListItem.  It forces
 
-     @property {SC.View} view The cell view that needs a value
-     @property {Number} row the index of the row
-     @property {Number} column the index of the column
+      del.getDelegateProperty('contentValueKey', del) 
+
+    in SC.ListItemView.displayValue() to ask itself instead of 'del' for
+    the 'contentValueKey'.
   */
-  collectionViewWillDisplayCellForRowAndColumn: function(view, row, column) {
-    var table = this.get('table');
-    if(column >= 0) {
-      var value = this.valueForRowAndColumnInTableView(row, column, this.get('table'));
-      view.displayValue = value;
-    }
-  },
+  contentValueKey: undefined,
   
   /**
      Returns the appropriate value from the content based on row and column number

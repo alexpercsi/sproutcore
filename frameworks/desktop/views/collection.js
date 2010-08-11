@@ -1227,8 +1227,9 @@ SC.CollectionView = SC.View.extend(
         else attrs.classNames = this._COLLECTION_CLASS_NAMES.copy();
         if(rowViewInstance){
           attrs.classNames.push('column-'+i);
-          attrs.column=columns[i];
-          attrs.isSelectedBinding='*parentView.isSelected';
+          attrs.column = columns[i];
+          attrs.contentValueKey = columns[i].get('key');
+          attrs.isSelectedBinding = '*parentView.isSelected';
         }
 
         if (layout) {
@@ -1236,14 +1237,12 @@ SC.CollectionView = SC.View.extend(
         } else {
           delete attrs.layout ;
         }
+
         ret = rowViewInstance? rowViewInstance.createChildView(E,attrs):this.createItemView(E, idx, attrs);
-        
+
         if (rowViewInstance){
           rowViewInstance.get('childViews').push(ret);
-          if (this.collectionViewWillDisplayCellForRowAndColumn){
-            this.collectionViewWillDisplayCellForRowAndColumn(ret,idx,i);
-          }
-          ret=null;
+          ret = null;
         }
       }
 
