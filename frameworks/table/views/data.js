@@ -34,7 +34,17 @@ SC.DataView = SC.ListView.extend({
         columns = tableView.get('columns');
         column = columns.objectAt(column);
       var  key = column.get('key');
-      return item?item.get?item.get(key):item[key]:null;
+      var ret = null;
+      if (item){
+        if (item.get){
+          ret = item.get(key);
+        }
+        else
+        {
+          ret = item[key];
+        }
+      }
+      return ret;
     }
   },
   
