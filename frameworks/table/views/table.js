@@ -390,8 +390,10 @@ SC.TableView = SC.View.extend({
       
     this._ghostLeft = this._tableHeaderView.get('contentView').offsetForView(idx) + 1;
     this._ghost = el;
-    SC.$(el).css({left: this._ghostLeft, top: 40});
+    el.style.left='%@px'.fmt(this._ghostLeft);
+    el.style.top='%@px'.fmt(this.get('headerHeight'));
     this.get('layer').appendChild(el);
+    
   },
 
   /**

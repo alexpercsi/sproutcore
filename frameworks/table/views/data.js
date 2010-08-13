@@ -69,14 +69,33 @@ SC.DataView = SC.ListView.extend({
    */
   viewForCell: function(row, column) {
     var itemViews = this._sc_itemViews;
-    
-    var view = itemViews[row][column];
+    var view = itemViews[row].childViews[column];
       
     if(!view){
       return NO;  
     }
 
     return view;
+  },
+  
+  /**
+      Returns a clone of the layer for the view at the given row and column
+
+      @param {Number} row the row index
+      @param {Number} column the column index
+   */
+  ghostLayerForCell: function(row, column) {
+    var itemViews = this._sc_itemViews;
+    var view = itemViews[row].childViews[column];
+    var layer;
+      
+    if(!view){
+      return NO;  
+    }
+
+    layer = view.get('layer').cloneNode(YES);
+    layer.style.top='%@px'.fmt(itemViews[row].get('layout').top);
+    return layer;
   },
   
   /**
@@ -107,25 +126,14 @@ SC.DataView = SC.ListView.extend({
       el = document.createElement('div');
       
     nowShowing.forEach(function(idx) {
-      var view = this.viewForCell(idx, column);
-      if (view)
+      var layer = this.ghostLayerForCell(idx, column);
+      if (layer)
       {
-        if (view.get)
-        {
-          var layer=view.get('layer');
-          el.appendChild(layer.cloneNode(YES));
-        }
-        else
-        {
-          if (view.cloneNode)
-          {
-            el.appendChild(view.cloneNode(YES));
-          }
-        }
+        el.appendChild(layer);
       }
     }, this);
     
-    el.className = "column-" + column + " ghost";
+    el.className = "ghost";
     
     return el;
   },

@@ -58,7 +58,7 @@ SC.CollectionView = SC.View.extend(
   ACTION_DELAY: 200,
 
 	rowView: SC.View.extend(SC.Control,{
-		classNames: ['sc-dataview-row'],
+		classNames: ['sc-dataview-row', 'sc-list-item-view'],
 		
 	
 		render: function(context, firstTime) {
@@ -1180,6 +1180,10 @@ SC.CollectionView = SC.View.extend(
           var classNames = ret.get('classNames') || [];
           if (rowViewInstance){
             classNames.push('column-'+i);
+            if (i===0){
+              classNames.push('first');
+            }
+            ret.set('contentValueKey', columns[i].get('key'));
             ret.set('column',columns[i]);
             ret.set('isSelected', SC.Binding.from('*parentView.isSelected',ret));
           }
@@ -1227,6 +1231,9 @@ SC.CollectionView = SC.View.extend(
         else attrs.classNames = this._COLLECTION_CLASS_NAMES.copy();
         if(rowViewInstance){
           attrs.classNames.push('column-'+i);
+          if (i===0){
+            attrs.classNames.push('first');
+          }
           attrs.column = columns[i];
           attrs.contentValueKey = columns[i].get('key');
           attrs.isSelectedBinding = '*parentView.isSelected';

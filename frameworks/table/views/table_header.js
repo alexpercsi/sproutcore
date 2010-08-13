@@ -14,7 +14,7 @@ SC.TableHeaderView = SC.View.extend(SC.SimpleLayout, {
   thicknessPath: 'column.width',
   
   /** @private */
-  startOffset: 6,
+  startOffset: 1,
   
   /** @private */
   offsetDelta: -1,
@@ -32,6 +32,7 @@ SC.TableHeaderView = SC.View.extend(SC.SimpleLayout, {
       return this.createChildView(SC.TableHeaderCellView.extend({
         column: column,
         delegate: this,
+        first: idx===0,
         calculatedWidth: column.get('width')
       }));
     }, this);

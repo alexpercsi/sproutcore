@@ -18,6 +18,9 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
   
   labelView: SC.View.extend({
     tagName: 'label',
+    
+    layout:{left:5,right:5,top:0,bottom:0},
+    
     valueBinding: '.parentView.title',
     
     displayProperties: ['value'],
@@ -93,6 +96,8 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
   render: function(context, firstTime) {
     var href, toolTip, classes, theme;
     var sortState = this.get('sortState');
+    
+    context.setClass('first', this.get('first'));
 
     classes = this._TEMPORARY_CLASS_HASH || {};
     classes.asc = (sortState  === "ASC");
