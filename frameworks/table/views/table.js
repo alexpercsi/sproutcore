@@ -49,6 +49,13 @@ SC.TableView = SC.View.extend({
   headerHeight:38,
   
   /**
+    If set to NO the horizontal scroller will be suppressed.
+    
+    @property {Boolean}
+  */
+  hasHorizontalScroller:YES,
+  
+  /**
     An example view that will be used to render cells in the table
     
     @property {SC.View}
@@ -149,6 +156,7 @@ SC.TableView = SC.View.extend({
         autohidesVerticalScroller: NO,
         layout: { left: 6, right: 0, top: this.get('headerHeight'), bottom: 0 },
         verticalScrollOffset:0,
+        hasHorizontalScrollerBinding: SC.Binding.from('hasHorizontalScroller', this),
         contentView: this.get('exampleFolderedListView').design({
           layout:{top:0,left:0,right:0,bottom:0},
           exampleView: this.get('exampleView'),
@@ -189,7 +197,7 @@ SC.TableView = SC.View.extend({
           bottom: 0,
           top:    this.get('useHeaders')?this.get('headerHeight'):0
         },
-
+        hasHorizontalScrollerBinding: SC.Binding.from('hasHorizontalScroller', this),
         borderStyle: SC.BORDER_NONE,
         contentView: SC.DataView.design({
 
