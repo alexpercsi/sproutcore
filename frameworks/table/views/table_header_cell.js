@@ -35,7 +35,7 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
     @private 
   */
   sortStateView: SC.View.extend({
-    layout:{centerY:0,height:8,right:15,width:9},
+    layout:{centerY:2,height:8,right:15,width:9},
     sortStateBinding: '.parentView.sortState',
     sortStateDidChange: function(){
       switch (this.get('sortState')){
