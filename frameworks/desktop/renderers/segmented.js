@@ -157,12 +157,22 @@ SC.BaseTheme.renderers.Segmented = SC.Renderer.extend({
     var segments = this.$('.sc-segment'), len = segments.length, idx, segment, r;
     for (idx = 0; idx < len; idx++) {
       segment = segments[idx];
-      r = segment.getBoundingClientRect();
-      if (this.layoutDirection == SC.LAYOUT_VERTICAL) {
-        if (pageY > r.top && pageY < r.bottom) return idx;
-      }
-      else {
-        if (pageX > r.left && pageX < r.right) return idx;
+      if (segment.getBoundingClientRect) {
+        r = segment.getBoundingClientRect();
+        if (this.layoutDirection == SC.LAYOUT_VERTICAL) {
+          if (pageY > r.top && pageY < r.bottom) return idx;
+        }
+        else {
+          if (pageX > r.left && pageX < r.right) return idx;
+        }
+      } else {
+        r = segment;
+        if (this.layoutDirection == SC.LAYOUT_VERTICAL) {
+           if (pageY > r.offsetTop && pageY < (r.offsetTop + r.offsetHeight)) return idx;
+         }
+         else {
+           if (pageX > r.offsetLeft && pageX < (r.offsetLeft + r.offsetWidth)) return idx;
+         }
       }
     }
     return -1;
