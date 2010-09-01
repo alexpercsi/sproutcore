@@ -56,21 +56,6 @@ SC.CollectionView = SC.View.extend(
   classNames: ['sc-collection-view'],
   
   ACTION_DELAY: 200,
-
-	rowView: SC.View.extend(SC.Control,{
-		classNames: ['sc-dataview-row', 'sc-list-item-view'],
-		
-	
-		render: function(context, firstTime) {
-	    var content = this.get('content'),
-				classArray = [];
-		
-	    // add alternating row classes
-	    classArray.push((this.get('contentIndex') % 2 === 0) ? 'even' : 'odd');
-	    context.addClass(classArray);
-			sc_super();
-		}
-	}),
   
   // ......................................
   // PROPERTIES
@@ -608,24 +593,6 @@ SC.CollectionView = SC.View.extend(
   _contentGroupIndexes: function() {
     return this.get('contentDelegate').contentGroupIndexes(this, this.get('content'));
   }.property('contentDelegate', 'content').cacheable(),
-  
-
-  
-
-
-
-  columnViews: function() {
-    var containerView = this.get('containerView') || this;
-    containerView.createLayer();
-    return [containerView];
-  }.property('columns').cacheable(),
-
-
-  _cv_columnViewsDidChange: function() {
-    this.reload();
-  }.observes('columnViews'),
-  
-
 
   // ..........................................................
   // CONTENT CHANGES
@@ -1079,11 +1046,7 @@ SC.CollectionView = SC.View.extend(
     @returns {SC.View} instantiated view
   */
   itemViewForContentIndex: function(idx, rebuild) {
-    var ret, 
-        rowView=this.get('rowView') || SC.View,
-        rowViewInstance,
-        columns = this.get('columns') || [null];
-
+    var ret;
     // Use the cached view for this index, if we have it.  We'll do this up-
     // front to avoid 
     var itemViews = this._sc_itemViews;
@@ -1101,7 +1064,7 @@ SC.CollectionView = SC.View.extend(
         groupIndexes = this.get('_contentGroupIndexes'),
         isGroupView = NO,
         key, E, layout, layerId,
-        viewPoolKey, viewPool, reuseFunc, parentView, isEnabled, isSelected,
+        viewPoolKey, parentView, isEnabled, isSelected,
         outlineLevel, disclosureState, isVisibleInWindow;
         
 
@@ -1133,130 +1096,115 @@ SC.CollectionView = SC.View.extend(
     outlineLevel      = del.contentIndexOutlineLevel(this, content, idx);
     disclosureState   = del.contentIndexDisclosureState(this, content, idx);
     isVisibleInWindow = this.isVisibleInWindow;
-    layout            = this.layoutForContentIndex(idx); 
-    for (var i=0;i<columns.length;i++)
-    {
-      //TODO [AP]: rowViews should be cached too. Also consider cell selection
-      if (columns[i]!==null && !rowViewInstance){
-        rowViewInstance = this.createChildView(rowView.design({
-          layout:layout,
-          isVisibleInWindow:isVisibleInWindow,
-          contentIndex:idx,
-          parentView:parentView,
-          layerId:layerId,
-          isEnabled:isEnabled,
-          content:item,
-          isSelected:isSelected,
-          outlineLevel:outlineLevel,
-          disclosureState:disclosureState
-        }));
-      }
+    layout            = this.layoutForContentIndex(idx);
+    
+    ret = this.createItemViewForContentIndex(layout,isVisibleInWindow,idx,parentView,layerId,isEnabled,item,isSelected,outlineLevel,disclosureState,E,viewPoolKey,isGroupView,itemViews);
+    
+    return ret ;
+  },
+  
+  //returns row view or item view
+  createItemViewForContentIndex: function(layout,isVisibleInWindow,idx,parentView,layerId,isEnabled,item,isSelected,outlineLevel,disclosureState,E,viewPoolKey,isGroupView,itemViews){
+    var ret,
+        columns = this.get('columns');
       
-      // If the view is reusable and there is an appropriate view inside the
-      // pool, simply reuse it to avoid having to create a new view.
-      if (E  &&  E.isReusableInCollections) {
-        // Lazily create the view pool.
-        viewPool = this[viewPoolKey];
-        if (!viewPool) viewPool = this[viewPoolKey] = [];
+    // If the view is reusable and there is an appropriate view inside the
+    // pool, simply reuse it to avoid having to create a new view.
+    if (E  &&  E.isReusableInCollections) {
+      
+      ret = this._retrieveViewFromPool(viewPoolKey,idx,layerId,isEnabled,isSelected,outlineLevel,disclosureState,isVisibleInWindow, parentView, layout, E, item);
+      
+    }
 
-        // Is there a view we can re-use?
-        if (viewPool.length > 0) {
-          ret = viewPool.pop();
+    // If we weren't able to re-use a view, then create a new one.
+    if (!ret) {
+      ret = this._createNewItemView(idx,item,parentView, layerId, isEnabled, isSelected, outlineLevel, disclosureState, isGroupView, isVisibleInWindow, layout, E);
+    }
 
-          // Tell the view it's about to be re-used.
-          reuseFunc = ret.prepareForReuse;
-          if (reuseFunc) reuseFunc.call(ret);
+    itemViews[idx] = ret;
+    
+    return ret;
+    
+  },
+  
+  _createNewItemView: function(idx,item,parentView,layerId, isEnabled, isSelected, outlineLevel, disclosureState, isGroupView, isVisibleInWindow, layout, E){
+    var ret;
+    
+    // collect some other state
+    var attrs = this._TMP_ATTRS;
+    attrs.contentIndex      = idx;
+    attrs.content           = item;
+    attrs.owner             = attrs.displayDelegate = this;
+    attrs.parentView        = parentView;   // Same here; shouldn't be needed
+    attrs.page              = this.page;
+    attrs.layerId           = layerId;
+    attrs.isEnabled         = isEnabled;
+    attrs.isSelected        = isSelected;
+    attrs.outlineLevel      = outlineLevel;
+    attrs.disclosureState   = disclosureState;
+    attrs.isGroupView       = isGroupView;
+    attrs.isVisibleInWindow = isVisibleInWindow;
+    if (isGroupView) attrs.classNames = this._GROUP_COLLECTION_CLASS_NAMES;
+    else attrs.classNames = this._COLLECTION_CLASS_NAMES;
 
-          // Set the new state.  We'll set content last, because it's the most
-          // likely to have observers.
-          ret.beginPropertyChanges();
-          ret.set('contentIndex', idx);
-          ret.set('layerId', rowViewInstance?this.layerIdFor(idx,i):layerId);
-          ret.set('isEnabled', isEnabled);
-          ret.set('isSelected', isSelected);
-          ret.set('outlineLevel', outlineLevel);
-          ret.set('disclosureState', disclosureState);
-          ret.set('isVisibleInWindow', isVisibleInWindow);
-          var classNames = ret.get('classNames') || [];
-          if (rowViewInstance){
-            classNames.push('column-'+i);
-            if (i===0){
-              classNames.push('first');
-            }
-            ret.set('contentValueKey', columns[i].get('key'));
-            ret.set('column',columns[i]);
-            ret.set('isSelected', SC.Binding.from('*parentView.isSelected',ret));
-          }
-          ret.set('classNames',classNames);
+    if (layout) {
+      attrs.layout = layout;
+    } else {
+      delete attrs.layout ;
+    }
 
-          // TODO:  In theory this shouldn't be needed, but without it, we
-          //        sometimes get errors when doing a full reload, because
-          //        'childViews' contains the view but the parent is not set.
-          //        This implies a timing issue with the general flow of
-          //        collection view.
-          ret.set('parentView', rowViewInstance || parentView);
+    ret = this.createItemView(E, idx, attrs);
+    return ret;
+  },
+  
+  _retrieveViewFromPool: function(viewPoolKey,idx,layerId,isEnabled,isSelected,outlineLevel,disclosureState,isVisibleInWindow, parentView, layout, E, item){
+    var ret,viewPool,reuseFunc;
+    
+    // Lazily create the view pool.
+    viewPool = this[viewPoolKey];
+    if (!viewPool) viewPool = this[viewPoolKey] = [];
 
-          // Since we re-use layerIds, we need to reset SproutCore's internal
-          // mapping table.
-          SC.View.views[layerId] = ret;
+    // Is there a view we can re-use?
+    if (viewPool.length > 0) {
+      ret = viewPool.pop();
 
-          if (layout) {
-            ret.set('layout', rowViewInstance?this.layoutForContentIndex(idx,i):layout);
-          }
-          else {
-            ret.set('layout', E.prototype.layout);
-          }
-          ret.set('content', item);
-          ret.endPropertyChanges();
-        }
+      // Tell the view it's about to be re-used.
+      reuseFunc = ret.prepareForReuse;
+      if (reuseFunc) reuseFunc.call(ret);
+
+      // Set the new state.  We'll set content last, because it's the most
+      // likely to have observers.
+      ret.beginPropertyChanges();
+      ret.set('contentIndex', idx);
+      ret.set('layerId', layerId);
+      ret.set('isEnabled', isEnabled);
+      ret.set('isSelected', isSelected);
+      ret.set('outlineLevel', outlineLevel);
+      ret.set('disclosureState', disclosureState);
+      ret.set('isVisibleInWindow', isVisibleInWindow);
+
+      // TODO:  In theory this shouldn't be needed, but without it, we
+      //        sometimes get errors when doing a full reload, because
+      //        'childViews' contains the view but the parent is not set.
+      //        This implies a timing issue with the general flow of
+      //        collection view.
+      ret.set('parentView', parentView);
+
+      // Since we re-use layerIds, we need to reset SproutCore's internal
+      // mapping table.
+      SC.View.views[layerId] = ret;
+
+      if (layout) {
+        ret.set('layout', layout);
       }
-
-      // If we weren't able to re-use a view, then create a new one.
-      if (!ret) {
-        // collect some other state
-        var attrs = this._TMP_ATTRS;
-        attrs.contentIndex      = idx;
-        attrs.content           = item;
-        attrs.owner             = attrs.displayDelegate = this;
-        attrs.parentView        = rowViewInstance || parentView;   // Same here; shouldn't be needed
-        attrs.page              = this.page;
-        attrs.layerId           = rowViewInstance?this.layerIdFor(idx,i):layerId;
-        attrs.isEnabled         = isEnabled;
-        attrs.isSelected        = isSelected;
-        attrs.outlineLevel      = outlineLevel;
-        attrs.disclosureState   = disclosureState;
-        attrs.isGroupView       = isGroupView;
-        attrs.isVisibleInWindow = isVisibleInWindow;
-        if (isGroupView) attrs.classNames = this._GROUP_COLLECTION_CLASS_NAMES.copy();
-        else attrs.classNames = this._COLLECTION_CLASS_NAMES.copy();
-        if(rowViewInstance){
-          attrs.classNames.push('column-'+i);
-          if (i===0){
-            attrs.classNames.push('first');
-          }
-          attrs.column = columns[i];
-          attrs.contentValueKey = columns[i].get('key');
-          attrs.isSelectedBinding = '*parentView.isSelected';
-        }
-
-        if (layout) {
-          attrs.layout = rowViewInstance?this.layoutForContentIndex(idx,i):layout;
-        } else {
-          delete attrs.layout ;
-        }
-
-        ret = rowViewInstance? rowViewInstance.createChildView(E,attrs):this.createItemView(E, idx, attrs);
-
-        if (rowViewInstance){
-          rowViewInstance.get('childViews').push(ret);
-          ret = null;
-        }
+      else {
+        ret.set('layout', E.prototype.layout);
       }
-
-      itemViews[idx] = rowViewInstance || ret ;
+      ret.set('content', item);
+      ret.endPropertyChanges();
     }
     
-    return rowViewInstance || ret ;
+    return ret;
   },
   
   /**
@@ -1297,32 +1245,28 @@ SC.CollectionView = SC.View.extend(
     @param {Number} idx the content index
     @returns {String} layer id, must be suitable for use in HTML id attribute
   */
-  layerIdFor: function(idx,column) {
+  layerIdFor: function(idx) {  
     var ret = this._TMP_LAYERID;
     ret[0] = SC.guidFor(this);
     ret[1] = idx;
-    return SC.none(column)?ret.join('-'):ret.join('-')+'-'+column;
+    return ret.join('-');
   },
-  
+
   /**
     Extracts the content index from the passed layerID.  If the layer id does
     not belong to the receiver or if no value could be extracted, returns NO.
-    
+
     @param {String} id the layer id
   */
   contentIndexForLayerId: function(id) {
     if (!id || !(id = id.toString())) return null ; // nothing to do
-    
+
     var base = this._baseLayerId;
     if (!base) base = this._baseLayerId = SC.guidFor(this)+"-";
-    
+
     // no match
     if ((id.length <= base.length) || (id.indexOf(base) !== 0)) return null ; 
-    var ret = id.split('-');
-    if (!SC.typeOf(ret)===SC.T_ARRAY || !ret.length>0){
-      return null;
-    }
-    ret = (ret.length===3?Number(ret[1]):Number(ret[ret.length-1]));
+    var ret = Number(id.slice(id.lastIndexOf('-')+1));
     return isNaN(ret) ? null : ret ;
   },
   
@@ -1335,27 +1279,6 @@ SC.CollectionView = SC.View.extend(
    contentIndexForItemView: function(itemView) {
     var content = itemView.get('content');
     return !SC.none(content)?this.get('content').indexOf(content):NO;
-   },
-   
-   /**
-    Extracts the column index from passed layer id
-    
-    @param {String} id the layer id
-   */
-   columnForLayerId: function(id){
-     if (!id || !(id = id.toString())) return null ; // nothing to do
-
-     var base = this._baseLayerId;
-     if (!base) base = this._baseLayerId = SC.guidFor(this)+"-";
-
-     // no match
-     if ((id.length <= base.length) || (id.indexOf(base) !== 0)) return null ; 
-     var ret = id.split('-');
-     if (!SC.typeOf(ret)===SC.T_ARRAY || !ret.length>0){
-       return null;
-     }
-     ret = ret[ret.length-1];
-     return isNaN(ret) ? null : ret ;
    },
 
 
@@ -1410,27 +1333,6 @@ SC.CollectionView = SC.View.extend(
     }
     
     return column?this._itemViewForRowAndColumn(contentIndex,column):this.itemViewForContentIndex(contentIndex);
-  },
-  
-  
-  /** 
-     Finds the cell view for the given row and column
-     
-     @private
-   */
-  _itemViewForRowAndColumn: function(row,column){
-     var itemViews = this._sc_itemViews;
-     if (!itemViews || !itemViews.length || itemViews.length<row){
-       return null;
-     }
-     else
-     {
-       var rowView = itemViews[row];
-       if (rowView && rowView.childViews && rowView.childViews.length>column){
-         return rowView.childViews[column];
-       }
-       return null;
-     }
   },
   
   // ..........................................................

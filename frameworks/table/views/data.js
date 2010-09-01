@@ -18,6 +18,39 @@ SC.DataView = SC.ListView.extend({
   */
   contentValueKey: undefined,
   
+  
+  /**
+    The view that will wrap the cells of a row
+  */
+  rowView: SC.View.extend(SC.Control,{
+    classNames: ['sc-dataview-row', 'sc-list-item-view'],
+    
+  
+    render: function(context, firstTime) {
+      var content = this.get('content'),
+        classArray = [];
+    
+      // add alternating row classes
+      classArray.push((this.get('contentIndex') % 2 === 0) ? 'even' : 'odd');
+      context.addClass(classArray);
+      sc_super();
+    }
+  }),
+  
+  
+  columnViews: function() {
+    var containerView = this.get('containerView') || this;
+    containerView.createLayer();
+    return [containerView];
+  }.property('columns').cacheable(),
+
+
+  _cv_columnViewsDidChange: function() {
+    this.reload();
+  }.observes('columnViews'),
+  
+  
+  
   /**
      Returns the appropriate value from the content based on row and column number
 
@@ -98,6 +131,29 @@ SC.DataView = SC.ListView.extend({
     return layer;
   },
   
+  _generateRowViewInstance: function(col, rowViewInstance, layout, isVisibleInWindow, idx, parentView, layerId, isEnabled, item, isSelected, outlineLevel, disclosureState){
+    
+    //TODO [AP]: rowViews should be cached too. Also consider cell selection
+    
+    var columns = this.get('columns'),
+        rowView = this.get('rowView');
+    if (columns[col]!==null && !rowViewInstance){
+      rowViewInstance = this.createChildView(rowView.design({
+        layout:layout,
+        isVisibleInWindow:isVisibleInWindow,
+        contentIndex:idx,
+        parentView:parentView,
+        layerId:layerId,
+        isEnabled:isEnabled,
+        content:item,
+        isSelected:isSelected,
+        outlineLevel:outlineLevel,
+        disclosureState:disclosureState
+      }));
+    }
+    return rowViewInstance;
+  },
+  
   /**
       Determines if a content item is selected
 
@@ -117,6 +173,166 @@ SC.DataView = SC.ListView.extend({
     this.set('calculatedHeight',ret.minHeight);
     return ret ;
   },
+  
+  //returns row view or item view
+  createItemViewForContentIndex: function(layout,isVisibleInWindow,idx,parentView,layerId,isEnabled,item,isSelected,outlineLevel,disclosureState,E,viewPoolKey,isGroupView,itemViews){
+    var ret, rowViewInstance,
+        columns = this.get('columns'),
+        rowView = this.get('rowView') || SC.View;
+    
+    for (var i=0;i<columns.length;i++)
+    {
+      ret=null;
+      rowViewInstance = this._generateRowViewInstance(i, rowViewInstance, layout, isVisibleInWindow, idx, parentView, layerId, isEnabled, item, isSelected, outlineLevel, disclosureState);
+      
+      E = columns[i].get('exampleView');
+     
+      
+      // If the view is reusable and there is an appropriate view inside the
+      // pool, simply reuse it to avoid having to create a new view.
+      if (E  &&  E.isReusableInCollections) {
+        ret = this._retrieveViewFromPool(viewPoolKey,idx,rowViewInstance,i,layerId,isEnabled,isSelected,outlineLevel,disclosureState,isVisibleInWindow, parentView, layout, E, item);
+        
+      }
+
+      // If we weren't able to re-use a view, then create a new one.
+      if (!ret) { 
+        ret = this._createNewItemView(idx,item,rowViewInstance,parentView, i, layerId, isEnabled, isSelected, outlineLevel, disclosureState, isGroupView, isVisibleInWindow, layout, E);
+      }
+
+      itemViews[idx] = rowViewInstance;
+    }
+    
+    return rowViewInstance;
+    
+  },
+  
+  _createNewItemView: function(idx,item,rowViewInstance,parentView, col, layerId, isEnabled, isSelected, outlineLevel, disclosureState, isGroupView, isVisibleInWindow, layout, E){
+    //console.log(col);
+    var columns = this.get('columns'),
+        ret;
+    
+    // collect some other state
+    var attrs = this._TMP_ATTRS;
+    attrs.contentIndex      = idx;
+    attrs.content           = item;
+    attrs.owner             = attrs.displayDelegate = this;
+    attrs.parentView        = rowViewInstance || parentView;   // Same here; shouldn't be needed
+    attrs.page              = this.page;
+    attrs.layerId           = rowViewInstance?this.layerIdFor(idx,col):layerId;
+    attrs.isEnabled         = isEnabled;
+    attrs.isSelected        = isSelected;
+    attrs.outlineLevel      = outlineLevel;
+    attrs.disclosureState   = disclosureState;
+    attrs.isGroupView       = isGroupView;
+    attrs.isVisibleInWindow = isVisibleInWindow;
+    if (isGroupView) attrs.classNames = this._GROUP_COLLECTION_CLASS_NAMES.copy();
+    else attrs.classNames = this._COLLECTION_CLASS_NAMES.copy();
+    if(rowViewInstance){
+      attrs.classNames.push('column-'+col);
+      if (col===0){
+        attrs.classNames.push('first');
+      }
+      attrs.column = columns[col];
+      attrs.contentValueKey = columns[col].get('key');
+      attrs.isSelectedBinding = '*parentView.isSelected';
+    }
+
+    if (layout) {
+      attrs.layout = rowViewInstance?this.layoutForContentIndex(idx,col):layout;
+    } else {
+      delete attrs.layout ;
+    }
+
+    ret = rowViewInstance? rowViewInstance.createChildView(E,attrs):this.createItemView(E, idx, attrs);
+
+    if (rowViewInstance){
+      rowViewInstance.get('childViews').push(ret);
+      ret = null;
+    }
+    
+    return rowViewInstance;
+  },
+  
+  
+  /**
+    Generates a layerId for the passed index and item.  Usually the default
+    implementation is suitable.
+    
+    @param {Number} idx the content index
+    @returns {String} layer id, must be suitable for use in HTML id attribute
+  */
+  layerIdFor: function(idx,column) {
+    var ret = this._TMP_LAYERID;
+    ret[0] = SC.guidFor(this);
+    ret[1] = idx;
+    return SC.none(column)?ret.join('-'):ret.join('-')+'-'+column;
+  },
+  
+  
+  /**
+    Extracts the content index from the passed layerID.  If the layer id does
+    not belong to the receiver or if no value could be extracted, returns NO.
+    
+    @param {String} id the layer id
+  */
+  contentIndexForLayerId: function(id) {
+    if (!id || !(id = id.toString())) return null ; // nothing to do
+    
+    var base = this._baseLayerId;
+    if (!base) base = this._baseLayerId = SC.guidFor(this)+"-";
+    
+    // no match
+    if ((id.length <= base.length) || (id.indexOf(base) !== 0)) return null ; 
+    var ret = id.split('-');
+    if (!SC.typeOf(ret)===SC.T_ARRAY || !ret.length>0){
+      return null;
+    }
+    ret = (ret.length===3?Number(ret[1]):Number(ret[ret.length-1]));
+    return isNaN(ret) ? null : ret ;
+  },
+  
+  
+  /**
+    Extracts the column index from passed layer id
+    
+    @param {String} id the layer id
+   */
+   columnForLayerId: function(id){
+     if (!id || !(id = id.toString())) return null ; // nothing to do
+
+     var base = this._baseLayerId;
+     if (!base) base = this._baseLayerId = SC.guidFor(this)+"-";
+
+     // no match
+     if ((id.length <= base.length) || (id.indexOf(base) !== 0)) return null ; 
+     var ret = id.split('-');
+     if (!SC.typeOf(ret)===SC.T_ARRAY || !ret.length>0){
+       return null;
+     }
+     ret = ret[ret.length-1];
+     return isNaN(ret) ? null : ret ;
+   },
+
+   /** 
+      Finds the cell view for the given row and column
+
+      @private
+    */
+   _itemViewForRowAndColumn: function(row,column){
+      var itemViews = this._sc_itemViews;
+      if (!itemViews || !itemViews.length || itemViews.length<row){
+        return null;
+      }
+      else
+      {
+        var rowView = itemViews[row];
+        if (rowView && rowView.childViews && rowView.childViews.length>column){
+          return rowView.childViews[column];
+        }
+        return null;
+      }
+   },
 
   /**
     Returns a ghost view for a given column 
