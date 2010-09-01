@@ -319,12 +319,34 @@ SC.TableView = SC.View.extend({
   _sctv_ruleForColumn: function(column) {
     var columns = this.get('columns'),
       col = columns.objectAt(column),
-      width = col.get('width') - 1;
-    this._widths[column] = width ;
-    return ['#'+this.get('layerId')+' div.column-' + column + ' {',
-        'width: ' + width + 'px !important;',
-        'left: ' + this._offsets[column] + 'px !important;',
-      '}'].join("");
+      width;
+      if (!col.get('isFlexible')){
+        width = col.get('width') - 1;
+        this._widths[column] = width ;
+        return ['#'+this.get('layerId')+' div.column-' + column + ' {',
+            'width: ' + width + 'px !important;',
+            'left: ' + this._offsets[column] + 'px !important;',
+          '}'].join("");
+      }
+      else
+      {
+        var totalWidth = this.$().width();
+        width = totalWidth-this._offsets[column]-2;
+        for (var i=column+1;i<columns.length;i++){
+          width-=columns.objectAt(i).get('width');
+        }
+        
+        if (width<=0)
+        {
+           width = col.get('width') - 1;
+        }
+        this._widths[column] = width ;
+        col.set('width', width+4);
+        return ['#'+this.get('layerId')+' div.column-' + column + ' {',
+            'width: ' + width + 'px !important;',
+            'left: ' + this._offsets[column] + 'px !important;',
+          '}'].join("");
+      }
   },
   
   /** @private */

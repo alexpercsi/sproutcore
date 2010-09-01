@@ -3,6 +3,8 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
   
   layout:{top:0,bottom:0},
   
+  column: null,
+  
   classNames: ['sc-table-cell'],
 
   titleBinding: '*column.label',
@@ -57,7 +59,8 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
     delegateBinding: '.parentView',
     layout: {
       top: 0, bottom: 0, right: 0, width: 16
-    }
+    },
+    isVisibleBinding: '.parentView*column.isResizable'
   }),
   
   /** @private */
@@ -127,7 +130,13 @@ SC.TableHeaderCellView = SC.View.extend(SC.Button,{
     
   /** @private */
   mouseDragged: function(evt) {
-    var x = evt.pageX;
+    var x = evt.pageX,
+        isReorderable = this.getPath('column.isReorderable');
+    
+    if (!isReorderable){
+      return YES;
+    }
+    
     if(!this._dragging)
     {
        if(Math.abs(this._initialX - x) < 6)
