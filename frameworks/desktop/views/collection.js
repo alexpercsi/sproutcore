@@ -1103,7 +1103,11 @@ SC.CollectionView = SC.View.extend(
     return ret ;
   },
   
-  //returns row view or item view
+  /**
+    Internal method for itemViewForContentIndex. Returns an item view from the pool if possible, or creates a new one.
+    You will not usually need to call this method yourself
+    
+  */
   createItemViewForContentIndex: function(layout,isVisibleInWindow,idx,parentView,layerId,isEnabled,item,isSelected,outlineLevel,disclosureState,E,viewPoolKey,isGroupView,itemViews){
     var ret,
         columns = this.get('columns');
@@ -1127,6 +1131,12 @@ SC.CollectionView = SC.View.extend(
     
   },
   
+  /**
+    Internal method for itemViewForContentIndex. Creates a new item view.
+    You will not usually need to call this method yourself
+    
+    @private
+  */
   _createNewItemView: function(idx,item,parentView,layerId, isEnabled, isSelected, outlineLevel, disclosureState, isGroupView, isVisibleInWindow, layout, E){
     var ret;
     
@@ -1157,6 +1167,13 @@ SC.CollectionView = SC.View.extend(
     return ret;
   },
   
+  
+  /**
+    Internal method for itemViewForContentIndex. Retrieves a view instance from the pool, if possible.
+    You will not usually need to call this method yourself
+    
+    @private
+  */
   _retrieveViewFromPool: function(viewPoolKey,idx,layerId,isEnabled,isSelected,outlineLevel,disclosureState,isVisibleInWindow, parentView, layout, E, item){
     var ret,viewPool,reuseFunc;
     

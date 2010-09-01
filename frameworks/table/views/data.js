@@ -174,7 +174,11 @@ SC.DataView = SC.ListView.extend({
     return ret ;
   },
   
-  //returns row view or item view
+  /**
+    Internal method for itemViewForContentIndex. Returns an item view from the pool if possible, or creates a new one.
+    You will not usually need to call this method yourself
+    
+  */
   createItemViewForContentIndex: function(layout,isVisibleInWindow,idx,parentView,layerId,isEnabled,item,isSelected,outlineLevel,disclosureState,E,viewPoolKey,isGroupView,itemViews){
     var ret, rowViewInstance,
         columns = this.get('columns'),
@@ -207,6 +211,12 @@ SC.DataView = SC.ListView.extend({
     
   },
   
+  /**
+     Internal method for itemViewForContentIndex. Creates a new item view.
+     You will not usually need to call this method yourself
+
+     @private
+   */
   _createNewItemView: function(idx,item,rowViewInstance,parentView, col, layerId, isEnabled, isSelected, outlineLevel, disclosureState, isGroupView, isVisibleInWindow, layout, E){
     //console.log(col);
     var columns = this.get('columns'),
@@ -252,6 +262,71 @@ SC.DataView = SC.ListView.extend({
     }
     
     return rowViewInstance;
+  },
+  
+  /**
+    Internal method for itemViewForContentIndex. Retrieves a view instance from the pool, if possible.
+    You will not usually need to call this method yourself
+    
+    @private
+  */
+  _retrieveViewFromPool: function(viewPoolKey,idx,rowViewInstance,col,layerId,isEnabled,isSelected,outlineLevel,disclosureState,isVisibleInWindow, parentView, layout, E, item){
+    var ret,viewPool,reuseFunc,
+        columns = this.get('columns');
+    
+    // Lazily create the view pool.
+    viewPool = this[viewPoolKey];
+    if (!viewPool) viewPool = this[viewPoolKey] = [];
+
+    // Is there a view we can re-use?
+    if (viewPool.length > 0) {
+      ret = viewPool.pop();
+
+      // Tell the view it's about to be re-used.
+      reuseFunc = ret.prepareForReuse;
+      if (reuseFunc) reuseFunc.call(ret);
+
+      // Set the new state.  We'll set content last, because it's the most
+      // likely to have observers.
+      ret.beginPropertyChanges();
+      ret.set('contentIndex', idx);
+      ret.set('layerId', rowViewInstance?this.layerIdFor(idx,col):layerId);
+      ret.set('isEnabled', isEnabled);
+      ret.set('isSelected', isSelected);
+      ret.set('outlineLevel', outlineLevel);
+      ret.set('disclosureState', disclosureState);
+      ret.set('isVisibleInWindow', isVisibleInWindow);
+      var classNames = ret.get('classNames') || [];
+      if (rowViewInstance){
+        classNames.push('column-'+col);
+        ret.set('column',columns[col]);
+        ret.set('isSelected', SC.Binding.from('*parentView.isSelected',ret));
+      }
+      ret.set('classNames',classNames);
+
+      // TODO:  In theory this shouldn't be needed, but without it, we
+      //        sometimes get errors when doing a full reload, because
+      //        'childViews' contains the view but the parent is not set.
+      //        This implies a timing issue with the general flow of
+      //        collection view.
+      ret.set('parentView', rowViewInstance || parentView);
+
+      // Since we re-use layerIds, we need to reset SproutCore's internal
+      // mapping table.
+      SC.View.views[layerId] = ret;
+
+      if (layout) {
+        ret.set('layout', rowViewInstance?this.layoutForContentIndex(idx,col):layout);
+      }
+      else {
+        ret.set('layout', E.prototype.layout);
+      }
+      ret.set('content', item);
+      ret.endPropertyChanges();
+    }
+    
+    return ret;
+    
   },
   
   
