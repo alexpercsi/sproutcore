@@ -193,7 +193,7 @@ SC.TableView = SC.ListView.extend(SC.TableDelegate, {
     @property
     @type SC.View
   */
-  tableHeadView: SC.TableHeadView.design({
+  tableHeadView: SC.View.design({
     layout: { top: 0, left: 0, right: 0 }
   }),
   
