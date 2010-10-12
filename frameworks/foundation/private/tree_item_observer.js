@@ -729,93 +729,6 @@ SC.TreeItemObserver = SC.Object.extend(SC.Array, SC.CollectionContent, {
     
     this.endPropertyChanges();
   },
-
-	/**Sort the tree controller
-	*/
-	sort: function(orderByKey, orderByDirection){
-		if(SC.none(orderByKey)) return;
-		
-		var branches = this.get('branchIndexes');
-		var children = this.get('children');
-		var newChildren = SC.clone(children);
-		var that = this;
-		if(SC.none('children')) return;
-		var newBranches = [];
-		if(!SC.none(branches)){
-			if(branches.get('length') > 0){
-				branches.forEach(function(i) {
-						var currentBranch = newChildren.objectAt(i);
-						that._sortFolders(currentBranch,orderByKey, orderByDirection);
-						newBranches.push(currentBranch);
-						children.removeObject(currentBranch);
-				});
-			}
-		}
-		
-		if(orderByDirection === 'ASC'){
-			newBranches = newBranches.sortProperty(orderByKey);
-			children = children.sortProperty(orderByKey);
-		}
-		else{
-			newBranches = newBranches.sortProperty(orderByKey).reverse();
-			children = children.sortProperty(orderByKey).reverse();
-		}
-		
-		var ret = newBranches.concat(children);
-		
-		this.set('children', ret);
-	},
-	
-	/** Called by sort function to sort recursivelly all the branches
-	*/
-	_sortFolders: function(content, key, direction){
-		var sortedFolders = [], leafItems = [], treeItemChildren = [], folders = [], currentItem;
-		var that = this;
-		if(SC.none(content) || content.get('length')=== 0){
-			return;
-		}
-		
-		treeItemChildren = content.get('treeItemChildren');
-		if(SC.none(treeItemChildren) || treeItemChildren.length === 0){
-			return;
-		}
-		for(var i=0;i<treeItemChildren.get('length');i+=1){
-			currentItem = treeItemChildren.objectAt(i);
-			if(SC.none(this._computeChildren(currentItem))){
-				leafItems.push(currentItem);
-			}
-			else{
-				folders.push(currentItem);
-			}
-		}
-		
-		if(folders.get('length') > 0){
-			if(direction === 'ASC'){
-				sortedFolders.pushObjects(folders.sortProperty(key));
-			}
-			else
-			{
-				sortedFolders.pushObjects(folders.sortProperty(key).reverse());
-			}
-		}
-		
-		if(leafItems.get('length') > 0){
-			if(direction === 'ASC'){
-				sortedFolders.pushObjects(leafItems.sortProperty(key));
-			}
-			else{
-				sortedFolders.pushObjects(leafItems.sortProperty(key).reverse());
-			}
-		}
-		
-		//HACK [CB/AP]: We should use .set but we currently can't because .treeItemChildren is a computed property.
-		content.treeItemChildren = sortedFolders;
-		
-		folders.forEach(function(folder){
-			that._sortFolders(folder, key, direction);
-		});
-	},
-	
   
   /**
     Called whenever the children or disclosure state changes.  Begins or ends
@@ -833,7 +746,7 @@ SC.TreeItemObserver = SC.Object.extend(SC.Array, SC.CollectionContent, {
       this._childrenRangeObserver = 
           cur.addRangeObserver(null, this, this._childrenRangeDidChange);
     } else this._childrenRangeObserver = null;
-
+    
     this._children = cur ;
     this._childrenRangeDidChange(cur, null, '[]', null);
     
@@ -850,7 +763,7 @@ SC.TreeItemObserver = SC.Object.extend(SC.Array, SC.CollectionContent, {
         min = indexes ? indexes.get('min') : 0,
         max = indexes ? indexes.get('max') : len,
         old = this._childrenLen || 0;
-
+        
     this._childrenLen = len; // save for future calls
     this.observerContentDidChange(min, max-min, len-old);
   },

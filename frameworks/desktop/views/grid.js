@@ -15,8 +15,6 @@ require('views/list') ;
 SC.GridView = SC.ListView.extend(
 /** @scope SC.GridView.prototype */ {
     classNames: ['sc-grid-view'],
-
-	// useRenderer: NO,
   
   layout: { left:0, right:0, top:0, bottom:0 },
 
@@ -25,23 +23,21 @@ SC.GridView = SC.ListView.extend(
     
     The value should be an integer expressed in pixels.
   */
-  rowHeight: 18,
+  rowHeight: 48,
   
   /**
     The minimum column width for grid items.  Items will actually
     be laid out as needed to completely fill the space, but the minimum
     width of each item will be this value.
   */
-  columnWidth: 120,
+  columnWidth: 64,
 
   /**
     The default example item view will render text-based items.
     
     You can override this as you wish.
   */
-  exampleView: SC.LabelView.extend({
-		useFactory: YES
-	}),
+  exampleView: SC.LabelView,
   
   insertionOrientation: SC.HORIZONTAL_ORIENTATION,
   
@@ -190,23 +186,22 @@ SC.GridView = SC.ListView.extend(
     // convert to index
     var ret= (row*itemsPerRow) + col ;
     return [ret, retOp] ;
-  }
+  },
 
   /** @private
     If the size of the clipping frame changes, all of the item views
     on screen are potentially in the wrong position.  Update all of their
     layouts if different.
   */
-  // _gv_clippingFrameDidChange: function() {
-  //   var nowShowing = this.get('nowShowing'), itemView, idx, len;
-  //   this.notifyPropertyChange('itemsPerRow');
-  // 
-  //   // len = nowShowing.get('length');
-  // 
-  //   // for (idx=0; idx < len; idx++) {
-  //     // itemView = this.itemViewForContentIndex(idx);
-  //     // itemView.adjust(this.layoutForContentIndex(idx));
-  //   // }
-  // 		this.reload(nowShowing)
-  // }.observes('clippingFrame')
+  _gv_clippingFrameDidChange: function() {
+    var nowShowing = this.get('nowShowing'), itemView, idx, len;
+    this.notifyPropertyChange('itemsPerRow');
+
+    len = nowShowing.get('length');
+
+    for (idx=0; idx < len; idx++) {
+      itemView = this.itemViewForContentIndex(idx);
+      itemView.adjust(this.layoutForContentIndex(idx));
+    }
+  }.observes('clippingFrame')
 }) ;

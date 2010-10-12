@@ -21,27 +21,24 @@ SC.CSSStyleSheet = SC.Object.extend(
   init: function() {
     sc_super() ;
     
-    var ss = this.styleSheetElement ;
+    var ss = this.styleSheet ;
     if (!ss) {
       // create the stylesheet object the hard way (works everywhere)
-      ss = this.styleSheetElement = document.createElement('style') ;
+      ss = this.styleSheet = document.createElement('style') ;
       ss.type = 'text/css' ;
       var head = document.getElementsByTagName('head')[0] ;
       if (!head) head = document.documentElement ; // fix for Opera
       head.appendChild(ss) ;
     }
     
-		this.styleSheet = document.styleSheets[document.styleSheets.length - 1]; 
-
     // cache this object for later
     var ssObjects = this.constructor.styleSheets ;
     if (!ssObjects) ssObjects = this.constructor.styleSheets = {} ;
     ssObjects[SC.guidFor(ss)] ;
     
     // create rules array
-    var rules = ss.cssRules || SC.EMPTY_ARRAY ;
-    var array = SC.SparseArray.create();
-		// array.provideLength(rules.length);
+    var rules = ss.rules || SC.EMPTY_ARRAY ;
+    var array = SC.SparseArray.create(rules.length) ;
     array.delegate = this ;
     this.rules = array ;
     
@@ -96,37 +93,8 @@ SC.CSSStyleSheet = SC.Object.extend(
   /**
     You can also insert and remove rules on the rules property array.
   */
-  insertRule: function(rule,i) {
+  insertRule: function(rule) {
     var rules = this.get('rules') ;
-		rules.pushObject(rule);
-		if (!SC.none(i))
-		{
-		  var styleSheetElement = this.styleSheet;
-  		if (SC.browser.msie)
-  		{
-		    //break up the rule for IE
-		    var brokenRule = rule.split('{');
-		    var hash = brokenRule[1];
-		    //remove trailing bracket and split by ;
-		    rules = brokenRule[1].substr(0,brokenRule[1].length-1).split(';');
-		    for (var idx =0;idx<rules.length;idx++)
-		    {
-          //add the rule
-		      styleSheetElement.addRule(brokenRule[0],rules[idx]+';');
-		    }
-  		}
-  		else
-  		{ 
-  		  if (i<styleSheetElement.cssRules.length)
-  		  {
-  		    i = styleSheetElement.insertRule(rule,i);
-		    }
-		    else
-		    {
-		      i = styleSheetElement.insertRule(rule,styleSheetElement.cssRules.length);
-		    }
-  		}
-	  }
   },
   
   /**
@@ -137,26 +105,8 @@ SC.CSSStyleSheet = SC.Object.extend(
     rules.removeObject(rule) ;
   },
   
-  deleteRuleByIndex: function(i) {
-    var styleSheetElement = this.styleSheet;
-	  if (i<styleSheetElement.cssRules.length)
-	  {
-	    styleSheetElement.deleteRule(i);
-	  }
-	  else
-	  {
-	    //index too large, delete last if any
-	  }
-  },
-  
   // TODO: implement a destroy method
   
-	destroy: function() {
-		var ss = this.get('styleSheetElement');
-		ss.parentNode.removeChild(ss);
-		sc_super();
-	},
-
   /**
     @private
     
@@ -165,7 +115,7 @@ SC.CSSStyleSheet = SC.Object.extend(
   */
   sparseArrayDidRequestIndex: function(array, idx) {
     // sc_assert(this.rules === array) ;
-    var rules = this.styleSheet.cssRules || SC.EMPTY_ARRAY ;
+    var rules = this.styleSheet.rules || SC.EMPTY_ARRAY ;
     var rule = rules[idx] ;
     if (rule) {
       array.provideContentAtIndex(idx, SC.CSSRule.create({ 
@@ -178,7 +128,7 @@ SC.CSSStyleSheet = SC.Object.extend(
   /** @private synchronize the browser's rules array with our own */
   sparseArrayDidReplace: function(array, idx, amt, objects) {
     var cssRules = objects.collect(function(obj) { return obj.rule; }) ;
-    this.styleSheet.cssRules.replace(idx, amt, cssRules) ;
+    this.styleSheet.rules.replace(idx, amt, cssRules) ;
   }
   
 });

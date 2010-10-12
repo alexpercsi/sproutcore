@@ -181,17 +181,6 @@ SC.ListItemView = SC.View.extend(
   */
   validator: null,
 
-	displayValue: function() {
-		var content = this.get('content'),
-        del     = this.displayDelegate,
-				key, value;
-				
-		key = this.getDelegateProperty('contentValueKey', del) ;
-    value = (key && content) ? (content.get ? content.get(key) : content[key]) : content ;
-    if (value && SC.typeOf(value) !== SC.T_STRING) value = value.toString();
-		return value;
-	}.property('content').cacheable(),
-  
   contentPropertyDidChange: function() {
     //if (this.get('isEditing')) this.discardEditing() ;
     if (this.get('contentIsEditable') !== this.contentIsEditable()) {
@@ -371,6 +360,7 @@ SC.ListItemView = SC.View.extend(
   button.
   */
   mouseDown: function(evt) {
+    
     // if content is not editable, then always let collection view handle the
     // event.
     if (!this.get('contentIsEditable')) return NO ; 

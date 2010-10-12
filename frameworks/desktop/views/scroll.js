@@ -456,10 +456,6 @@ SC.ScrollView = SC.View.extend(SC.Border, {
     The container view that will contain your main content view.  You can 
     replace this property with your own custom subclass if you prefer.
     
-    The default is a ContainerView which has a contentClippingFrame that will
-    be normal on desktop, but will show three screenfulls on touch devices (making
-    scrolling a bit nicer).
-    
     @type {SC.ContainerView}
   */
   containerView: SC.ContainerView.extend({
@@ -710,8 +706,6 @@ SC.ScrollView = SC.View.extend(SC.Border, {
     var vscroll = this.get('hasVerticalScroller') ? this.get('verticalScrollerView') : null ;
     var hasVertical = vscroll && this.get('isVerticalScrollerVisible') ;
     
-    if (SC.browser.touch) hasVertical = hasHorizontal = NO;
-    
     // get the containerView
     var clip = this.get('containerView') ;
     var clipLayout = { left: 0, top: 0 } ;
@@ -880,7 +874,10 @@ SC.ScrollView = SC.View.extend(SC.Border, {
   */
   _touchScrollDidChange: function() {
     if (this.get("contentView").touchScrollDidChange) {
-      this.get("contentView").touchScrollDidChange(this._scroll_horizontalScrollOffset,this._scroll_verticalScrollOffset);
+      this.get("contentView").touchScrollDidChange(
+        this._scroll_horizontalScrollOffset,
+        this._scroll_verticalScrollOffset
+      );
     }
     
     // tell scrollers
@@ -1308,12 +1305,6 @@ SC.ScrollView = SC.View.extend(SC.Border, {
       this.touch = null;
     }
   },
-  
-  touchCancelled: function(touch) {
-    this.tracking = NO;
-    this.dragging = NO;
-    this.touch = null;
-  },
 
   startDecelerationAnimation: function(evt) {
     var touch = this.touch;
@@ -1523,9 +1514,6 @@ SC.ScrollView = SC.View.extend(SC.Border, {
       
       // and now we're done, so just end the run loop and return.
       SC.RunLoop.end();
-
-			this.set('isScrolling', NO);
-			
       return;
     }
     

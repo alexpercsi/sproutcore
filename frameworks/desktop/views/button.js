@@ -480,6 +480,7 @@ SC.ButtonView = SC.View.extend(SC.Control, SC.Button, SC.StaticLayout,
     }
     
     evt.preventDefault();
+    return YES;
   },
   
   touchEnd: function(touch){

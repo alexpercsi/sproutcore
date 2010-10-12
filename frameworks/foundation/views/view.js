@@ -319,14 +319,6 @@ SC.View = SC.Responder.extend(SC.DelegateSupport,
     }
   },
   
-  _notifyThemeDidChange: function() {
-    var len, idx, childViews = this.get("childViews");
-    len = childViews.length;
-    for (idx = 0; idx < len; idx++){
-      childViews[idx].notifyPropertyChange("theme");
-    }
-  },
-  
   /**
     The current theme. You may only set this to a string, and during runtime, the value
     (from get()) will always be a theme object or null.
@@ -1132,7 +1124,6 @@ SC.View = SC.Responder.extend(SC.DelegateSupport,
       this.designer.viewDidUpdateLayer(); //let the designer know
     }
     return this ;
-    
   },
   
   /**
@@ -1350,19 +1341,7 @@ SC.View = SC.Responder.extend(SC.DelegateSupport,
       }
     }
     
-    // add special class names
-    if (this.get('isTextSelectable')) classSet["allow-select"] = YES;
-    if (!this.get('isEnabled')) classSet["disabled"] = YES;
-    if (!this.get('isVisible')) classSet["hidden"] = YES;
-    if (this.get('isFirstResponder')) classSet["focus"] = YES;
-    
-    bgcolor = this.get('backgroundColor');
-    if (bgcolor) q.css('backgroundColor', bgcolor);
-
-    cursor = this.get('cursor') ;
-    if (cursor) classSet[cursor.get('className')] = YES;
-
-    q.setClass(classSet);
+    this.endPropertyChanges() ;
   },
   
   /**
@@ -1716,9 +1695,6 @@ SC.View = SC.Responder.extend(SC.DelegateSupport,
         parentView = this.get('parentView'),
         parentNode = parentView ? parentView.get('containerLayer') : null ;
     
-if(SC.DEBUGMEYES)
-	debugger
-
     // remove node from current parentNode if the node does not match the new 
     // parent node.
     if (node && node.parentNode && node.parentNode !== parentNode) {
@@ -1747,9 +1723,7 @@ if(SC.DEBUGMEYES)
       }
       
       var siblings = parentView.get('childViews'),
-					index = siblings.indexOf(this),
-          // nextView = index > 0 ? siblings.objectAt(index+1) : null,
-          nextView = siblings.objectAt(index+1),
+          nextView = siblings.objectAt(siblings.indexOf(this)+1),
           nextNode = (nextView) ? nextView.get('layer') : null ;
       
       // before we add to parent node, make sure that the nextNode exists...

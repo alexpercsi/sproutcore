@@ -313,7 +313,6 @@ CoreTest.Plan = {
           func.call(this);
           this.working.test_end = this.now();
         } catch(e) {
-          throw e;
           msg = (e && e.toString) ? e.toString() : "(unknown error)";
           this.error("Died on test #" + (this.working.assertions.length + 1) + ": " + msg);
         }

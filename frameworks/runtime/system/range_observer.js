@@ -128,9 +128,7 @@ SC.RangeObserver = {
         }
       };
     }
-
-		var indexes = (this.indexes ? this.indexes : SC.IndexSet.create(0, this.source.get('length')))
-		indexes.forEach(func, this)
+    this.indexes.forEach(func,this);
 
     // add to pending range observers queue so that if any of these objects
     // change we will have a chance to setup observing on them.
@@ -185,9 +183,7 @@ SC.RangeObserver = {
           }
         };
       }
-
-			var indexes = (this.indexes ? this.indexes : SC.IndexSet.create(0, this.source.get('length')))
-      indexes.forEach(func,this);
+      this.indexes.forEach(func,this);
       return YES ;
       
     } else return NO ;

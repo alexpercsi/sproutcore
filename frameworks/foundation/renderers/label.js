@@ -61,10 +61,10 @@ SC.BaseTheme.renderers.Label = SC.Renderer.extend({
   update: function() {
     var cq = this.$();
     this.updateTitleRenderer();
-    if (this.didChange('textAlign')) {
+    if (this.didChange('text-align')) {
       cq.css('text-align', this.textAlign);
     }
-    if (this.didChange('fontWeight')) {
+    if (this.didChange('font-weight')) {
       cq.css('font-weight', this.fontWeight);
     }
     if (this.didChange('opacity')) {

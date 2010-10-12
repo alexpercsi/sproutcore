@@ -60,8 +60,7 @@ SC.CollectionContent = {
   */
   contentIndexIsSelected: function(view, content, idx) {
     var sel = view.get('selection');
-    var ret =  sel ? sel.contains(content, idx) : NO ;
-    return ret;
+    return sel ? sel.contains(content, idx) : NO ;
   },
   
   /**
@@ -175,20 +174,6 @@ SC.CollectionContent = {
   */
   contentIndexCollapse: function(view, content, idx) {
     console.log('contentIndexCollapse(%@, %@, %@)'.fmt(view,content,idx));
-  },
-
-
-	collectionViewWillDisplayCellForRowAndColumn: function(collectionView, view, row, column) {
-		var content = collectionView.get('content'),
-			item = content.objectAt(row),
-			del = collectionView.get('contentDelegate');
-			
-		view.set('content', item);
-    view.set('isEnabled', del.contentIndexIsEnabled(this, content, row));
-    view.set('isSelected', del.contentIndexIsSelected(this, content, row));
-    view.set('outlineLevel', del.contentIndexOutlineLevel(this, content, row));
-    view.set('disclosureState', del.contentIndexDisclosureState(this, content, row));
-	}
-
+  }
     
 };

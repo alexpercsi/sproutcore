@@ -247,8 +247,7 @@ SC.SelectFieldView = SC.FieldView.extend(
     var value = sc_super(); // get raw value... 
     var valueKey = this.get('valueKey') ;
     var objects = this.get('objects') ;
-    var found = null; // matching object goes here.
-    var object;
+    var found, object;
     
     // Handle empty selection.
     if (value == '***') {
@@ -261,6 +260,7 @@ SC.SelectFieldView = SC.FieldView.extend(
       
       var loc = (SC.typeOf(objects.length) === SC.T_FUNCTION) ? objects.length() : objects.length;
       
+      found = null ; // matching object goes here.
       while(!found && (--loc >= 0)) {
         object = objects.objectAt? objects.objectAt(loc) : objects[loc] ;
         if (!object) continue; // null means placeholder; just skip

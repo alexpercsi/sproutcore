@@ -596,7 +596,7 @@ SC.DateTime.mixin(SC.Comparable,
       prefix = key.slice(0, 4);
       suffix = key.slice(4);
       if (prefix === 'last' || prefix === 'next') {
-        currentWeekday = this._get('dayOfWeek', start, timezone);
+        currentWeekday = this._get('dayOfWeek');
         targetWeekday = this._englishDayNames.indexOf(suffix);    
         if (targetWeekday >= 0) {
           var delta = targetWeekday - currentWeekday;
@@ -893,9 +893,7 @@ SC.DateTime.mixin(SC.Comparable,
     @returns {DateTime} the DateTime corresponding to the string parameter
   */
   parse: function(str, fmt) {
-    // Declared as an object not a literal since in some browsers the literal
-    // retains state across function calls
-    var re = new RegExp('(?:%([aAbBcdHIjmMpSUWwxXyYZ%])|(.))', "g");
+    var re = /(?:\%([aAbBcdHIjmMpSUWwxXyYZ\%])|(.))/g;
     var d, parts, opts = {}, check = {}, scanner = SC.Scanner.create({string: str});
     
     if (SC.none(fmt)) fmt = SC.DATETIME_ISO8601;

@@ -259,10 +259,6 @@ test('fancy getters', function() {
   equals(dt.get('lastMonday'), dt.advance({ day: -5 }), 'dt.advance(day: -5)');
   equals(dt.get('nextFriday'), dt.advance({ day: 6 }), 'dt.advance(day: 6)');
   equals(dt.get('lastWednesday'), dt.advance({ day: -3 }), 'dt.advance(day: -3)');
-  
-  equals(
-    SC.DateTime.create({ year: 2010, month: 9, day: 29, hour: 0, minute: 30, timezone: -120 }).adjust({ day: 1 }).get('lastMonday').toISO8601(),
-    "2010-08-30T00:30:00+02:00");
 });
  
 test('parse', function() {
@@ -300,11 +296,6 @@ test('parse with time zones',function() {
 
 test('parse without a format uses default ISO8601', function() {
   equals(SC.DateTime.parse("2010-09-17T18:35:08Z").toISO8601(), "2010-09-17T18:35:08+00:00");
-});
-
-test('bad parsing', function() {
-  equals(SC.DateTime.parse(SC.DateTime.parse("foo")), null);
-  equals(SC.DateTime.parse("2010-09-17T18:35:08Z", SC.DATETIME_ISO8601).toISO8601(), "2010-09-17T18:35:08+00:00");
 });
 
 test('binding', function() {

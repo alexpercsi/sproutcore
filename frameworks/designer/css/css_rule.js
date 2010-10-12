@@ -18,7 +18,5 @@ sc_require('css/css_style') ;
 */
 SC.CSSRule = SC.Object.extend(
 /** @scope SC.CSSRule.prototype */ {
-	
-	rule: ''
-	
+  
 });
