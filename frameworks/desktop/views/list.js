@@ -405,6 +405,11 @@ SC.ListView = SC.CollectionView.extend(
     //   end   = end - (end % 50) + 50;
     // }
     
+    //HACK [BB2]: added 30 more rows before the top edge and after the bottom 
+    //edge for smoother incremental rendering
+    start = start - 30;
+    end = end + 60;
+    
     if (end<start) end = start;
     if (end>len) end = len ;
     
