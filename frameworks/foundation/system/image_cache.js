@@ -213,7 +213,7 @@ SC.imageCache = SC.Object.create(/** @scope SC.imageCache.prototype */ {
     
     // if we have an entry, then initiate an image load with the proper 
     // callbacks.
-    if (entry) {
+    if (entry && entry.image) {
       // var img = (entry.image = new Image()) ;
       var img = entry.image ;
       img.onabort = this._imageDidAbort ;
