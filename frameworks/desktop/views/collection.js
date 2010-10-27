@@ -833,15 +833,14 @@ SC.CollectionView = SC.View.extend(
     if (invalid.isIndexSet && invalid.contains(nowShowing)) invalid = YES ;
     if (this.willReload) this.willReload(invalid === YES ? null : invalid);
 
-    
     // Up-front, figure out whether the view class (and, if applicable,
     // group view class) is re-usable.  If so, it's beneficial for us to
     // first return all no-longer-needed views to the pool before allocating
     // new ones, because that will maximize the potential for re-use.
     exampleView = this.get('exampleView');
-    shouldReuseViews = exampleView ? exampleView.isReusableInCollections : NO;
+    shouldReuseViews = exampleView ? exampleView.prototype.isReusableInCollections : NO;
     groupExampleView = this.get('groupExampleView');
-    shouldReuseGroupViews = groupExampleView ? groupExampleView.isReusableInCollections : NO;
+    shouldReuseGroupViews = groupExampleView ? groupExampleView.prototype.isReusableInCollections : NO;
 
     // if an index set, just update indexes
     if (invalid.isIndexSet) {
@@ -1100,7 +1099,7 @@ SC.CollectionView = SC.View.extend(
     
     // If the view is reusable and there is an appropriate view inside the
     // pool, simply reuse it to avoid having to create a new view.
-    if (E  &&  E.isReusableInCollections) {
+    if (E  &&  E.prototype.isReusableInCollections) {
       // Lazily create the view pool.
       viewPool = this[viewPoolKey];
       if (!viewPool) viewPool = this[viewPoolKey] = [];
