@@ -151,6 +151,14 @@ SC.Gesturable = {
   */
   touchesDragged: function(evt, touches) {
     this.gestureTouchesDragged(evt, touches);
+    
+    /**
+      Forward touch event for other responders
+    */
+    var touch = touches.firstObject();
+    if (touch.nextTouchResponder && touch.nextTouchResponder.isScrollable) {
+      touch.makeTouchResponder(touch.nextTouchResponder);
+    }
   },
   
   /**
