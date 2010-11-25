@@ -103,12 +103,14 @@ SC.device = SC.Object.create({
   //
   
   orientationchange: function(evt) {
+    SC.RunLoop.begin();
     if(window.orientation===0 || window.orientation===180) {
       this.set('orientation', 'portrait');
     }
     else {
       this.set('orientation', 'landscape');
     }
+    SC.RunLoop.end();
   },
   
   orientationObserver: function(){
